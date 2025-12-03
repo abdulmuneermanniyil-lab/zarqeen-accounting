@@ -3,128 +3,209 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Zarqeen – Invoicing</title>
+    <title>Zarqeen Alif - Professional Invoicing Software</title>
     <link rel="stylesheet" href="/static/style.css" />
+    <link rel="icon" type="image/png" href="/static/header.png">
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-    <style>
-        /* Add Modal Styles */
-        .modal { display: none; position: fixed; z-index: 999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); }
-        .modal-content { background-color: #fefefe; margin: 15% auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 500px; text-align: center; border-radius: 8px; }
-        .key-display { font-size: 1.5em; font-family: monospace; background: #eee; padding: 10px; margin: 15px 0; border: 1px dashed #333; color: #d32f2f; }
-    </style>
 </head>
 
 <body>
-<div class="container">
-    <!-- Header & Hero (Keep your existing header code) -->
-    <header class="header-area">
-        <img src="/static/logo.png" alt="Zarqeen Logo" class="logo">
-        <div class="brand">
-            <h1>Zarqeen Alif</h1>
-            <p class="muted">Lightweight invoice generator — fast, offline & simple</p>
+
+    <!-- NAVBAR -->
+    <header>
+        <div class="nav-container">
+            <div class="logo-area">
+                <img src="/static/logo.png" alt="Zarqeen" class="logo-img">
+                <span class="brand-name">Zarqeen Alif</span>
+            </div>
+            <nav class="nav-links">
+                <a href="#features">Features</a>
+                <a href="#pricing">Pricing</a>
+                <a href="#download" class="nav-btn">Download</a>
+            </nav>
         </div>
     </header>
 
+    <!-- HERO SECTION -->
     <section class="hero">
-        <div class="main">
+        <h1>Invoicing Made Simple & Professional</h1>
+        <p>The fastest offline billing software for Indian businesses. GST Ready, Inventory Management, and Beautiful Invoices.</p>
+        
+        <div class="cta-group">
+            <a href="https://drive.google.com/drive/folders/YOUR_ACTUAL_LINK_HERE" target="_blank" class="btn-primary">
+                Download for Windows
+            </a>
+            <a href="#pricing" class="btn-outline">View License Plans</a>
+        </div>
+        
+        <div style="font-size: 0.85rem; opacity: 0.7; margin-top: 10px;">
+            v1.2.0 • Windows 10/11 • 200MB
+        </div>
+    </section>
+
+    <!-- FEATURES GRID -->
+    <section id="features" class="features">
+        <div class="feature-card">
+            <div class="feature-icon">⚡</div>
+            <h3>Lightning Fast</h3>
+            <p>Built with lightweight technology. Opens instantly and generates invoices in seconds without lag.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">🛡️</div>
+            <h3>100% Offline & Secure</h3>
+            <p>No internet required. Your data stays on your computer. We value your business privacy.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">🇮🇳</div>
+            <h3>Indian GST Ready</h3>
+            <p>Pre-configured with Indian State codes, IGST/CGST/SGST logic, and compliant formats.</p>
+        </div>
+    </section>
+
+    <!-- PRICING SECTION -->
+    <section id="pricing" class="pricing-section">
+        <h2 class="section-title">Simple, Transparent Pricing</h2>
+        <p class="section-subtitle">Start for free. Upgrade when you grow.</p>
+
+        <div class="pricing-grid">
             
-            <!-- (Keep Download Section) -->
-            <div class="download-card">
-                <h3>Download Zarqeen Alif — Alif 1.1</h3>
-                <div style="text-align:right">
-                    <a class="btn" href="https://drive.google.com/drive/folders/YOUR_LINK" target="_blank">⬇ Download</a>
-                </div>
+            <!-- Free Plan -->
+            <div class="plan-card">
+                <h3>Trial</h3>
+                <div class="price">Free</div>
+                <p class="plan-desc">7 Days unlimited access</p>
+                <ul class="features-list">
+                    <li>Unlimited Invoices</li>
+                    <li>Full Features</li>
+                    <li>No Credit Card required</li>
+                </ul>
+                <a href="https://drive.google.com/drive/folders/YOUR_ACTUAL_LINK_HERE" target="_blank">
+                    <button class="btn-plan secondary">Download Now</button>
+                </a>
             </div>
 
-            <!-- PLANS SECTION MODIFIED -->
-            <h2 id="plans">Buy License</h2>
-            <div class="plans-grid">
-                
-                <!-- Free Plan -->
-                <article class="plan">
-                    <h3>Free Trial</h3>
-                    <p class="lead">7 Days</p>
-                    <a class="btn secondary" href="#">Included</a>
-                </article>
-
-                <!-- Basic Plan -->
-                <article class="plan">
-                    <h3>Basic — 1 Year</h3>
-                    <p class="price">₹299</p>
-                    <button class="btn" onclick="buyPlan('basic')">Buy Basic License</button>
-                </article>
-
-                <!-- Premium Plan -->
-                <article class="plan">
-                    <h3>Premium — 3 Years</h3>
-                    <p class="price">₹599</p>
-                    <button class="btn" onclick="buyPlan('premium')">Buy Premium License</button>
-                </article>
-
+            <!-- Basic Plan -->
+            <div class="plan-card">
+                <h3>Basic</h3>
+                <div class="price">₹299<span>/year</span></div>
+                <p class="plan-desc">Perfect for Freelancers</p>
+                <ul class="features-list">
+                    <li>Valid for 1 Year</li>
+                    <li>2 Staff Accounts</li>
+                    <li>Unlimited Invoices</li>
+                    <li>Email Support</li>
+                </ul>
+                <button class="btn-plan primary" onclick="buyPlan('basic')">Buy Basic License</button>
             </div>
-            <!-- End Plans -->
+
+            <!-- Premium Plan -->
+            <div class="plan-card popular">
+                <div class="badge">BEST VALUE</div>
+                <h3>Premium</h3>
+                <div class="price">₹599<span>/3 years</span></div>
+                <p class="plan-desc">For Growing Businesses</p>
+                <ul class="features-list">
+                    <li>Valid for 3 Years</li>
+                    <li>Unlimited Staff</li>
+                    <li>Priority Support</li>
+                    <li>Free Updates</li>
+                </ul>
+                <button class="btn-plan primary" onclick="buyPlan('premium')">Buy Premium License</button>
+            </div>
 
         </div>
     </section>
 
-    <!-- License Modal -->
+    <!-- FOOTER -->
+    <footer>
+        <p>&copy; <span id="year"></span> Zarqeen Software Solutions. All rights reserved.</p>
+        <p style="margin-top:5px; font-size: 0.8rem;">
+            Support: <a href="mailto:zarqeensoftware@gmail.com" style="color:var(--primary)">zarqeensoftware@gmail.com</a>
+        </p>
+    </footer>
+
+    <!-- SUCCESS MODAL -->
     <div id="licenseModal" class="modal">
         <div class="modal-content">
-            <h2>Payment Successful!</h2>
-            <p>Copy this license key and paste it into your software:</p>
-            <div id="licenseKeyArea" class="key-display">Generating...</div>
-            <p><small>Please save this key safely. It is one-time use.</small></p>
-            <button class="btn secondary" onclick="document.getElementById('licenseModal').style.display='none'">Close</button>
+            <div style="font-size: 3rem; margin-bottom: 10px;">🎉</div>
+            <h2 style="color: var(--secondary)">Payment Successful!</h2>
+            <p style="color: var(--text-muted)">Here is your license key. Copy and paste it into the software.</p>
+            
+            <div id="licenseKeyArea" class="key-box">Generating...</div>
+            
+            <button class="btn-plan secondary" onclick="document.getElementById('licenseModal').style.display='none'">Close</button>
         </div>
     </div>
 
-</div>
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        document.getElementById('year').textContent = new Date().getFullYear();
+        const RAZORPAY_KEY_ID = "{{ key_id }}"; 
 
-<script>
-    const RAZORPAY_KEY_ID = "{{ key_id }}"; // Passed from Flask
+        async function buyPlan(planType) {
+            // Visual feedback
+            const btns = document.querySelectorAll('button');
+            btns.forEach(b => b.disabled = true);
+            document.body.style.cursor = 'wait';
 
-    async function buyPlan(planType) {
-        // 1. Create Order
-        const res = await fetch('/create_order', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ plan: planType })
-        });
-        const orderData = await res.json();
-
-        // 2. Open Razorpay
-        const options = {
-            "key": RAZORPAY_KEY_ID,
-            "amount": orderData.amount,
-            "currency": "INR",
-            "name": "Zarqeen Software",
-            "description": `Purchase ${planType} License`,
-            "order_id": orderData.id,
-            "handler": async function (response){
-                // 3. Verify Payment & Get Key
-                const verifyRes = await fetch('/verify_payment', {
+            try {
+                // 1. Create Order
+                const res = await fetch('/create_order', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        razorpay_payment_id: response.razorpay_payment_id,
-                        razorpay_order_id: response.razorpay_order_id,
-                        razorpay_signature: response.razorpay_signature,
-                        plan_type: planType
-                    })
+                    body: JSON.stringify({ plan: planType })
                 });
-                const result = await verifyRes.json();
-                
-                if(result.success) {
-                    document.getElementById('licenseKeyArea').innerText = result.license_key;
-                    document.getElementById('licenseModal').style.display = 'block';
-                } else {
-                    alert('Payment verification failed.');
-                }
+                const orderData = await res.json();
+
+                if(orderData.error) { alert("Error creating order: " + orderData.error); return; }
+
+                // 2. Open Razorpay
+                const options = {
+                    "key": RAZORPAY_KEY_ID,
+                    "amount": orderData.amount,
+                    "currency": "INR",
+                    "name": "Zarqeen Software",
+                    "description": `License: ${planType.toUpperCase()}`,
+                    "order_id": orderData.id,
+                    "theme": { "color": "#4F46E5" }, // Matches CSS Primary Color
+                    "handler": async function (response){
+                        // 3. Verify & Get Key
+                        const verifyRes = await fetch('/verify_payment', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({
+                                razorpay_payment_id: response.razorpay_payment_id,
+                                razorpay_order_id: response.razorpay_order_id,
+                                razorpay_signature: response.razorpay_signature,
+                                plan_type: planType
+                            })
+                        });
+                        const result = await verifyRes.json();
+                        
+                        if(result.success) {
+                            document.getElementById('licenseKeyArea').innerText = result.license_key;
+                            document.getElementById('licenseModal').style.display = 'block';
+                        } else {
+                            alert('Payment verification failed. Contact support.');
+                        }
+                    },
+                    "modal": {
+                        "ondismiss": function(){
+                            btns.forEach(b => b.disabled = false);
+                            document.body.style.cursor = 'default';
+                        }
+                    }
+                };
+                const rzp1 = new Razorpay(options);
+                rzp1.open();
+
+            } catch(e) {
+                console.error(e);
+                alert("Connection error. Please try again.");
+                btns.forEach(b => b.disabled = false);
+                document.body.style.cursor = 'default';
             }
-        };
-        const rzp1 = new Razorpay(options);
-        rzp1.open();
-    }
-</script>
+        }
+    </script>
 </body>
 </html>
