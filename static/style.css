@@ -126,3 +126,33 @@ header {
 
 /* --- FOOTER --- */
 footer { text-align: center; padding: 40px 20px; color: var(--text-muted); font-size: 0.9rem; border-top: 1px solid #e2e8f0; }
+
+/* Find .plan-card and replace with this: */
+.plan-card {
+    background: var(--white); 
+    padding: 40px 30px; 
+    border-radius: 16px;
+    border: 1px solid #e2e8f0; 
+    position: relative;
+    transition: 0.3s;
+    
+    /* NEW: Flexbox to align buttons at the bottom */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%; 
+}
+
+/* Ensure the features list pushes the button down */
+.features-list { 
+    list-style: none; 
+    margin-bottom: 30px; 
+    text-align: left; 
+    flex-grow: 1; /* This fills the empty space */
+}
+
+/* Ensure the link wrapper takes full width */
+.plan-card a {
+    width: 100%;
+    text-decoration: none;
+}
