@@ -138,6 +138,19 @@ def verify_payment():
         print(f"GENERAL ERROR: {e}")
         return jsonify({'success': False, 'message': str(e)}), 500
 
+
+
+# Add this near your other routes
+@app.route('/api/latest_version')
+def latest_version():
+    return jsonify({
+        "version": "1.2.0",  # <--- CHANGE THIS whenever you release a new update
+        "download_url": "https://drive.google.com/drive/folders/17O3vY4KYUzd7Rma4o8rp3j2iIrpqhJe9?usp=drive_link",
+        "release_notes": "Added License File support and fixed bugs."
+    })
+
+
+
 # ==========================================
 #  API FOR DESKTOP APP
 # ==========================================
@@ -175,3 +188,5 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()
     app.run(debug=True)
+
+
