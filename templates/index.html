@@ -193,10 +193,34 @@
                         const result = await verifyRes.json();
                         
                         if(result.success) {
-                            document.getElementById('licenseKeyArea').innerText = result.license_key;
+                            // 1. Create the file content (The Key)
+                            const licenseKey = result.license_key;
+                            
+                            // 2. Create a Blob (File Object)
+                            const blob = new Blob([licenseKey], { type: "text/plain" });
+                            const url = window.URL.createObjectURL(blob);
+                            
+                            // 3. Setup the Download Button in Modal
+                            const keyArea = document.getElementById('licenseKeyArea');
+                            keyArea.innerHTML = ""; // Clear text
+                            
+                            const downloadBtn = document.createElement("a");
+                            downloadBtn.href = url;
+                            downloadBtn.download = "license.zarqeen"; // The file name
+                            downloadBtn.className = "btn-plan primary";
+                            downloadBtn.style.display = "inline-block";
+                            downloadBtn.style.textDecoration = "none";
+                            downloadBtn.innerText = "⬇ Download License File";
+                            
+                            keyArea.appendChild(downloadBtn);
+                            
+                            // 4. Update Modal Text
+                            document.querySelector('#licenseModal h2').innerText = "Payment Successful!";
+                            document.querySelector('#licenseModal p').innerText = "Download this file and upload it inside the software.";
+                            
                             document.getElementById('licenseModal').style.display = 'block';
                         } else {
-                            alert('Payment verification failed. Contact support.');
+                            alert('Payment verification failed.');
                         }
                     },
                     "modal": {
