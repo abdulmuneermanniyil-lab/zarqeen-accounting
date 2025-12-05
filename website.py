@@ -95,6 +95,12 @@ def create_order():
 def verify_payment():
     """Verifies payment signature and Generates License"""
     data = request.json
+    
+    # --- DEBUG LOGGING (Check Render Logs to see these) ---
+    print(f"Received Data for Verification: {data}")
+    print(f"Using Secret Key ending in: ...{RAZORPAY_KEY_SECRET[-4:]}") 
+    # -----------------------------------------------------
+
     try:
         # 1. Verify Signature
         params_dict = {
@@ -102,7 +108,11 @@ def verify_payment():
             'razorpay_payment_id': data['razorpay_payment_id'],
             'razorpay_signature': data['razorpay_signature']
         }
+        
+        # This line raises an error if signature is wrong
         razorpay_client.utility.verify_payment_signature(params_dict)
+
+        print("Signature Verified Successfully!")
 
         # 2. Payment Successful -> Generate License
         plan_type = data.get('plan_type')
@@ -119,9 +129,14 @@ def verify_payment():
 
         return jsonify({'success': True, 'license_key': new_key})
 
+    except razorpay.errors.SignatureVerificationError:
+        print("ERROR: Razorpay Signature Verification Failed!")
+        print("Check if RAZORPAY_KEY_SECRET in Render matches the Key ID used in HTML.")
+        return jsonify({'success': False, 'message': 'Signature Mismatch'}), 400
+        
     except Exception as e:
-        print(f"Error: {e}")
-        return jsonify({'success': False, 'message': 'Payment Verification Failed'})
+        print(f"GENERAL ERROR: {e}")
+        return jsonify({'success': False, 'message': str(e)}), 500
 
 # ==========================================
 #  API FOR DESKTOP APP
