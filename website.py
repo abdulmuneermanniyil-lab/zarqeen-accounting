@@ -8,6 +8,7 @@ from datetime import datetime
 from flask import Flask, render_template, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
+from flask_mail import Mail, Message
 
 # Initialize Flask
 app = Flask(__name__, template_folder='templates', static_folder='static')
@@ -149,6 +150,34 @@ def latest_version():
         "release_notes": "Added License File support and fixed bugs."
     })
 
+
+# Add to website.py
+
+
+# Configure Mail on Render (Add these env vars in Render Dashboard too!)
+app.config['MAIL_SERVER'] = 'smtp-relay.brevo.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = '9cd21d001@smtp-brevo.com' # Your Login
+app.config['MAIL_PASSWORD'] = 'bskrnT85t4SOLS4'          # Your Key
+app.config['MAIL_DEFAULT_SENDER'] = ('Zarqeen Support', 'zarqeensoftware@gmail.com')
+
+mail = Mail(app)
+
+@app.route('/api/send_otp_remote', methods=['POST'])
+def send_otp_remote():
+    data = request.json
+    email = data.get('email')
+    otp = data.get('otp')
+    username = data.get('username', 'User')
+
+    try:
+        msg = Message("Zarqeen Verification Code", recipients=[email])
+        msg.body = f"Hi {username},\n\nYour verification code is: {otp}\n\nThis code expires in 10 minutes."
+        mail.send(msg)
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 
 # ==========================================
