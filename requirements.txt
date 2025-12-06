@@ -4,3 +4,4 @@ flask_cors
 razorpay
 gunicorn
 psycopg2-binary
+flask_mail
