@@ -5,3 +5,4 @@ Flask-Mail
 razorpay
 psycopg2-binary
 gunicorn
+requests
