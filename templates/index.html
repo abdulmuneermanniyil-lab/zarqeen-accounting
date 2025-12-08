@@ -144,17 +144,20 @@
     </footer>
 
     <!-- SUCCESS MODAL -->
-    <div id="licenseModal" class="modal">
-        <div class="modal-content">
-            <div style="font-size: 3rem; margin-bottom: 10px;">🎉</div>
-            <h2 style="color: var(--secondary)">Payment Successful!</h2>
-            <p style="color: var(--text-muted)">Here is your license key. Copy and paste it into the software.</p>
-            
-            <div id="licenseKeyArea" class="key-box">Generating...</div>
-            
-            <button class="btn-plan secondary" onclick="document.getElementById('licenseModal').style.display='none'">Close</button>
-        </div>
+    <!-- SUCCESS MODAL -->
+<div id="licenseModal" class="modal">
+    <div class="modal-content">
+        <div style="font-size: 3rem; margin-bottom: 10px;">🎉</div>
+        <h2 style="color: var(--secondary)">Payment Successful!</h2>
+        <p style="color: var(--text-muted)">Here is your license key. Download and save it safely.</p>
+        
+        <div id="licenseKeyArea" class="key-box">Generating...</div>
+        
+        <br>
+        <!-- Updated OnClick Function -->
+        <button class="btn-plan secondary" onclick="closeLicenseModal()">Close</button>
     </div>
+</div>
 
     <!-- JAVASCRIPT LOGIC -->
     <script>
