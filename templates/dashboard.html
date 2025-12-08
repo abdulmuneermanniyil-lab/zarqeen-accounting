@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Zarqeen License Dashboard</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        body { padding: 20px; background: #f9fafb; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #f3f4f6; }
+        .status-used { color: red; font-weight: bold; }
+        .status-new { color: green; font-weight: bold; }
+        .btn-logout { background: #dc2626; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>License Database</h1>
+        <a href="/admin/logout" class="btn-logout">Logout</a>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>License Key</th>
+                <th>Plan</th>
+                <th>Payment ID</th>
+                <th>Status</th>
+                <th>Created At</th>
+                <th>Used At</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for lic in licenses %}
+            <tr>
+                <td>{{ lic.id }}</td>
+                <td style="font-family: monospace;">{{ lic.license_key }}</td>
+                <td>{{ lic.plan_type.upper() }}</td>
+                <td>{{ lic.payment_id }}</td>
+                <td>
+                    {% if lic.is_used %}
+                        <span class="status-used">USED</span>
+                    {% else %}
+                        <span class="status-new">ACTIVE</span>
+                    {% endif %}
+                </td>
+                <td>{{ lic.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                <td>{{ lic.used_at.strftime('%Y-%m-%d %H:%M') if lic.used_at else '-' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
