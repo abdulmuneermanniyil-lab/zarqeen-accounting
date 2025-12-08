@@ -158,37 +158,55 @@
 
     <!-- JAVASCRIPT LOGIC -->
     <script>
-        document.getElementById('year').textContent = new Date().getFullYear();
-        const RAZORPAY_KEY_ID = "{{ key_id }}"; 
+    document.getElementById('year').textContent = new Date().getFullYear();
+    const RAZORPAY_KEY_ID = "{{ key_id }}"; 
 
-        async function buyPlan(planType) {
-            // Visual feedback
-            const btns = document.querySelectorAll('button');
-            btns.forEach(b => b.disabled = true);
-            document.body.style.cursor = 'wait';
+    // Helper to toggle loading screen
+    function toggleLoading(show) {
+        const overlay = document.getElementById('loadingOverlay');
+        if (show) overlay.style.display = 'flex';
+        else overlay.style.display = 'none';
+    }
 
-            try {
-                // 1. Create Order
-                const res = await fetch('/create_order', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ plan: planType })
-                });
-                const orderData = await res.json();
+    // New Function to Close Modal properly
+    function closeLicenseModal() {
+        document.getElementById('licenseModal').style.display = 'none';
+        // Reload page to clear the "Payment Successful" state so they can buy again if needed
+        window.location.reload(); 
+    }
 
-                if(orderData.error) { alert("Error creating order: " + orderData.error); return; }
+    async function buyPlan(planType) {
+        toggleLoading(true); // Start buffering
 
-                // 2. Open Razorpay
-                const options = {
-                    "key": RAZORPAY_KEY_ID,
-                    "amount": orderData.amount,
-                    "currency": "INR",
-                    "name": "Zarqeen Software",
-                    "description": `License: ${planType.toUpperCase()}`,
-                    "order_id": orderData.id,
-                    "theme": { "color": "#4F46E5" }, // Matches CSS Primary Color
-                    "handler": async function (response){
-                        // 3. Verify & Get Key
+        try {
+            // 1. Create Order
+            const res = await fetch('/create_order', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ plan: planType })
+            });
+            const orderData = await res.json();
+
+            if(orderData.error) { 
+                alert("Error: " + orderData.error); 
+                toggleLoading(false); 
+                return; 
+            }
+
+            // 2. Open Razorpay
+            const options = {
+                "key": RAZORPAY_KEY_ID,
+                "amount": orderData.amount,
+                "currency": "INR",
+                "name": "Zarqeen Software",
+                "description": `License: ${planType.toUpperCase()}`,
+                "order_id": orderData.id,
+                "theme": { "color": "#4F46E5" },
+                "handler": async function (response){
+                    // 3. Payment Done -> Verify & Generate Key
+                    toggleLoading(true); // Show buffering again while checking DB
+
+                    try {
                         const verifyRes = await fetch('/verify_payment', {
                             method: 'POST',
                             headers: {'Content-Type': 'application/json'},
@@ -201,54 +219,56 @@
                         });
                         const result = await verifyRes.json();
                         
+                        // 4. STOP BUFFERING HERE
+                        toggleLoading(false); 
+
                         if(result.success) {
-                            // 1. Create the file content (The Key)
+                            // Prepare Download Link
                             const licenseKey = result.license_key;
-                            
-                            // 2. Create a Blob (File Object)
                             const blob = new Blob([licenseKey], { type: "text/plain" });
                             const url = window.URL.createObjectURL(blob);
                             
-                            // 3. Setup the Download Button in Modal
                             const keyArea = document.getElementById('licenseKeyArea');
-                            keyArea.innerHTML = ""; // Clear text
+                            keyArea.innerHTML = ""; 
                             
                             const downloadBtn = document.createElement("a");
                             downloadBtn.href = url;
-                            downloadBtn.download = "license.zarqeen"; // The file name
+                            downloadBtn.download = "license.zarqeen"; 
                             downloadBtn.className = "btn-plan primary";
                             downloadBtn.style.display = "inline-block";
-                            downloadBtn.style.textDecoration = "none";
                             downloadBtn.innerText = "⬇ Download License File";
                             
                             keyArea.appendChild(downloadBtn);
                             
-                            // 4. Update Modal Text
-                            document.querySelector('#licenseModal h2').innerText = "Payment Successful!";
-                            document.querySelector('#licenseModal p').innerText = "Download this file and upload it inside the software.";
-                            
+                            // Show Success Modal
                             document.getElementById('licenseModal').style.display = 'block';
-                        } else {
-                            alert('Payment verification failed.');
-                        }
-                    },
-                    "modal": {
-                        "ondismiss": function(){
-                            btns.forEach(b => b.disabled = false);
-                            document.body.style.cursor = 'default';
-                        }
-                    }
-                };
-                const rzp1 = new Razorpay(options);
-                rzp1.open();
 
-            } catch(e) {
-                console.error(e);
-                alert("Connection error. Please try again.");
-                btns.forEach(b => b.disabled = false);
-                document.body.style.cursor = 'default';
-            }
+                        } else {
+                            alert('Payment verification failed in database.');
+                        }
+                    } catch (e) {
+                        toggleLoading(false);
+                        console.error(e);
+                        alert("Network error during verification.");
+                    }
+                },
+                "modal": {
+                    "ondismiss": function(){
+                        toggleLoading(false);
+                    }
+                }
+            };
+            
+            const rzp1 = new Razorpay(options);
+            rzp1.open();
+            toggleLoading(false); // Hide loader so they can see the Popup
+
+        } catch(e) {
+            console.error(e);
+            toggleLoading(false);
+            alert("Connection error.");
         }
-    </script>
+    }
+</script>
 </body>
 </html>
