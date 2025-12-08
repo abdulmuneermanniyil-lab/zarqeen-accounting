@@ -61,8 +61,13 @@ class License(db.Model):
 # ==========================================
 #  RENDER DB FIX (Create Tables Automatically)
 # ==========================================
+# Try to create DB, but don't crash if it fails
 with app.app_context():
-    db.create_all()
+    try:
+        db.create_all()
+        print("Database tables created successfully")
+    except Exception as e:
+        print(f"Database error during startup: {e}")
 
 # ==========================================
 #  HELPER FUNCTIONS
