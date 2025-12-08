@@ -114,10 +114,26 @@ header {
 .btn-plan.secondary:hover { background: #cbd5e1; }
 
 /* --- MODAL --- */
-.modal { display: none; position: fixed; z-index: 999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(4px); }
+/* Ensure Modal is HIGHER than the Loading Wheel (which was 9999) */
+.modal {
+    z-index: 10001 !important; 
+    /* existing styles... */
+    display: none; 
+    position: fixed; 
+    top: 0; left: 0; width: 100%; height: 100%; 
+    background: rgba(0,0,0,0.5);
+}
+
 .modal-content {
-    background: var(--white); margin: 10% auto; padding: 40px; width: 90%; max-width: 450px;
-    border-radius: 16px; text-align: center; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    background: white;
+    padding: 2rem;
+    border-radius: 10px;
+    text-align: center;
+    max-width: 400px;
+    margin: 15% auto; /* Centers it vertically */
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    position: relative; /* Important for button clicks */
+}
 }
 .key-box {
     background: #f1f5f9; padding: 15px; border-radius: 8px; border: 2px dashed #cbd5e1;
