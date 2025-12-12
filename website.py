@@ -2,9 +2,8 @@ import os
 import random
 import string
 import razorpay
-import urllib.parse
 from datetime import datetime
-from functools import wraps
+from functools import wraps # <--- Required for security
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
@@ -17,14 +16,11 @@ CORS(app)
 #  CONFIGURATION
 # ==========================================
 
-# 1. SECRET KEY (Required for Sessions/Login)
-app.secret_key = os.environ.get('SECRET_KEY', 'change_this_to_something_secret')
+# 1. SECURITY KEY (Crucial for Login Sessions)
+app.secret_key = os.environ.get('SECRET_KEY', 'CHANGE_THIS_TO_A_LONG_RANDOM_STRING_IN_RENDER')
 
-# 2. DATABASE CONFIGURATION (With Fix for Special Characters)
-# We prioritize the Env Var, but fall back to your provided string with the FIX applied
-raw_db_url = os.environ.get('DATABASE_URL', 'postgresql://postgres:Zarqeen%40786@db.xyz.supabase.co:5432/postgres')
-
-# Fix: Ensure it starts with postgresql:// and handle special chars if needed
+# 2. DATABASE
+raw_db_url = os.environ.get('DATABASE_URL', 'sqlite:///site.db')
 if raw_db_url.startswith("postgres://"):
     raw_db_url = raw_db_url.replace("postgres://", "postgresql://", 1)
 
@@ -35,11 +31,11 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 RAZORPAY_KEY_ID = os.environ.get('RAZORPAY_KEY_ID')
 RAZORPAY_KEY_SECRET = os.environ.get('RAZORPAY_KEY_SECRET')
 
-# 4. ADMIN LOGIN CREDENTIALS (Set these in Render Env Vars)
+# 4. ADMIN CREDENTIALS
 ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', 'admin')
 ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'admin123')
 
-# 5. MAIL SETUP
+# 5. MAIL
 app.config['MAIL_SERVER'] = os.environ.get('MAIL_SERVER', 'smtp-relay.brevo.com')
 app.config['MAIL_PORT'] = int(os.environ.get('MAIL_PORT', 587))
 app.config['MAIL_USE_TLS'] = True
@@ -52,7 +48,7 @@ db = SQLAlchemy(app)
 razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
 
 # ==========================================
-#  DATABASE MODELS
+#  DATABASE MODEL
 # ==========================================
 class License(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -64,21 +60,21 @@ class License(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     used_at = db.Column(db.DateTime, nullable=True)
 
-# Create tables automatically on Render start
+# Create tables
 with app.app_context():
     try:
         db.create_all()
-        print("✅ Database connected and tables created.")
     except Exception as e:
-        print(f"❌ Database Connection Error: {e}")
+        print(f"DB Error: {e}")
 
 # ==========================================
-#  HELPER FUNCTIONS
+#  SECURITY HELPER (The Lock)
 # ==========================================
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if 'admin_logged_in' not in session:
+        # Check if user is NOT logged in
+        if not session.get('admin_logged_in'):
             return redirect(url_for('login'))
         return f(*args, **kwargs)
     return decorated_function
@@ -93,7 +89,7 @@ def generate_unique_key(plan_type):
             return full_key
 
 # ==========================================
-#  PUBLIC ROUTES
+#  PUBLIC ROUTES (Anyone can see)
 # ==========================================
 @app.route('/')
 def home():
@@ -104,6 +100,7 @@ def create_order():
     try:
         data = request.json
         plan = data.get('plan')
+        # Amount in Paise (30100 = 301.00 INR)
         amount = 29900 if plan == 'basic' else 59900
         order = razorpay_client.order.create({
             'amount': amount, 
@@ -112,14 +109,12 @@ def create_order():
         })
         return jsonify(order)
     except Exception as e:
-        print(f"Order Error: {e}")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/verify_payment', methods=['POST'])
 def verify_payment():
     data = request.json
     try:
-        # 1. Verify Signature
         params_dict = {
             'razorpay_order_id': data['razorpay_order_id'],
             'razorpay_payment_id': data['razorpay_payment_id'],
@@ -127,14 +122,10 @@ def verify_payment():
         }
         razorpay_client.utility.verify_payment_signature(params_dict)
 
-        # 2. Determine Plan & Amount
         plan_type = data.get('plan_type')
         amount = 299.0 if plan_type == 'basic' else 599.0
-
-        # 3. Generate Key
         new_key = generate_unique_key(plan_type)
         
-        # 4. Save to DB
         new_license = License(
             license_key=new_key, 
             plan_type=plan_type, 
@@ -147,15 +138,19 @@ def verify_payment():
         return jsonify({'success': True, 'license_key': new_key})
 
     except Exception as e:
-        print(f"❌ Payment Verification/DB Error: {e}")
-        db.session.rollback()
+        print(f"Error: {e}")
         return jsonify({'success': False, 'message': str(e)})
 
 # ==========================================
-#  ADMIN DASHBOARD ROUTES
+#  ADMIN ROUTES (PROTECTED 🔒)
 # ==========================================
+
 @app.route('/admin/login', methods=['GET', 'POST'])
 def login():
+    # If already logged in, go to dashboard
+    if session.get('admin_logged_in'):
+        return redirect(url_for('dashboard'))
+
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
@@ -167,11 +162,45 @@ def login():
     return render_template('login.html')
 
 @app.route('/admin/dashboard')
-@login_required
+@login_required  # <--- THIS LOCKS THE DASHBOARD
 def dashboard():
-    # Fetch all licenses ordered by newest first
     licenses = License.query.order_by(License.created_at.desc()).all()
     return render_template('dashboard.html', licenses=licenses)
+
+@app.route('/admin/delete_license/<int:id>', methods=['POST'])
+@login_required # <--- THIS LOCKS DELETION
+def delete_license(id):
+    lic = License.query.get_or_404(id)
+    try:
+        db.session.delete(lic)
+        db.session.commit()
+        flash('License deleted successfully', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error deleting: {str(e)}', 'danger')
+    return redirect(url_for('dashboard'))
+
+@app.route('/admin/edit_license/<int:id>', methods=['POST'])
+@login_required # <--- THIS LOCKS EDITING
+def edit_license(id):
+    lic = License.query.get_or_404(id)
+    try:
+        lic.license_key = request.form.get('license_key')
+        lic.plan_type = request.form.get('plan_type')
+        lic.payment_id = request.form.get('payment_id')
+        
+        is_used_val = request.form.get('is_used')
+        lic.is_used = True if is_used_val == 'on' else False
+        
+        if not lic.is_used:
+            lic.used_at = None
+            
+        db.session.commit()
+        flash('License updated successfully', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error updating: {str(e)}', 'danger')
+    return redirect(url_for('dashboard'))
 
 @app.route('/admin/logout')
 def logout():
@@ -179,7 +208,7 @@ def logout():
     return redirect(url_for('login'))
 
 # ==========================================
-#  APP API (For Desktop Software)
+#  SOFTWARE API (For Windows App)
 # ==========================================
 @app.route('/api/validate_license', methods=['POST'])
 def validate_license():
@@ -211,48 +240,6 @@ def send_otp_remote():
         return jsonify({'success': True})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
-
-# --- ADD THESE NEW ROUTES TO website.py ---
-
-@app.route('/admin/delete_license/<int:id>', methods=['POST'])
-@login_required
-def delete_license(id):
-    lic = License.query.get_or_404(id)
-    try:
-        db.session.delete(lic)
-        db.session.commit()
-        flash('License deleted successfully', 'success')
-    except Exception as e:
-        db.session.rollback()
-        flash(f'Error deleting license: {str(e)}', 'danger')
-    return redirect(url_for('dashboard'))
-
-@app.route('/admin/edit_license/<int:id>', methods=['POST'])
-@login_required
-def edit_license(id):
-    lic = License.query.get_or_404(id)
-    try:
-        # Update fields from the form
-        lic.license_key = request.form.get('license_key')
-        lic.plan_type = request.form.get('plan_type')
-        lic.payment_id = request.form.get('payment_id')
-        
-        # specific logic for checkbox
-        is_used_val = request.form.get('is_used')
-        lic.is_used = True if is_used_val == 'on' else False
-        
-        # If unchecking "Used", clear the used_at date
-        if not lic.is_used:
-            lic.used_at = None
-            
-        db.session.commit()
-        flash('License updated successfully', 'success')
-    except Exception as e:
-        db.session.rollback()
-        flash(f'Error updating license: {str(e)}', 'danger')
-    return redirect(url_for('dashboard'))
-
-
 
 if __name__ == '__main__':
     app.run(debug=True)
