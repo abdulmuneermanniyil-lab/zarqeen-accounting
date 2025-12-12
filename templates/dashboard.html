@@ -3,26 +3,56 @@
 <head>
     <meta charset="utf-8">
     <title>Zarqeen Admin Dashboard</title>
-    <!-- Simple CSS for the dashboard -->
     <style>
         body { font-family: 'Segoe UI', sans-serif; padding: 20px; background: #f3f4f6; color: #1f2937; }
         
         /* Header Area */
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); flex-wrap: wrap; gap: 10px; }
         h1 { margin: 0; font-size: 1.5rem; color: #4F46E5; }
         
+        /* Controls Area (Search + Buttons) */
+        .controls { display: flex; gap: 10px; align-items: center; }
+        
+        /* Search Input */
+        .search-input {
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            width: 250px;
+            font-size: 0.9rem;
+        }
+
         /* Buttons */
         .btn { padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; text-decoration: none; font-size: 0.9rem; font-weight: 500; display: inline-block; }
         .btn-logout { background: #dc2626; color: white; }
-        .btn-excel { background: #10B981; color: white; margin-right: 10px; }
+        .btn-excel { background: #10B981; color: white; }
         .btn-edit { background: #3b82f6; color: white; padding: 5px 10px; font-size: 0.8rem; }
         .btn-delete { background: #ef4444; color: white; padding: 5px 10px; font-size: 0.8rem; }
         
         /* Table */
         .table-container { overflow-x: auto; background: white; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
         table { width: 100%; border-collapse: collapse; min-width: 800px; }
+        
         th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #e5e7eb; }
-        th { background-color: #f9fafb; font-weight: 600; text-transform: uppercase; font-size: 0.75rem; color: #6b7280; }
+        
+        /* Sortable Headers */
+        th { 
+            background-color: #f9fafb; 
+            font-weight: 600; 
+            text-transform: uppercase; 
+            font-size: 0.75rem; 
+            color: #6b7280; 
+            cursor: pointer; /* Shows hand icon */
+            user-select: none; /* Prevents text selection while clicking */
+            position: relative;
+        }
+        
+        th:hover { background-color: #e5e7eb; color: #111827; }
+
+        /* Sort Arrows */
+        th.sort-asc::after { content: " ▲"; font-size: 0.7rem; color: #4F46E5; }
+        th.sort-desc::after { content: " ▼"; font-size: 0.7rem; color: #4F46E5; }
+        
         tr:hover { background-color: #f9fafb; }
         
         /* Status Badges */
@@ -30,18 +60,15 @@
         .status-used { background: #fee2e2; color: #991b1b; }
         .status-new { background: #d1fae5; color: #065f46; }
 
-        /* Modal (Popup) Styles */
+        /* Modal Styles */
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); }
         .modal-content { background-color: white; margin: 10% auto; padding: 25px; border-radius: 8px; width: 400px; position: relative; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
         .close-modal { position: absolute; top: 10px; right: 15px; font-size: 1.5rem; cursor: pointer; color: #6b7280; }
         
-        /* Form Inputs in Modal */
         .form-group { margin-bottom: 15px; }
         .form-group label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.9rem; }
         .form-group input, .form-group select { width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px; }
         .btn-save { width: 100%; background: #4F46E5; color: white; margin-top: 10px; }
-
-        /* Flash Messages */
         .alert { padding: 10px; margin-bottom: 20px; border-radius: 4px; background: #d1fae5; color: #065f46; text-align: center; }
         .alert.danger { background: #fee2e2; color: #991b1b; }
     </style>
@@ -51,13 +78,17 @@
     <!-- Header -->
     <div class="header">
         <h1>License Database</h1>
-        <div>
-            <button onclick="downloadExcel()" class="btn btn-excel">📥 Export to Excel</button>
+        
+        <div class="controls">
+            <!-- SEARCH BAR -->
+            <input type="text" id="searchInput" onkeyup="filterTable()" class="search-input" placeholder="🔍 Search keys, names, IDs...">
+            
+            <button onclick="downloadExcel()" class="btn btn-excel">📥 Export Excel</button>
             <a href="/admin/logout" class="btn btn-logout">Logout</a>
         </div>
     </div>
 
-    <!-- Flash Messages (Success/Error) -->
+    <!-- Flash Messages -->
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             {% for category, message in messages %}
@@ -71,13 +102,14 @@
         <table id="licenseTable">
             <thead>
                 <tr>
-                    <th>ID</th>
-                    <th>License Key</th>
-                    <th>Plan</th>
-                    <th>Payment ID</th>
-                    <th>Status</th>
-                    <th>Created At</th>
-                    <th>Actions</th>
+                    <!-- Added onclick events for sorting -->
+                    <th onclick="sortTable(0)">ID</th>
+                    <th onclick="sortTable(1)">License Key</th>
+                    <th onclick="sortTable(2)">Plan</th>
+                    <th onclick="sortTable(3)">Payment ID</th>
+                    <th onclick="sortTable(4)">Status</th>
+                    <th onclick="sortTable(5)">Created At</th>
+                    <th>Actions</th> <!-- No sort on actions -->
                 </tr>
             </thead>
             <tbody>
@@ -94,16 +126,14 @@
                             <span class="status status-new">ACTIVE</span>
                         {% endif %}
                     </td>
+                    <!-- Store raw date for sorting logic if needed, but text sort usually works for YYYY-MM-DD -->
                     <td>{{ lic.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
                     <td>
-                        <!-- Edit Button (Passes data to JS function) -->
                         <button class="btn btn-edit" 
                             onclick="openEditModal('{{ lic.id }}', '{{ lic.license_key }}', '{{ lic.plan_type }}', '{{ lic.payment_id }}', '{{ lic.is_used }}')">
                             Edit
                         </button>
-
-                        <!-- Delete Form -->
-                        <form action="/admin/delete_license/{{ lic.id }}" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this license?');">
+                        <form action="/admin/delete_license/{{ lic.id }}" method="POST" style="display:inline;" onsubmit="return confirm('Delete this license?');">
                             <button type="submit" class="btn btn-delete">Del</button>
                         </form>
                     </td>
@@ -124,7 +154,6 @@
                     <label>License Key</label>
                     <input type="text" name="license_key" id="editKey" required>
                 </div>
-
                 <div class="form-group">
                     <label>Plan Type</label>
                     <select name="plan_type" id="editPlan">
@@ -132,17 +161,14 @@
                         <option value="premium">premium</option>
                     </select>
                 </div>
-
                 <div class="form-group">
                     <label>Payment ID</label>
                     <input type="text" name="payment_id" id="editPaymentId" required>
                 </div>
-
                 <div class="form-group" style="display: flex; align-items: center; gap: 10px;">
                     <input type="checkbox" name="is_used" id="editIsUsed" style="width: auto;">
                     <label for="editIsUsed" style="margin: 0; cursor: pointer;">Mark as Used</label>
                 </div>
-
                 <button type="submit" class="btn btn-save">Save Changes</button>
             </form>
         </div>
@@ -150,52 +176,127 @@
 
     <!-- JavaScript -->
     <script>
-        // 1. Export to Excel (CSV)
+        // 1. SEARCH FUNCTION
+        function filterTable() {
+            let input = document.getElementById("searchInput");
+            let filter = input.value.toUpperCase();
+            let table = document.getElementById("licenseTable");
+            let tr = table.getElementsByTagName("tr");
+
+            // Loop through all table rows (skipping header)
+            for (let i = 1; i < tr.length; i++) {
+                let showRow = false;
+                let tds = tr[i].getElementsByTagName("td");
+                
+                // Check all columns in the row
+                for(let j = 0; j < tds.length - 1; j++) { // -1 to skip Actions column
+                    if (tds[j]) {
+                        let txtValue = tds[j].textContent || tds[j].innerText;
+                        if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                            showRow = true;
+                            break; // Found a match in this row
+                        }
+                    }
+                }
+                tr[i].style.display = showRow ? "" : "none";
+            }
+        }
+
+        // 2. SORT FUNCTION
+        function sortTable(n) {
+            var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
+            table = document.getElementById("licenseTable");
+            switching = true;
+            dir = "asc"; // Set the sorting direction to ascending:
+            
+            // Remove arrows from other headers
+            var headers = table.getElementsByTagName("th");
+            for (var h = 0; h < headers.length; h++) {
+                headers[h].classList.remove("sort-asc", "sort-desc");
+            }
+
+            while (switching) {
+                switching = false;
+                rows = table.rows;
+                
+                // Loop through all table rows (except the first, which contains table headers):
+                for (i = 1; i < (rows.length - 1); i++) {
+                    shouldSwitch = false;
+                    
+                    x = rows[i].getElementsByTagName("TD")[n];
+                    y = rows[i + 1].getElementsByTagName("TD")[n];
+                    
+                    var xContent = x.innerHTML.toLowerCase();
+                    var yContent = y.innerHTML.toLowerCase();
+
+                    // Check if numeric (for ID column)
+                    var isNum = !isNaN(parseFloat(xContent)) && isFinite(xContent) && !isNaN(parseFloat(yContent)) && isFinite(yContent);
+
+                    if (dir == "asc") {
+                        if (isNum) {
+                            if (parseFloat(xContent) > parseFloat(yContent)) { shouldSwitch = true; break; }
+                        } else {
+                            if (xContent > yContent) { shouldSwitch = true; break; }
+                        }
+                    } else if (dir == "desc") {
+                        if (isNum) {
+                            if (parseFloat(xContent) < parseFloat(yContent)) { shouldSwitch = true; break; }
+                        } else {
+                            if (xContent < yContent) { shouldSwitch = true; break; }
+                        }
+                    }
+                }
+                
+                if (shouldSwitch) {
+                    rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                    switching = true;
+                    switchcount ++;
+                } else {
+                    if (switchcount == 0 && dir == "asc") {
+                        dir = "desc";
+                        switching = true;
+                    }
+                }
+            }
+            
+            // Add arrow class to current header
+            headers[n].classList.add(dir == "asc" ? "sort-asc" : "sort-desc");
+        }
+
+        // 3. EXPORT EXCEL
         function downloadExcel() {
             let table = document.getElementById("licenseTable");
             let rows = Array.from(table.rows);
             let csvContent = "";
 
             rows.forEach(function(row) {
+                if (row.style.display === 'none') return; // Don't export hidden rows (search results)
                 let rowData = [];
                 let cols = Array.from(row.querySelectorAll("td, th"));
-                
-                // Skip the last column (Actions)
                 cols.slice(0, -1).forEach(function(col) {
-                    // Get text and remove extra whitespace
                     let text = col.innerText.replace(/(\r\n|\n|\r)/gm, "").trim();
-                    rowData.push('"' + text + '"'); // Quote strings to handle commas
+                    rowData.push('"' + text + '"');
                 });
-                
                 csvContent += rowData.join(",") + "\r\n";
             });
 
-            // Trigger Download
             let blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
             let link = document.createElement("a");
             let url = URL.createObjectURL(blob);
             link.setAttribute("href", url);
             link.setAttribute("download", "Zarqeen_Licenses.csv");
-            link.style.visibility = "hidden";
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
         }
 
-        // 2. Edit Modal Logic
+        // 4. MODAL LOGIC
         function openEditModal(id, key, plan, paymentId, isUsed) {
-            // Set Form Action URL
             document.getElementById('editForm').action = "/admin/edit_license/" + id;
-            
-            // Populate Fields
             document.getElementById('editKey').value = key;
             document.getElementById('editPlan').value = plan;
             document.getElementById('editPaymentId').value = paymentId;
-            
-            // Handle Checkbox (Python sends 'True' or 'False' as string)
             document.getElementById('editIsUsed').checked = (isUsed === 'True');
-            
-            // Show Modal
             document.getElementById('editModal').style.display = 'block';
         }
 
@@ -203,10 +304,8 @@
             document.getElementById('editModal').style.display = 'none';
         }
 
-        // Close modal if clicking outside box
         window.onclick = function(event) {
-            let modal = document.getElementById('editModal');
-            if (event.target == modal) {
+            if (event.target == document.getElementById('editModal')) {
                 closeEditModal();
             }
         }
