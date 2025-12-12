@@ -1,13 +1,16 @@
 <!-- In the name of Allah -->
-
 <!doctype html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Zarqeen Alif - Professional Invoicing Software</title>
+    
+    <!-- Link to CSS -->
     <link rel="stylesheet" href="/static/style.css" />
     <link rel="icon" type="image/png" href="/static/header.png">
+    
+    <!-- Razorpay SDK -->
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 </head>
 
@@ -17,6 +20,7 @@
     <header>
         <div class="nav-container">
             <div class="logo-area">
+                <!-- Ensure logo.png is in your static folder -->
                 <img src="/static/logo.png" alt="Zarqeen" class="logo-img">
                 <span class="brand-name">Zarqeen Alif</span>
             </div>
@@ -34,7 +38,8 @@
         <p>The fastest offline billing software for Indian businesses. GST Ready, Inventory Management, and Beautiful Invoices.</p>
         
         <div class="cta-group">
-           <a href="https://drive.google.com/drive/folders/17O3vY4KYUzd7Rma4o8rp3j2iIrpqhJe9?usp=drive_link" target="_blank" class="btn-primary">
+            <!-- Link to your Google Drive or Installer -->
+            <a href="https://drive.google.com/drive/folders/17O3vY4KYUzd7Rma4o8rp3j2iIrpqhJe9?usp=drive_link" target="_blank" class="btn-primary">
                 Download for Windows
             </a>
             <a href="#pricing" class="btn-outline">View License Plans</a>
@@ -65,7 +70,6 @@
     </section>
 
     <!-- PRICING SECTION -->
-   <!-- PRICING SECTION -->
     <section id="pricing" class="pricing-section">
         <h2 class="section-title">Simple, Transparent Pricing</h2>
         <p class="section-subtitle">Start for free. Upgrade when you grow.</p>
@@ -84,7 +88,6 @@
                         <li>No Credit Card required</li>
                     </ul>
                 </div>
-                <!-- Button at bottom -->
                 <a href="https://drive.google.com/drive/folders/17O3vY4KYUzd7Rma4o8rp3j2iIrpqhJe9?usp=drive_link" target="_blank">
                     <button class="btn-plan secondary">Download Now</button>
                 </a>
@@ -103,7 +106,6 @@
                         <li>Email Support</li>
                     </ul>
                 </div>
-                <!-- Button at bottom -->
                 <button class="btn-plan primary" onclick="buyPlan('basic')">Buy Basic License</button>
             </div>
 
@@ -121,7 +123,6 @@
                         <li>Free Updates</li>
                     </ul>
                 </div>
-                <!-- Button at bottom -->
                 <button class="btn-plan primary" onclick="buyPlan('premium')">Buy Premium License</button>
             </div>
 
@@ -129,149 +130,142 @@
     </section>
 
     <!-- FOOTER -->
-   <!-- FOOTER -->
     <footer>
         <p>&copy; <span id="year"></span> Zarqeen Software Solutions. All rights reserved.</p>
-        
         <p style="margin-top:5px; font-size: 0.8rem;">
             Support: <a href="mailto:zarqeensoftware@gmail.com" style="color:var(--primary)">zarqeensoftware@gmail.com</a>
         </p>
-
-        <!-- New Admin Link -->
+        <!-- Admin Link -->
         <div style="margin-top: 15px; font-size: 0.75rem; opacity: 0.5;">
             <a href="/admin/login" style="color: inherit; text-decoration: none;">Admin Login</a>
         </div>
     </footer>
 
     <!-- SUCCESS MODAL -->
-    <!-- SUCCESS MODAL -->
-<div id="licenseModal" class="modal">
-    <div class="modal-content">
-        <div style="font-size: 3rem; margin-bottom: 10px;">🎉</div>
-        <h2 style="color: var(--secondary)">Payment Successful!</h2>
-        <p style="color: var(--text-muted)">Here is your license key. Download and save it safely.</p>
-        
-        <div id="licenseKeyArea" class="key-box">Generating...</div>
-        
-        <br>
-        <!-- Updated OnClick Function -->
-        <button class="btn-plan secondary" onclick="closeLicenseModal()">Close</button>
+    <div id="licenseModal" class="modal">
+        <div class="modal-content">
+            <div style="font-size: 3rem; margin-bottom: 10px;">🎉</div>
+            <h2 style="color: var(--secondary)">Payment Successful!</h2>
+            <p style="color: var(--text-muted)">Here is your license key. Download and save it safely.</p>
+            
+            <!-- Dynamic Download Button Appears Here -->
+            <div id="licenseKeyArea" class="key-box">Generating...</div>
+            
+            <br>
+            <button class="btn-plan secondary" onclick="closeLicenseModal()">Close</button>
+        </div>
     </div>
-</div>
 
     <!-- JAVASCRIPT LOGIC -->
     <script>
-    document.getElementById('year').textContent = new Date().getFullYear();
-    const RAZORPAY_KEY_ID = "{{ key_id }}"; 
+        document.getElementById('year').textContent = new Date().getFullYear();
+        const RAZORPAY_KEY_ID = "{{ key_id }}"; 
 
-    // Helper to toggle loading screen
-    function toggleLoading(show) {
-        const overlay = document.getElementById('loadingOverlay');
-        if (show) overlay.style.display = 'flex';
-        else overlay.style.display = 'none';
-    }
-
-    // New Function to Close Modal properly
-    function closeLicenseModal() {
-        document.getElementById('licenseModal').style.display = 'none';
-        // Reload page to clear the "Payment Successful" state so they can buy again if needed
-        window.location.reload(); 
-    }
-
-    async function buyPlan(planType) {
-        toggleLoading(true); // Start buffering
-
-        try {
-            // 1. Create Order
-            const res = await fetch('/create_order', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ plan: planType })
-            });
-            const orderData = await res.json();
-
-            if(orderData.error) { 
-                alert("Error: " + orderData.error); 
-                toggleLoading(false); 
-                return; 
-            }
-
-            // 2. Open Razorpay
-            const options = {
-                "key": RAZORPAY_KEY_ID,
-                "amount": orderData.amount,
-                "currency": "INR",
-                "name": "Zarqeen Software",
-                "description": `License: ${planType.toUpperCase()}`,
-                "order_id": orderData.id,
-                "theme": { "color": "#4F46E5" },
-                "handler": async function (response){
-                    // 3. Payment Done -> Verify & Generate Key
-                    toggleLoading(true); // Show buffering again while checking DB
-
-                    try {
-                        const verifyRes = await fetch('/verify_payment', {
-                            method: 'POST',
-                            headers: {'Content-Type': 'application/json'},
-                            body: JSON.stringify({
-                                razorpay_payment_id: response.razorpay_payment_id,
-                                razorpay_order_id: response.razorpay_order_id,
-                                razorpay_signature: response.razorpay_signature,
-                                plan_type: planType
-                            })
-                        });
-                        const result = await verifyRes.json();
-                        
-                        // 4. STOP BUFFERING HERE
-                        toggleLoading(false); 
-
-                        if(result.success) {
-                            // Prepare Download Link
-                            const licenseKey = result.license_key;
-                            const blob = new Blob([licenseKey], { type: "text/plain" });
-                            const url = window.URL.createObjectURL(blob);
-                            
-                            const keyArea = document.getElementById('licenseKeyArea');
-                            keyArea.innerHTML = ""; 
-                            
-                            const downloadBtn = document.createElement("a");
-                            downloadBtn.href = url;
-                            downloadBtn.download = "license.zarqeen"; 
-                            downloadBtn.className = "btn-plan primary";
-                            downloadBtn.style.display = "inline-block";
-                            downloadBtn.innerText = "⬇ Download License File";
-                            
-                            keyArea.appendChild(downloadBtn);
-                            
-                            // Show Success Modal
-                            document.getElementById('licenseModal').style.display = 'block';
-
-                        } else {
-                            alert('Payment verification failed in database.');
-                        }
-                    } catch (e) {
-                        toggleLoading(false);
-                        console.error(e);
-                        alert("Network error during verification.");
-                    }
-                },
-                "modal": {
-                    "ondismiss": function(){
-                        toggleLoading(false);
-                    }
-                }
-            };
-            
-            const rzp1 = new Razorpay(options);
-            rzp1.open();
-            toggleLoading(false); // Hide loader so they can see the Popup
-
-        } catch(e) {
-            console.error(e);
-            toggleLoading(false);
-            alert("Connection error.");
+        // Function to Close Modal and Refresh Page
+        function closeLicenseModal() {
+            document.getElementById('licenseModal').style.display = 'none';
+            window.location.reload(); 
         }
-    }
-</script>
+
+        async function buyPlan(planType) {
+            // 1. Visual feedback (Change cursor)
+            document.body.style.cursor = 'wait';
+            const btns = document.querySelectorAll('button');
+            btns.forEach(b => b.disabled = true);
+
+            try {
+                // 2. Create Order on Server
+                const res = await fetch('/create_order', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ plan: planType })
+                });
+                const orderData = await res.json();
+
+                if(orderData.error) { 
+                    alert("Error creating order: " + orderData.error); 
+                    resetUI();
+                    return; 
+                }
+
+                // 3. Open Razorpay
+                const options = {
+                    "key": RAZORPAY_KEY_ID,
+                    "amount": orderData.amount,
+                    "currency": "INR",
+                    "name": "Zarqeen Software",
+                    "description": `License: ${planType.toUpperCase()}`,
+                    "order_id": orderData.id,
+                    "theme": { "color": "#4F46E5" },
+                    "handler": async function (response){
+                        // 4. Payment Success -> Verify on Server
+                        try {
+                            const verifyRes = await fetch('/verify_payment', {
+                                method: 'POST',
+                                headers: {'Content-Type': 'application/json'},
+                                body: JSON.stringify({
+                                    razorpay_payment_id: response.razorpay_payment_id,
+                                    razorpay_order_id: response.razorpay_order_id,
+                                    razorpay_signature: response.razorpay_signature,
+                                    plan_type: planType
+                                })
+                            });
+                            const result = await verifyRes.json();
+                            
+                            if(result.success) {
+                                // 5. Generate File Download
+                                const licenseKey = result.license_key;
+                                const blob = new Blob([licenseKey], { type: "text/plain" });
+                                const url = window.URL.createObjectURL(blob);
+                                
+                                const keyArea = document.getElementById('licenseKeyArea');
+                                keyArea.innerHTML = ""; // Clear "Generating..." text
+                                
+                                const downloadBtn = document.createElement("a");
+                                downloadBtn.href = url;
+                                downloadBtn.download = "license.zarqeen"; // File name
+                                downloadBtn.className = "btn-plan primary";
+                                downloadBtn.style.display = "inline-block";
+                                downloadBtn.style.textDecoration = "none";
+                                downloadBtn.innerText = "⬇ Download License File";
+                                
+                                keyArea.appendChild(downloadBtn);
+                                
+                                // Show Modal
+                                document.getElementById('licenseModal').style.display = 'block';
+
+                            } else {
+                                alert('Payment verification failed.');
+                            }
+                        } catch (e) {
+                            console.error(e);
+                            alert("Verification error.");
+                        } finally {
+                            resetUI();
+                        }
+                    },
+                    "modal": {
+                        "ondismiss": function(){
+                            resetUI();
+                        }
+                    }
+                };
+                
+                const rzp1 = new Razorpay(options);
+                rzp1.open();
+
+            } catch(e) {
+                console.error(e);
+                alert("Connection error. Please try again.");
+                resetUI();
+            }
+        }
+
+        function resetUI() {
+            document.body.style.cursor = 'default';
+            const btns = document.querySelectorAll('button');
+            btns.forEach(b => b.disabled = false);
+        }
+    </script>
 </body>
 </html>
