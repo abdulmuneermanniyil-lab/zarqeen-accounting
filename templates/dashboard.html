@@ -2,56 +2,214 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Zarqeen License Dashboard</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <title>Zarqeen Admin Dashboard</title>
+    <!-- Simple CSS for the dashboard -->
     <style>
-        body { padding: 20px; background: #f9fafb; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
-        th { background-color: #f3f4f6; }
-        .status-used { color: red; font-weight: bold; }
-        .status-new { color: green; font-weight: bold; }
-        .btn-logout { background: #dc2626; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px; }
+        body { font-family: 'Segoe UI', sans-serif; padding: 20px; background: #f3f4f6; color: #1f2937; }
+        
+        /* Header Area */
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        h1 { margin: 0; font-size: 1.5rem; color: #4F46E5; }
+        
+        /* Buttons */
+        .btn { padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; text-decoration: none; font-size: 0.9rem; font-weight: 500; display: inline-block; }
+        .btn-logout { background: #dc2626; color: white; }
+        .btn-excel { background: #10B981; color: white; margin-right: 10px; }
+        .btn-edit { background: #3b82f6; color: white; padding: 5px 10px; font-size: 0.8rem; }
+        .btn-delete { background: #ef4444; color: white; padding: 5px 10px; font-size: 0.8rem; }
+        
+        /* Table */
+        .table-container { overflow-x: auto; background: white; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        table { width: 100%; border-collapse: collapse; min-width: 800px; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #e5e7eb; }
+        th { background-color: #f9fafb; font-weight: 600; text-transform: uppercase; font-size: 0.75rem; color: #6b7280; }
+        tr:hover { background-color: #f9fafb; }
+        
+        /* Status Badges */
+        .status { padding: 4px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 700; }
+        .status-used { background: #fee2e2; color: #991b1b; }
+        .status-new { background: #d1fae5; color: #065f46; }
+
+        /* Modal (Popup) Styles */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); }
+        .modal-content { background-color: white; margin: 10% auto; padding: 25px; border-radius: 8px; width: 400px; position: relative; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        .close-modal { position: absolute; top: 10px; right: 15px; font-size: 1.5rem; cursor: pointer; color: #6b7280; }
+        
+        /* Form Inputs in Modal */
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.9rem; }
+        .form-group input, .form-group select { width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px; }
+        .btn-save { width: 100%; background: #4F46E5; color: white; margin-top: 10px; }
+
+        /* Flash Messages */
+        .alert { padding: 10px; margin-bottom: 20px; border-radius: 4px; background: #d1fae5; color: #065f46; text-align: center; }
+        .alert.danger { background: #fee2e2; color: #991b1b; }
     </style>
 </head>
 <body>
+
+    <!-- Header -->
     <div class="header">
         <h1>License Database</h1>
-        <a href="/admin/logout" class="btn-logout">Logout</a>
+        <div>
+            <button onclick="downloadExcel()" class="btn btn-excel">📥 Export to Excel</button>
+            <a href="/admin/logout" class="btn btn-logout">Logout</a>
+        </div>
     </div>
 
-    <table>
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>License Key</th>
-                <th>Plan</th>
-                <th>Payment ID</th>
-                <th>Status</th>
-                <th>Created At</th>
-                <th>Used At</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for lic in licenses %}
-            <tr>
-                <td>{{ lic.id }}</td>
-                <td style="font-family: monospace;">{{ lic.license_key }}</td>
-                <td>{{ lic.plan_type.upper() }}</td>
-                <td>{{ lic.payment_id }}</td>
-                <td>
-                    {% if lic.is_used %}
-                        <span class="status-used">USED</span>
-                    {% else %}
-                        <span class="status-new">ACTIVE</span>
-                    {% endif %}
-                </td>
-                <td>{{ lic.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
-                <td>{{ lic.used_at.strftime('%Y-%m-%d %H:%M') if lic.used_at else '-' }}</td>
-            </tr>
+    <!-- Flash Messages (Success/Error) -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert {{ category }}">{{ message }}</div>
             {% endfor %}
-        </tbody>
-    </table>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Table -->
+    <div class="table-container">
+        <table id="licenseTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>License Key</th>
+                    <th>Plan</th>
+                    <th>Payment ID</th>
+                    <th>Status</th>
+                    <th>Created At</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for lic in licenses %}
+                <tr>
+                    <td>{{ lic.id }}</td>
+                    <td style="font-family: monospace;">{{ lic.license_key }}</td>
+                    <td>{{ lic.plan_type.upper() }}</td>
+                    <td>{{ lic.payment_id }}</td>
+                    <td>
+                        {% if lic.is_used %}
+                            <span class="status status-used">USED</span>
+                        {% else %}
+                            <span class="status status-new">ACTIVE</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ lic.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                    <td>
+                        <!-- Edit Button (Passes data to JS function) -->
+                        <button class="btn btn-edit" 
+                            onclick="openEditModal('{{ lic.id }}', '{{ lic.license_key }}', '{{ lic.plan_type }}', '{{ lic.payment_id }}', '{{ lic.is_used }}')">
+                            Edit
+                        </button>
+
+                        <!-- Delete Form -->
+                        <form action="/admin/delete_license/{{ lic.id }}" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this license?');">
+                            <button type="submit" class="btn btn-delete">Del</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Edit Modal -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeEditModal()">&times;</span>
+            <h2 style="margin-top:0; margin-bottom: 20px;">Edit License</h2>
+            
+            <form id="editForm" method="POST">
+                <div class="form-group">
+                    <label>License Key</label>
+                    <input type="text" name="license_key" id="editKey" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Plan Type</label>
+                    <select name="plan_type" id="editPlan">
+                        <option value="basic">basic</option>
+                        <option value="premium">premium</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Payment ID</label>
+                    <input type="text" name="payment_id" id="editPaymentId" required>
+                </div>
+
+                <div class="form-group" style="display: flex; align-items: center; gap: 10px;">
+                    <input type="checkbox" name="is_used" id="editIsUsed" style="width: auto;">
+                    <label for="editIsUsed" style="margin: 0; cursor: pointer;">Mark as Used</label>
+                </div>
+
+                <button type="submit" class="btn btn-save">Save Changes</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        // 1. Export to Excel (CSV)
+        function downloadExcel() {
+            let table = document.getElementById("licenseTable");
+            let rows = Array.from(table.rows);
+            let csvContent = "";
+
+            rows.forEach(function(row) {
+                let rowData = [];
+                let cols = Array.from(row.querySelectorAll("td, th"));
+                
+                // Skip the last column (Actions)
+                cols.slice(0, -1).forEach(function(col) {
+                    // Get text and remove extra whitespace
+                    let text = col.innerText.replace(/(\r\n|\n|\r)/gm, "").trim();
+                    rowData.push('"' + text + '"'); // Quote strings to handle commas
+                });
+                
+                csvContent += rowData.join(",") + "\r\n";
+            });
+
+            // Trigger Download
+            let blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+            let link = document.createElement("a");
+            let url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", "Zarqeen_Licenses.csv");
+            link.style.visibility = "hidden";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // 2. Edit Modal Logic
+        function openEditModal(id, key, plan, paymentId, isUsed) {
+            // Set Form Action URL
+            document.getElementById('editForm').action = "/admin/edit_license/" + id;
+            
+            // Populate Fields
+            document.getElementById('editKey').value = key;
+            document.getElementById('editPlan').value = plan;
+            document.getElementById('editPaymentId').value = paymentId;
+            
+            // Handle Checkbox (Python sends 'True' or 'False' as string)
+            document.getElementById('editIsUsed').checked = (isUsed === 'True');
+            
+            // Show Modal
+            document.getElementById('editModal').style.display = 'block';
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').style.display = 'none';
+        }
+
+        // Close modal if clicking outside box
+        window.onclick = function(event) {
+            let modal = document.getElementById('editModal');
+            if (event.target == modal) {
+                closeEditModal();
+            }
+        }
+    </script>
 </body>
 </html>
