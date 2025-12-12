@@ -1,21 +1,154 @@
 <!-- In the name of Allah -->
 <!doctype html>
 <html lang="en">
-<!-- NAVBAR -->
-    <header>
-        <div class="nav-container">
-            <div class="logo-area">
-                <img src="/static/logo.png" alt="Zarqeen" class="logo-img">
-                <span class="brand-name">Zarqeen Alif</span>
-            </div>
-            <nav class="nav-links">
-                <a href="#features">Features</a>
-                <a href="#pricing">Pricing</a>
-                <!-- Updated Link Below -->
-                <a href="https://drive.google.com/drive/folders/17O3vY4KYUzd7Rma4o8rp3j2iIrpqhJe9?usp=drive_link" target="_blank" class="nav-btn">Download</a>
-            </nav>
-        </div>
-    </header>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Zarqeen Alif - India's Best Value Invoicing Software</title>
+    
+    <!-- Google Fonts (Inter for modern look) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Razorpay SDK -->
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/static/header.png">
+
+    <style>
+        /* --- CSS VARIABLES --- */
+        :root {
+            --primary: #2563EB;       /* Trustworthy Blue */
+            --primary-dark: #1E40AF;
+            --accent: #F59E0B;        /* Gold for "Best Value" */
+            --bg-light: #F3F4F6;
+            --text-main: #111827;
+            --text-muted: #6B7280;
+            --white: #ffffff;
+            --success: #10B981;
+        }
+
+        /* --- GLOBAL RESET --- */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; scroll-behavior: smooth; }
+        body { background-color: var(--bg-light); color: var(--text-main); line-height: 1.6; }
+        a { text-decoration: none; }
+        ul { list-style: none; }
+
+        /* --- NAVBAR --- */
+        header { background: var(--white); box-shadow: 0 1px 3px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 1000; }
+        .nav-container { max-width: 1200px; margin: 0 auto; padding: 1rem 1.5rem; display: flex; justify-content: space-between; align-items: center; }
+        
+        .logo-area { display: flex; align-items: center; gap: 12px; }
+        .logo-img { height: 45px; width: auto; }
+        .brand-name { font-weight: 800; font-size: 1.35rem; color: var(--primary-dark); tracking: -0.5px; }
+        
+        .nav-links { display: flex; align-items: center; gap: 2rem; }
+        .nav-links a { color: var(--text-muted); font-weight: 600; font-size: 0.95rem; transition: color 0.2s; }
+        .nav-links a:hover { color: var(--primary); }
+        
+        .nav-btn { background: var(--primary); color: var(--white) !important; padding: 0.6rem 1.2rem; border-radius: 8px; transition: background 0.2s; }
+        .nav-btn:hover { background: var(--primary-dark); }
+
+        /* --- HERO SECTION --- */
+        .hero { 
+            text-align: center; 
+            padding: 5rem 1rem 4rem; 
+            background: linear-gradient(180deg, #FFFFFF 0%, #EFF6FF 100%);
+            border-bottom: 1px solid #DBEAFE;
+        }
+        
+        .tagline { 
+            display: inline-block; 
+            background: #DBEAFE; 
+            color: var(--primary-dark); 
+            padding: 6px 16px; 
+            border-radius: 50px; 
+            font-size: 0.85rem; 
+            font-weight: 700; 
+            margin-bottom: 1.5rem;
+            border: 1px solid #BFDBFE;
+        }
+        
+        .hero h1 { font-size: 3rem; font-weight: 800; color: #111827; line-height: 1.2; margin-bottom: 1.5rem; letter-spacing: -1px; }
+        .hero h1 span { color: var(--primary); }
+        
+        .hero p { font-size: 1.2rem; color: var(--text-muted); max-width: 700px; margin: 0 auto 2.5rem; }
+        
+        .cta-group { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; }
+        
+        .btn-lg { padding: 1rem 2rem; font-size: 1.1rem; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; transition: transform 0.2s; }
+        .btn-lg:hover { transform: translateY(-2px); }
+        
+        .btn-primary { background: var(--primary); color: var(--white); }
+        .btn-primary:hover { background: var(--primary-dark); }
+        
+        .btn-outline { background: var(--white); color: var(--text-main); border: 1px solid #D1D5DB; }
+        .btn-outline:hover { border-color: var(--text-main); background: #F9FAFB; }
+
+        .specs { font-size: 0.85rem; color: var(--text-muted); margin-top: 1.5rem; opacity: 0.8; }
+
+        /* --- FEATURES --- */
+        .features { max-width: 1200px; margin: -3rem auto 3rem; padding: 0 1.5rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 2rem; position: relative; z-index: 10; }
+        
+        .feature-card { background: var(--white); padding: 2rem; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); border: 1px solid #E5E7EB; transition: transform 0.2s; }
+        .feature-card:hover { transform: translateY(-5px); border-color: var(--primary); }
+        
+        .icon-box { font-size: 2rem; margin-bottom: 1rem; background: #EFF6FF; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; border-radius: 12px; }
+        
+        .feature-card h3 { font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem; color: #1F2937; }
+        .feature-card p { color: var(--text-muted); font-size: 0.95rem; }
+
+        /* --- PRICING --- */
+        .pricing-section { padding: 4rem 1rem; text-align: center; }
+        .section-title { font-size: 2.25rem; font-weight: 800; margin-bottom: 0.5rem; }
+        .section-subtitle { color: var(--text-muted); margin-bottom: 3rem; font-size: 1.1rem; }
+        
+        .pricing-grid { max-width: 1000px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; align-items: start; }
+        
+        .plan-card { background: var(--white); padding: 2.5rem; border-radius: 16px; border: 1px solid #E5E7EB; position: relative; display: flex; flex-direction: column; height: 100%; transition: 0.3s; }
+        
+        /* Popular Card Styling */
+        .plan-card.popular { border: 2px solid var(--primary); box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); transform: scale(1.05); z-index: 2; }
+        
+        .badge { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: var(--accent); color: #78350F; padding: 6px 16px; border-radius: 20px; font-size: 0.8rem; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase; }
+        
+        .plan-name { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem; color: #1F2937; }
+        .price { font-size: 3rem; font-weight: 800; color: #111827; }
+        .price span { font-size: 1rem; color: var(--text-muted); font-weight: 500; }
+        
+        .plan-desc { color: var(--text-muted); margin-bottom: 2rem; font-size: 0.95rem; border-bottom: 1px solid #E5E7EB; padding-bottom: 1.5rem; }
+        
+        .features-list { list-style: none; text-align: left; margin-bottom: 2rem; }
+        .features-list li { margin-bottom: 0.8rem; color: #374151; display: flex; align-items: center; gap: 10px; font-size: 0.95rem; }
+        .features-list li::before { content: "✓"; color: var(--success); font-weight: 800; }
+        
+        .btn-buy { width: 100%; padding: 1rem; border-radius: 8px; font-weight: 700; font-size: 1rem; cursor: pointer; border: none; transition: 0.2s; margin-top: auto; }
+        .btn-buy.primary { background: var(--primary); color: var(--white); box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2); }
+        .btn-buy.primary:hover { background: var(--primary-dark); box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3); }
+        .btn-buy.secondary { background: #E5E7EB; color: #374151; }
+        .btn-buy.secondary:hover { background: #D1D5DB; }
+
+        /* --- FOOTER --- */
+        footer { margin-top: 4rem; padding: 3rem 1rem; background: var(--white); border-top: 1px solid #E5E7EB; text-align: center; }
+        .footer-admin { margin-top: 20px; font-size: 0.8rem; color: #9CA3AF; }
+        .footer-admin a { color: inherit; }
+
+        /* --- MODAL (For Download) --- */
+        .modal { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); backdrop-filter: blur(4px); animation: fadeIn 0.2s; }
+        .modal-content { background-color: var(--white); margin: 15vh auto; padding: 2.5rem; border-radius: 12px; width: 90%; max-width: 450px; text-align: center; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); position: relative; }
+        
+        .key-box { background: #F3F4F6; padding: 1rem; border: 2px dashed #D1D5DB; border-radius: 8px; margin: 1.5rem 0; font-family: monospace; font-size: 1.1rem; color: var(--primary-dark); word-break: break-all; }
+        
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 768px) {
+            .nav-links { display: none; } /* Hide menu on mobile for simplicity */
+            .hero h1 { font-size: 2.25rem; }
+            .plan-card.popular { transform: none; }
+        }
+    </style>
+</head>
 
 <body>
 
@@ -23,110 +156,122 @@
     <header>
         <div class="nav-container">
             <div class="logo-area">
-                <!-- Ensure logo.png is in your static folder -->
                 <img src="/static/logo.png" alt="Zarqeen" class="logo-img">
                 <span class="brand-name">Zarqeen Alif</span>
             </div>
             <nav class="nav-links">
                 <a href="#features">Features</a>
                 <a href="#pricing">Pricing</a>
-                <a href="#download" class="nav-btn">Download</a>
+                <!-- Updated Drive Link -->
+                <a href="https://drive.google.com/drive/folders/17O3vY4KYUzd7Rma4o8rp3j2iIrpqhJe9?usp=drive_link" target="_blank" class="nav-btn">Download for Windows</a>
             </nav>
         </div>
     </header>
 
     <!-- HERO SECTION -->
     <section class="hero">
-        <h1>Invoicing Made Simple & Professional</h1>
-        <p>The fastest offline billing software for Indian businesses. GST Ready, Inventory Management, and Beautiful Invoices.</p>
+        <div class="tagline">🇮🇳 MADE FOR INDIA</div>
+        <h1>
+            India's Best Value <br>
+            <span>Invoicing Software</span>
+        </h1>
+        <p>
+            The easiest offline billing software. Automatically calculates taxes. 
+            Designed specifically for Indian businesses who want simplicity and speed.
+        </p>
         
         <div class="cta-group">
-            <!-- Link to your Google Drive or Installer -->
-            <a href="https://drive.google.com/drive/folders/17O3vY4KYUzd7Rma4o8rp3j2iIrpqhJe9?usp=drive_link" target="_blank" class="btn-primary">
-                Download for Windows
+            <a href="https://drive.google.com/drive/folders/17O3vY4KYUzd7Rma4o8rp3j2iIrpqhJe9?usp=drive_link" target="_blank">
+                <button class="btn-lg btn-primary">Download Free Trial</button>
             </a>
-            <a href="#pricing" class="btn-outline">View License Plans</a>
+            <a href="#pricing">
+                <button class="btn-lg btn-outline">See Best Prices</button>
+            </a>
         </div>
         
-        <div style="font-size: 0.85rem; opacity: 0.7; margin-top: 10px;">
-            v1.2.0 • Windows 10/11 • 200MB
+        <div class="specs">
+            v1.2.0 • Windows 10/11 • 200MB • No Internet Required
         </div>
     </section>
 
-    <!-- FEATURES GRID -->
+    <!-- FEATURES SECTION -->
     <section id="features" class="features">
+        <!-- Feature 1 -->
         <div class="feature-card">
-            <div class="feature-icon">⚡</div>
-            <h3>Lightning Fast</h3>
-            <p>Built with lightweight technology. Opens instantly and generates invoices in seconds without lag.</p>
+            <div class="icon-box">⚡</div>
+            <h3>Lightning Fast & Offline</h3>
+            <p>Generates bills in seconds. Works 100% offline so your data stays safe on your own computer. No cloud fees.</p>
         </div>
+        <!-- Feature 2 -->
         <div class="feature-card">
-            <div class="feature-icon">🛡️</div>
-            <h3>100% Offline & Secure</h3>
-            <p>No internet required. Your data stays on your computer. We value your business privacy.</p>
+            <div class="icon-box">📊</div>
+            <h3>Auto Tax Calculation</h3>
+            <p>Not GST-filing ready, but smart enough to automatically calculate SGST, CGST, and IGST based on your state settings.</p>
         </div>
+        <!-- Feature 3 -->
         <div class="feature-card">
-            <div class="feature-icon">🇮🇳</div>
-            <h3>Indian GST Ready</h3>
-            <p>Pre-configured with Indian State codes, IGST/CGST/SGST logic, and compliant formats.</p>
+            <div class="icon-box">🇮🇳</div>
+            <h3>Exclusively for India</h3>
+            <p>Built specifically for the Indian market. Pre-loaded with Indian State codes and currency formats.</p>
         </div>
     </section>
 
     <!-- PRICING SECTION -->
     <section id="pricing" class="pricing-section">
-        <h2 class="section-title">Simple, Transparent Pricing</h2>
-        <p class="section-subtitle">Start for free. Upgrade when you grow.</p>
+        <h2 class="section-title">Unbeatable Pricing</h2>
+        <p class="section-subtitle">The cheapest and most reliable software in India.</p>
 
         <div class="pricing-grid">
             
             <!-- Free Plan -->
             <div class="plan-card">
-                <div>
-                    <h3>Trial</h3>
+                <div class="plan-header">
+                    <div class="plan-name">Trial</div>
                     <div class="price">Free</div>
                     <p class="plan-desc">7 Days unlimited access</p>
-                    <ul class="features-list">
-                        <li>Unlimited Invoices</li>
-                        <li>Full Features</li>
-                        <li>No Credit Card required</li>
-                    </ul>
                 </div>
-                <a href="https://drive.google.com/drive/folders/17O3vY4KYUzd7Rma4o8rp3j2iIrpqhJe9?usp=drive_link" target="_blank">
-                    <button class="btn-plan secondary">Download Now</button>
+                <ul class="features-list">
+                    <li>Unlimited Invoices</li>
+                    <li>Full Features Access</li>
+                    <li>No Credit Card required</li>
+                </ul>
+                <a href="https://drive.google.com/drive/folders/17O3vY4KYUzd7Rma4o8rp3j2iIrpqhJe9?usp=drive_link" target="_blank" style="margin-top: auto;">
+                    <button class="btn-buy secondary">Download Now</button>
                 </a>
             </div>
 
             <!-- Basic Plan -->
             <div class="plan-card">
-                <div>
-                    <h3>Basic</h3>
+                <div class="plan-header">
+                    <div class="plan-name">Basic</div>
                     <div class="price">₹299<span>/year</span></div>
-                    <p class="plan-desc">Perfect for Freelancers</p>
-                    <ul class="features-list">
-                        <li>Valid for 1 Year</li>
-                        <li>2 Staff Accounts</li>
-                        <li>Unlimited Invoices</li>
-                        <li>Email Support</li>
-                    </ul>
+                    <p class="plan-desc">Cheaper than a pizza!</p>
                 </div>
-                <button class="btn-plan primary" onclick="buyPlan('basic')">Buy Basic License</button>
+                <ul class="features-list">
+                    <li>Valid for 1 Year</li>
+                    <li>2 Staff Accounts</li>
+                    <li>Automatic Tax Calc</li>
+                    <li>Email Support</li>
+                </ul>
+                <button class="btn-buy primary" onclick="buyPlan('basic')">Buy Basic License</button>
             </div>
 
             <!-- Premium Plan -->
             <div class="plan-card popular">
                 <div class="badge">BEST VALUE</div>
-                <div>
-                    <h3>Premium</h3>
+                <div class="plan-header">
+                    <div class="plan-name">Premium</div>
                     <div class="price">₹599<span>/3 years</span></div>
-                    <p class="plan-desc">For Growing Businesses</p>
-                    <ul class="features-list">
-                        <li>Valid for 3 Years</li>
-                        <li>Unlimited Staff</li>
-                        <li>Priority Support</li>
-                        <li>Free Updates</li>
-                    </ul>
+                    <p class="plan-desc">For smart business owners</p>
                 </div>
-                <button class="btn-plan primary" onclick="buyPlan('premium')">Buy Premium License</button>
+                <ul class="features-list">
+                    <li><strong>Valid for 3 Years</strong></li>
+                    <li>Unlimited Staff</li>
+                    <li>Priority Support</li>
+                    <li>Free Updates</li>
+                    <li>Automatic Tax Calc</li>
+                </ul>
+                <button class="btn-buy primary" onclick="buyPlan('premium')">Buy Premium License</button>
             </div>
 
         </div>
@@ -134,50 +279,47 @@
 
     <!-- FOOTER -->
     <footer>
-        <p>&copy; <span id="year"></span> Zarqeen Software Solutions. All rights reserved.</p>
-        <p style="margin-top:5px; font-size: 0.8rem;">
-            Support: <a href="mailto:zarqeensoftware@gmail.com" style="color:var(--primary)">zarqeensoftware@gmail.com</a>
+        <p>&copy; <span id="year"></span> Zarqeen Software Solutions. Made with ❤️ in India.</p>
+        <p style="margin-top:10px; font-size: 0.9rem;">
+            Support: <a href="mailto:zarqeensoftware@gmail.com" style="color:var(--primary); font-weight:600;">zarqeensoftware@gmail.com</a>
         </p>
-        <!-- Admin Link -->
-        <div style="margin-top: 15px; font-size: 0.75rem; opacity: 0.5;">
-            <a href="/admin/login" style="color: inherit; text-decoration: none;">Admin Login</a>
+        <div class="footer-admin">
+            <a href="/admin/login">Admin Login</a>
         </div>
     </footer>
 
     <!-- SUCCESS MODAL -->
     <div id="licenseModal" class="modal">
         <div class="modal-content">
-            <div style="font-size: 3rem; margin-bottom: 10px;">🎉</div>
-            <h2 style="color: var(--secondary)">Payment Successful!</h2>
-            <p style="color: var(--text-muted)">Here is your license key. Download and save it safely.</p>
+            <div style="font-size: 3.5rem; margin-bottom: 10px;">🎉</div>
+            <h2 style="color: #059669; font-weight: 800;">Payment Successful!</h2>
+            <p style="color: var(--text-muted); margin-top: 10px;">Here is your license file. Download and upload it inside the software.</p>
             
-            <!-- Dynamic Download Button Appears Here -->
             <div id="licenseKeyArea" class="key-box">Generating...</div>
             
-            <br>
-            <button class="btn-plan secondary" onclick="closeLicenseModal()">Close</button>
+            <button class="btn-buy secondary" onclick="closeLicenseModal()">Close</button>
         </div>
     </div>
 
-    <!-- JAVASCRIPT LOGIC -->
+    <!-- LOGIC -->
     <script>
         document.getElementById('year').textContent = new Date().getFullYear();
         const RAZORPAY_KEY_ID = "{{ key_id }}"; 
 
-        // Function to Close Modal and Refresh Page
+        // Close Modal & Refresh
         function closeLicenseModal() {
             document.getElementById('licenseModal').style.display = 'none';
             window.location.reload(); 
         }
 
         async function buyPlan(planType) {
-            // 1. Visual feedback (Change cursor)
+            // Visual feedback
             document.body.style.cursor = 'wait';
             const btns = document.querySelectorAll('button');
             btns.forEach(b => b.disabled = true);
 
             try {
-                // 2. Create Order on Server
+                // 1. Create Order
                 const res = await fetch('/create_order', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
@@ -186,22 +328,22 @@
                 const orderData = await res.json();
 
                 if(orderData.error) { 
-                    alert("Error creating order: " + orderData.error); 
+                    alert("Order Error: " + orderData.error); 
                     resetUI();
                     return; 
                 }
 
-                // 3. Open Razorpay
+                // 2. Razorpay Options
                 const options = {
                     "key": RAZORPAY_KEY_ID,
                     "amount": orderData.amount,
                     "currency": "INR",
-                    "name": "Zarqeen Software",
+                    "name": "Zarqeen Alif",
                     "description": `License: ${planType.toUpperCase()}`,
                     "order_id": orderData.id,
-                    "theme": { "color": "#4F46E5" },
+                    "theme": { "color": "#2563EB" }, // Blue theme
                     "handler": async function (response){
-                        // 4. Payment Success -> Verify on Server
+                        // 3. Verify Payment
                         try {
                             const verifyRes = await fetch('/verify_payment', {
                                 method: 'POST',
@@ -216,18 +358,18 @@
                             const result = await verifyRes.json();
                             
                             if(result.success) {
-                                // 5. Generate File Download
+                                // 4. Prepare Download
                                 const licenseKey = result.license_key;
                                 const blob = new Blob([licenseKey], { type: "text/plain" });
                                 const url = window.URL.createObjectURL(blob);
                                 
                                 const keyArea = document.getElementById('licenseKeyArea');
-                                keyArea.innerHTML = ""; // Clear "Generating..." text
+                                keyArea.innerHTML = ""; 
                                 
                                 const downloadBtn = document.createElement("a");
                                 downloadBtn.href = url;
-                                downloadBtn.download = "license.zarqeen"; // File name
-                                downloadBtn.className = "btn-plan primary";
+                                downloadBtn.download = "license.zarqeen"; 
+                                downloadBtn.className = "btn-buy primary";
                                 downloadBtn.style.display = "inline-block";
                                 downloadBtn.style.textDecoration = "none";
                                 downloadBtn.innerText = "⬇ Download License File";
@@ -236,21 +378,18 @@
                                 
                                 // Show Modal
                                 document.getElementById('licenseModal').style.display = 'block';
-
                             } else {
-                                alert('Payment verification failed.');
+                                alert('Verification failed. Contact support.');
                             }
                         } catch (e) {
                             console.error(e);
-                            alert("Verification error.");
+                            alert("Verification error. Check internet.");
                         } finally {
                             resetUI();
                         }
                     },
                     "modal": {
-                        "ondismiss": function(){
-                            resetUI();
-                        }
+                        "ondismiss": function(){ resetUI(); }
                     }
                 };
                 
@@ -259,7 +398,7 @@
 
             } catch(e) {
                 console.error(e);
-                alert("Connection error. Please try again.");
+                alert("Connection error.");
                 resetUI();
             }
         }
