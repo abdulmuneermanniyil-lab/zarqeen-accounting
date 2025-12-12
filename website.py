@@ -212,5 +212,47 @@ def send_otp_remote():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
+# --- ADD THESE NEW ROUTES TO website.py ---
+
+@app.route('/admin/delete_license/<int:id>', methods=['POST'])
+@login_required
+def delete_license(id):
+    lic = License.query.get_or_404(id)
+    try:
+        db.session.delete(lic)
+        db.session.commit()
+        flash('License deleted successfully', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error deleting license: {str(e)}', 'danger')
+    return redirect(url_for('dashboard'))
+
+@app.route('/admin/edit_license/<int:id>', methods=['POST'])
+@login_required
+def edit_license(id):
+    lic = License.query.get_or_404(id)
+    try:
+        # Update fields from the form
+        lic.license_key = request.form.get('license_key')
+        lic.plan_type = request.form.get('plan_type')
+        lic.payment_id = request.form.get('payment_id')
+        
+        # specific logic for checkbox
+        is_used_val = request.form.get('is_used')
+        lic.is_used = True if is_used_val == 'on' else False
+        
+        # If unchecking "Used", clear the used_at date
+        if not lic.is_used:
+            lic.used_at = None
+            
+        db.session.commit()
+        flash('License updated successfully', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error updating license: {str(e)}', 'danger')
+    return redirect(url_for('dashboard'))
+
+
+
 if __name__ == '__main__':
     app.run(debug=True)
