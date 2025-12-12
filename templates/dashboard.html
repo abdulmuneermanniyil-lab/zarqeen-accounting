@@ -10,46 +10,34 @@
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); flex-wrap: wrap; gap: 10px; }
         h1 { margin: 0; font-size: 1.5rem; color: #4F46E5; }
         
-        /* Controls Area (Search + Buttons) */
+        /* Controls */
         .controls { display: flex; gap: 10px; align-items: center; }
-        
-        /* Search Input */
-        .search-input {
-            padding: 8px 12px;
-            border: 1px solid #d1d5db;
-            border-radius: 4px;
-            width: 250px;
-            font-size: 0.9rem;
-        }
+        .search-input { padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 4px; width: 250px; font-size: 0.9rem; }
 
         /* Buttons */
-        .btn { padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; text-decoration: none; font-size: 0.9rem; font-weight: 500; display: inline-block; }
-        .btn-logout { background: #dc2626; color: white; }
-        .btn-excel { background: #10B981; color: white; }
-        .btn-edit { background: #3b82f6; color: white; padding: 5px 10px; font-size: 0.8rem; }
-        .btn-delete { background: #ef4444; color: white; padding: 5px 10px; font-size: 0.8rem; }
+        .btn { padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; text-decoration: none; font-size: 0.85rem; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 4px; transition: opacity 0.2s; }
+        .btn:hover { opacity: 0.9; }
+
+        .btn-logout { background: #dc2626; color: white; padding: 8px 16px; }
+        .btn-excel { background: #10B981; color: white; padding: 8px 16px; }
+        
+        /* Action Buttons */
+        .btn-download { background: #8B5CF6; color: white; margin-right: 4px; } /* Purple for Download */
+        .btn-edit { background: #3b82f6; color: white; margin-right: 4px; }    /* Blue for Edit */
+        .btn-delete { background: #ef4444; color: white; }                        /* Red for Delete */
         
         /* Table */
         .table-container { overflow-x: auto; background: white; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        table { width: 100%; border-collapse: collapse; min-width: 800px; }
+        table { width: 100%; border-collapse: collapse; min-width: 900px; }
         
         th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #e5e7eb; }
         
-        /* Sortable Headers */
         th { 
-            background-color: #f9fafb; 
-            font-weight: 600; 
-            text-transform: uppercase; 
-            font-size: 0.75rem; 
-            color: #6b7280; 
-            cursor: pointer; /* Shows hand icon */
-            user-select: none; /* Prevents text selection while clicking */
-            position: relative;
+            background-color: #f9fafb; font-weight: 600; text-transform: uppercase; font-size: 0.75rem; color: #6b7280; 
+            cursor: pointer; user-select: none; 
         }
-        
         th:hover { background-color: #e5e7eb; color: #111827; }
 
-        /* Sort Arrows */
         th.sort-asc::after { content: " ▲"; font-size: 0.7rem; color: #4F46E5; }
         th.sort-desc::after { content: " ▼"; font-size: 0.7rem; color: #4F46E5; }
         
@@ -60,7 +48,7 @@
         .status-used { background: #fee2e2; color: #991b1b; }
         .status-new { background: #d1fae5; color: #065f46; }
 
-        /* Modal Styles */
+        /* Modal */
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); }
         .modal-content { background-color: white; margin: 10% auto; padding: 25px; border-radius: 8px; width: 400px; position: relative; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
         .close-modal { position: absolute; top: 10px; right: 15px; font-size: 1.5rem; cursor: pointer; color: #6b7280; }
@@ -68,7 +56,8 @@
         .form-group { margin-bottom: 15px; }
         .form-group label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.9rem; }
         .form-group input, .form-group select { width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px; }
-        .btn-save { width: 100%; background: #4F46E5; color: white; margin-top: 10px; }
+        .btn-save { width: 100%; background: #4F46E5; color: white; margin-top: 10px; padding: 10px; }
+        
         .alert { padding: 10px; margin-bottom: 20px; border-radius: 4px; background: #d1fae5; color: #065f46; text-align: center; }
         .alert.danger { background: #fee2e2; color: #991b1b; }
     </style>
@@ -80,15 +69,13 @@
         <h1>License Database</h1>
         
         <div class="controls">
-            <!-- SEARCH BAR -->
             <input type="text" id="searchInput" onkeyup="filterTable()" class="search-input" placeholder="🔍 Search keys, names, IDs...">
-            
             <button onclick="downloadExcel()" class="btn btn-excel">📥 Export Excel</button>
             <a href="/admin/logout" class="btn btn-logout">Logout</a>
         </div>
     </div>
 
-    <!-- Flash Messages -->
+    <!-- Messages -->
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             {% for category, message in messages %}
@@ -102,14 +89,13 @@
         <table id="licenseTable">
             <thead>
                 <tr>
-                    <!-- Added onclick events for sorting -->
                     <th onclick="sortTable(0)">ID</th>
                     <th onclick="sortTable(1)">License Key</th>
                     <th onclick="sortTable(2)">Plan</th>
                     <th onclick="sortTable(3)">Payment ID</th>
                     <th onclick="sortTable(4)">Status</th>
                     <th onclick="sortTable(5)">Created At</th>
-                    <th>Actions</th> <!-- No sort on actions -->
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -126,15 +112,23 @@
                             <span class="status status-new">ACTIVE</span>
                         {% endif %}
                     </td>
-                    <!-- Store raw date for sorting logic if needed, but text sort usually works for YYYY-MM-DD -->
                     <td>{{ lic.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
                     <td>
-                        <button class="btn btn-edit" 
-                            onclick="openEditModal('{{ lic.id }}', '{{ lic.license_key }}', '{{ lic.plan_type }}', '{{ lic.payment_id }}', '{{ lic.is_used }}')">
-                            Edit
+                        <!-- 1. DOWNLOAD BUTTON (New) -->
+                        <button class="btn btn-download" title="Download File" 
+                            onclick="downloadSingleFile('{{ lic.license_key }}')">
+                            ⬇
                         </button>
+
+                        <!-- 2. EDIT BUTTON -->
+                        <button class="btn btn-edit" title="Edit"
+                            onclick="openEditModal('{{ lic.id }}', '{{ lic.license_key }}', '{{ lic.plan_type }}', '{{ lic.payment_id }}', '{{ lic.is_used }}')">
+                            ✎
+                        </button>
+
+                        <!-- 3. DELETE BUTTON -->
                         <form action="/admin/delete_license/{{ lic.id }}" method="POST" style="display:inline;" onsubmit="return confirm('Delete this license?');">
-                            <button type="submit" class="btn btn-delete">Del</button>
+                            <button type="submit" class="btn btn-delete" title="Delete">✖</button>
                         </form>
                     </td>
                 </tr>
@@ -176,25 +170,43 @@
 
     <!-- JavaScript -->
     <script>
-        // 1. SEARCH FUNCTION
+        // --- NEW: DOWNLOAD SINGLE FILE FUNCTION ---
+        function downloadSingleFile(keyString) {
+            // Clean the key string just in case
+            const cleanKey = keyString.trim();
+            
+            // Create a blob (file-like object)
+            const blob = new Blob([cleanKey], { type: "text/plain" });
+            const url = window.URL.createObjectURL(blob);
+            
+            // Create invisible link and click it
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "license.zarqeen"; // Standard filename
+            document.body.appendChild(a);
+            a.click();
+            
+            // Cleanup
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        }
+
+        // --- SEARCH FUNCTION ---
         function filterTable() {
             let input = document.getElementById("searchInput");
             let filter = input.value.toUpperCase();
             let table = document.getElementById("licenseTable");
             let tr = table.getElementsByTagName("tr");
 
-            // Loop through all table rows (skipping header)
             for (let i = 1; i < tr.length; i++) {
                 let showRow = false;
                 let tds = tr[i].getElementsByTagName("td");
-                
-                // Check all columns in the row
-                for(let j = 0; j < tds.length - 1; j++) { // -1 to skip Actions column
+                for(let j = 0; j < tds.length - 1; j++) {
                     if (tds[j]) {
                         let txtValue = tds[j].textContent || tds[j].innerText;
                         if (txtValue.toUpperCase().indexOf(filter) > -1) {
                             showRow = true;
-                            break; // Found a match in this row
+                            break;
                         }
                     }
                 }
@@ -202,14 +214,13 @@
             }
         }
 
-        // 2. SORT FUNCTION
+        // --- SORT FUNCTION ---
         function sortTable(n) {
             var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
             table = document.getElementById("licenseTable");
             switching = true;
-            dir = "asc"; // Set the sorting direction to ascending:
+            dir = "asc"; 
             
-            // Remove arrows from other headers
             var headers = table.getElementsByTagName("th");
             for (var h = 0; h < headers.length; h++) {
                 headers[h].classList.remove("sort-asc", "sort-desc");
@@ -218,18 +229,13 @@
             while (switching) {
                 switching = false;
                 rows = table.rows;
-                
-                // Loop through all table rows (except the first, which contains table headers):
                 for (i = 1; i < (rows.length - 1); i++) {
                     shouldSwitch = false;
-                    
                     x = rows[i].getElementsByTagName("TD")[n];
                     y = rows[i + 1].getElementsByTagName("TD")[n];
                     
                     var xContent = x.innerHTML.toLowerCase();
                     var yContent = y.innerHTML.toLowerCase();
-
-                    // Check if numeric (for ID column)
                     var isNum = !isNaN(parseFloat(xContent)) && isFinite(xContent) && !isNaN(parseFloat(yContent)) && isFinite(yContent);
 
                     if (dir == "asc") {
@@ -246,7 +252,6 @@
                         }
                     }
                 }
-                
                 if (shouldSwitch) {
                     rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
                     switching = true;
@@ -258,19 +263,17 @@
                     }
                 }
             }
-            
-            // Add arrow class to current header
             headers[n].classList.add(dir == "asc" ? "sort-asc" : "sort-desc");
         }
 
-        // 3. EXPORT EXCEL
+        // --- EXPORT EXCEL ---
         function downloadExcel() {
             let table = document.getElementById("licenseTable");
             let rows = Array.from(table.rows);
             let csvContent = "";
 
             rows.forEach(function(row) {
-                if (row.style.display === 'none') return; // Don't export hidden rows (search results)
+                if (row.style.display === 'none') return;
                 let rowData = [];
                 let cols = Array.from(row.querySelectorAll("td, th"));
                 cols.slice(0, -1).forEach(function(col) {
@@ -290,7 +293,7 @@
             document.body.removeChild(link);
         }
 
-        // 4. MODAL LOGIC
+        // --- MODAL LOGIC ---
         function openEditModal(id, key, plan, paymentId, isUsed) {
             document.getElementById('editForm').action = "/admin/edit_license/" + id;
             document.getElementById('editKey').value = key;
