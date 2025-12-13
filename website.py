@@ -241,5 +241,46 @@ def send_otp_remote():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
+from flask import jsonify
+
+# =========================================================
+#  API ROUTE: DESKTOP APP UPDATE CHECK
+# =========================================================
+@app.route('/api/version_check', methods=['GET'])
+def version_check():
+    """
+    This endpoint is called by the Desktop App to check for updates.
+    Change the values below when you release a new version.
+    """
+    
+    # 1. SETTINGS FOR THE NEW VERSION
+    # Make sure this is HIGHER than the version in the user's app.py
+    latest_version = "1.3.0" 
+    
+    # 2. DOWNLOAD LINK
+    # Where should the user go to download the .exe or .zip?
+    # This can be a Google Drive link, Dropbox, or a route on this website.
+    download_link = "https://zarqeen.onrender.com/downloads/setup_v1.3.0.exe"
+    
+    # 3. MARKETING TEXT (The Advertisement)
+    # This is what appears in the modal popup on the desktop app.
+    headline_text = "Big Performance Update!"
+    feature_list = [
+        "Faster Invoice Generation",
+        "New Database Backup & Restore",
+        "Staff Management Limits Fixed",
+        "Critical Security Patches"
+    ]
+
+    # 4. RETURN JSON RESPONSE
+    return jsonify({
+        'version': latest_version,
+        'download_url': download_link,
+        'headline': headline_text,
+        'features': feature_list,
+        # Optional: Add an image URL if you implemented the image logic
+        'ad_image': '' 
+    })
+
 if __name__ == '__main__':
     app.run(debug=True)
