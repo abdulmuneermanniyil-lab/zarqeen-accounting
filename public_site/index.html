@@ -245,65 +245,86 @@
     </div>
 
     <!-- LOGIC -->
+    <!-- LOGIC -->
     <script>
+        // 1. GLOBAL VARIABLES (Must be at the top)
         document.getElementById('year').textContent = new Date().getFullYear();
+        let RAZORPAY_KEY_ID = null; 
 
-        // ========================================================
-        // ⚠️ CRITICAL: REPLACE THIS URL AFTER DEPLOYING BACKEND
+        // ⚠️ REPLACE THIS with your actual Backend URL from Render
         // Example: "https://zarqeen-backend.onrender.com"
-        // ========================================================
         const BACKEND_URL = "https://zarqeen-backend.onrender.com"; 
 
-        // Update Admin Link
-        document.getElementById('adminLink').href = `${BACKEND_URL}/admin/login`;
+        // Update Admin Link automatically
+        const adminLink = document.getElementById('adminLink');
+        if(adminLink) {
+            adminLink.href = `${BACKEND_URL}/admin/login`;
+        }
 
-        let RAZORPAY_KEY_ID = null;
-
-        // 1. Fetch Configuration on Load
+        // 2. Fetch Configuration on Page Load
         async function fetchConfig() {
             try {
                 const res = await fetch(`${BACKEND_URL}/api/get-config`);
                 const data = await res.json();
-                RAZORPAY_KEY_ID = data.key_id;
-                console.log("System Ready");
+                
+                // Update the global variable
+                RAZORPAY_KEY_ID = data.key_id; 
+                console.log("System Ready. Key loaded.");
             } catch (error) {
                 console.error("Error connecting to backend:", error);
             }
         }
+        
+        // Run immediately
         fetchConfig();
 
+        // 3. UI Functions
         function closeLicenseModal() {
             document.getElementById('licenseModal').style.display = 'none';
             window.location.reload(); 
         }
 
+        function resetUI() {
+            document.body.style.cursor = 'default';
+            const btns = document.querySelectorAll('button');
+            btns.forEach(b => b.disabled = false);
+        }
+
+        // 4. Buy Logic
         async function buyPlan(planType) {
+            // Check if key is loaded
             if (!RAZORPAY_KEY_ID) {
                 alert("Connecting to server... please wait 2 seconds and try again.");
-                await fetchConfig();
+                await fetchConfig(); // Try fetching again
                 return;
             }
 
+            // Visual feedback
             document.body.style.cursor = 'wait';
             const btns = document.querySelectorAll('button');
             btns.forEach(b => b.disabled = true);
 
             try {
-                // 2. Create Order via Backend API
+                // A. Create Order via Backend
                 const res = await fetch(`${BACKEND_URL}/create_order`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({ plan: planType })
                 });
+                
+                if (!res.ok) {
+                    throw new Error(`Server error: ${res.status}`);
+                }
+
                 const orderData = await res.json();
 
                 if(orderData.error) { 
                     throw new Error(orderData.error);
                 }
 
-                // 3. Open Razorpay
+                // B. Open Razorpay
                 const options = {
-                    "key": RAZORPAY_KEY_ID,
+                    "key": RAZORPAY_KEY_ID, // Uses the global variable
                     "amount": orderData.amount,
                     "currency": "INR",
                     "name": "Zarqeen Alif",
@@ -311,7 +332,7 @@
                     "order_id": orderData.id,
                     "theme": { "color": "#2563EB" }, 
                     "handler": async function (response){
-                        // 4. Verify Payment via Backend API
+                        // C. Verify Payment via Backend
                         try {
                             const verifyRes = await fetch(`${BACKEND_URL}/verify_payment`, {
                                 method: 'POST',
@@ -326,7 +347,7 @@
                             const result = await verifyRes.json();
                             
                             if(result.success) {
-                                // 5. Download Logic
+                                // D. Download Logic
                                 const licenseKey = result.license_key;
                                 const blob = new Blob([licenseKey], { type: "text/plain" });
                                 const url = window.URL.createObjectURL(blob);
@@ -368,12 +389,6 @@
                 alert("Error: " + e.message);
                 resetUI();
             }
-        }
-
-        function resetUI() {
-            document.body.style.cursor = 'default';
-            const btns = document.querySelectorAll('button');
-            btns.forEach(b => b.disabled = false);
         }
     </script>
 </body>
