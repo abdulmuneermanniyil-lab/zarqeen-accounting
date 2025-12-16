@@ -6,7 +6,7 @@ from datetime import datetime
 from functools import wraps
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
-from flask_cors import CORS  # <--- CRITICAL FOR SEPARATE FRONTEND
+from flask_cors import CORS
 from flask_mail import Mail, Message
 
 app = Flask(__name__)
@@ -40,7 +40,7 @@ app.config['MAIL_DEFAULT_SENDER'] = ('Zarqeen Support', 'zarqeensoftware@gmail.c
 
 # --- 2. ENABLE CORS ---
 # This allows your Static Site (zarqeen.in) to fetch data from this Backend
-CORS(app) 
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 mail = Mail(app)
 db = SQLAlchemy(app)
