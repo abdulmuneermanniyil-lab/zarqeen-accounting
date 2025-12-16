@@ -6,144 +6,88 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Zarqeen Alif - India's Best Value Invoicing Software</title>
     
-    <!-- Google Fonts (Inter for modern look) -->
+    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
     
     <!-- Razorpay SDK -->
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="/static/header.png">
+    <link rel="icon" type="image/png" href="static/header.png">
 
     <style>
-        /* --- CSS VARIABLES --- */
+        /* (Keep your existing CSS exactly as it was) */
         :root {
-            --primary: #2563EB;       /* Trustworthy Blue */
+            --primary: #2563EB;
             --primary-dark: #1E40AF;
-            --accent: #F59E0B;        /* Gold for "Best Value" */
+            --accent: #F59E0B;
             --bg-light: #F3F4F6;
             --text-main: #111827;
             --text-muted: #6B7280;
             --white: #ffffff;
             --success: #10B981;
         }
-
-        /* --- GLOBAL RESET --- */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; scroll-behavior: smooth; }
         body { background-color: var(--bg-light); color: var(--text-main); line-height: 1.6; }
         a { text-decoration: none; }
         ul { list-style: none; }
-
-        /* --- NAVBAR --- */
         header { background: var(--white); box-shadow: 0 1px 3px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 1000; }
         .nav-container { max-width: 1200px; margin: 0 auto; padding: 1rem 1.5rem; display: flex; justify-content: space-between; align-items: center; }
-        
         .logo-area { display: flex; align-items: center; gap: 12px; }
         .logo-img { height: 45px; width: auto; }
         .brand-name { font-weight: 800; font-size: 1.35rem; color: var(--primary-dark); tracking: -0.5px; }
-        
         .nav-links { display: flex; align-items: center; gap: 2rem; }
         .nav-links a { color: var(--text-muted); font-weight: 600; font-size: 0.95rem; transition: color 0.2s; }
         .nav-links a:hover { color: var(--primary); }
-        
         .nav-btn { background: var(--primary); color: var(--white) !important; padding: 0.6rem 1.2rem; border-radius: 8px; transition: background 0.2s; }
         .nav-btn:hover { background: var(--primary-dark); }
-
-        /* --- HERO SECTION --- */
-        .hero { 
-            text-align: center; 
-            padding: 5rem 1rem 4rem; 
-            background: linear-gradient(180deg, #FFFFFF 0%, #EFF6FF 100%);
-            border-bottom: 1px solid #DBEAFE;
-        }
-        
-        .tagline { 
-            display: inline-block; 
-            background: #DBEAFE; 
-            color: var(--primary-dark); 
-            padding: 6px 16px; 
-            border-radius: 50px; 
-            font-size: 0.85rem; 
-            font-weight: 700; 
-            margin-bottom: 1.5rem;
-            border: 1px solid #BFDBFE;
-        }
-        
+        .hero { text-align: center; padding: 5rem 1rem 4rem; background: linear-gradient(180deg, #FFFFFF 0%, #EFF6FF 100%); border-bottom: 1px solid #DBEAFE; }
+        .tagline { display: inline-block; background: #DBEAFE; color: var(--primary-dark); padding: 6px 16px; border-radius: 50px; font-size: 0.85rem; font-weight: 700; margin-bottom: 1.5rem; border: 1px solid #BFDBFE; }
         .hero h1 { font-size: 3rem; font-weight: 800; color: #111827; line-height: 1.2; margin-bottom: 1.5rem; letter-spacing: -1px; }
         .hero h1 span { color: var(--primary); }
-        
         .hero p { font-size: 1.2rem; color: var(--text-muted); max-width: 700px; margin: 0 auto 2.5rem; }
-        
         .cta-group { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; }
-        
         .btn-lg { padding: 1rem 2rem; font-size: 1.1rem; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; transition: transform 0.2s; }
         .btn-lg:hover { transform: translateY(-2px); }
-        
         .btn-primary { background: var(--primary); color: var(--white); }
         .btn-primary:hover { background: var(--primary-dark); }
-        
         .btn-outline { background: var(--white); color: var(--text-main); border: 1px solid #D1D5DB; }
         .btn-outline:hover { border-color: var(--text-main); background: #F9FAFB; }
-
         .specs { font-size: 0.85rem; color: var(--text-muted); margin-top: 1.5rem; opacity: 0.8; }
-
-        /* --- FEATURES --- */
         .features { max-width: 1200px; margin: -3rem auto 3rem; padding: 0 1.5rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 2rem; position: relative; z-index: 10; }
-        
         .feature-card { background: var(--white); padding: 2rem; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); border: 1px solid #E5E7EB; transition: transform 0.2s; }
         .feature-card:hover { transform: translateY(-5px); border-color: var(--primary); }
-        
         .icon-box { font-size: 2rem; margin-bottom: 1rem; background: #EFF6FF; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; border-radius: 12px; }
-        
         .feature-card h3 { font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem; color: #1F2937; }
         .feature-card p { color: var(--text-muted); font-size: 0.95rem; }
-
-        /* --- PRICING --- */
         .pricing-section { padding: 4rem 1rem; text-align: center; }
         .section-title { font-size: 2.25rem; font-weight: 800; margin-bottom: 0.5rem; }
         .section-subtitle { color: var(--text-muted); margin-bottom: 3rem; font-size: 1.1rem; }
-        
         .pricing-grid { max-width: 1000px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; align-items: start; }
-        
         .plan-card { background: var(--white); padding: 2.5rem; border-radius: 16px; border: 1px solid #E5E7EB; position: relative; display: flex; flex-direction: column; height: 100%; transition: 0.3s; }
-        
-        /* Popular Card Styling */
         .plan-card.popular { border: 2px solid var(--primary); box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); transform: scale(1.05); z-index: 2; }
-        
         .badge { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: var(--accent); color: #78350F; padding: 6px 16px; border-radius: 20px; font-size: 0.8rem; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase; }
-        
         .plan-name { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem; color: #1F2937; }
         .price { font-size: 3rem; font-weight: 800; color: #111827; }
         .price span { font-size: 1rem; color: var(--text-muted); font-weight: 500; }
-        
         .plan-desc { color: var(--text-muted); margin-bottom: 2rem; font-size: 0.95rem; border-bottom: 1px solid #E5E7EB; padding-bottom: 1.5rem; }
-        
         .features-list { list-style: none; text-align: left; margin-bottom: 2rem; }
         .features-list li { margin-bottom: 0.8rem; color: #374151; display: flex; align-items: center; gap: 10px; font-size: 0.95rem; }
         .features-list li::before { content: "✓"; color: var(--success); font-weight: 800; }
-        
         .btn-buy { width: 100%; padding: 1rem; border-radius: 8px; font-weight: 700; font-size: 1rem; cursor: pointer; border: none; transition: 0.2s; margin-top: auto; }
         .btn-buy.primary { background: var(--primary); color: var(--white); box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2); }
         .btn-buy.primary:hover { background: var(--primary-dark); box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3); }
         .btn-buy.secondary { background: #E5E7EB; color: #374151; }
         .btn-buy.secondary:hover { background: #D1D5DB; }
-
-        /* --- FOOTER --- */
         footer { margin-top: 4rem; padding: 3rem 1rem; background: var(--white); border-top: 1px solid #E5E7EB; text-align: center; }
         .footer-admin { margin-top: 20px; font-size: 0.8rem; color: #9CA3AF; }
         .footer-admin a { color: inherit; }
-
-        /* --- MODAL (For Download) --- */
         .modal { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); backdrop-filter: blur(4px); animation: fadeIn 0.2s; }
         .modal-content { background-color: var(--white); margin: 15vh auto; padding: 2.5rem; border-radius: 12px; width: 90%; max-width: 450px; text-align: center; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); position: relative; }
-        
         .key-box { background: #F3F4F6; padding: 1rem; border: 2px dashed #D1D5DB; border-radius: 8px; margin: 1.5rem 0; font-family: monospace; font-size: 1.1rem; color: var(--primary-dark); word-break: break-all; }
-        
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-        /* --- RESPONSIVE --- */
         @media (max-width: 768px) {
-            .nav-links { display: none; } /* Hide menu on mobile for simplicity */
+            .nav-links { display: none; }
             .hero h1 { font-size: 2.25rem; }
             .plan-card.popular { transform: none; }
         }
@@ -156,13 +100,12 @@
     <header>
         <div class="nav-container">
             <div class="logo-area">
-                <img src="/static/logo.png" alt="Zarqeen" class="logo-img">
+                <img src="static/logo.png" alt="Zarqeen" class="logo-img">
                 <span class="brand-name">Zarqeen Alif</span>
             </div>
             <nav class="nav-links">
                 <a href="#features">Features</a>
                 <a href="#pricing">Pricing</a>
-                <!-- Updated Drive Link -->
                 <a href="https://drive.google.com/drive/folders/17O3vY4KYUzd7Rma4o8rp3j2iIrpqhJe9?usp=drive_link" target="_blank" class="nav-btn">Download for Windows</a>
             </nav>
         </div>
@@ -196,19 +139,16 @@
 
     <!-- FEATURES SECTION -->
     <section id="features" class="features">
-        <!-- Feature 1 -->
         <div class="feature-card">
             <div class="icon-box">⚡</div>
             <h3>Lightning Fast & Offline</h3>
             <p>Generates bills in seconds. Works 100% offline so your data stays safe on your own computer. No cloud fees.</p>
         </div>
-        <!-- Feature 2 -->
         <div class="feature-card">
             <div class="icon-box">📊</div>
             <h3>Auto Tax Calculation</h3>
             <p>Not GST-filing ready, but smart enough to automatically calculate SGST, CGST, and IGST based on your state settings.</p>
         </div>
-        <!-- Feature 3 -->
         <div class="feature-card">
             <div class="icon-box">🇮🇳</div>
             <h3>Exclusively for India</h3>
@@ -285,7 +225,8 @@
             Support: <a href="mailto:zarqeensoftware@gmail.com" style="color:var(--primary); font-weight:600;">zarqeensoftware@gmail.com</a>
         </p>
         <div class="footer-admin">
-            <a href="/admin/login">Admin Login</a>
+            <!-- IMPORTANT: Point this to your backend URL -->
+            <a href="#" id="adminLink">Admin Login</a>
         </div>
     </footer>
 
@@ -305,23 +246,50 @@
     <!-- LOGIC -->
     <script>
         document.getElementById('year').textContent = new Date().getFullYear();
-        const RAZORPAY_KEY_ID = "{{ key_id }}"; 
 
-        // Close Modal & Refresh
+        // ========================================================
+        // ⚠️ CRITICAL: REPLACE THIS URL AFTER DEPLOYING BACKEND
+        // Example: "https://zarqeen-backend.onrender.com"
+        // ========================================================
+        const BACKEND_URL = "https://zarqeen-backend.onrender.com"; 
+
+        // Update Admin Link
+        document.getElementById('adminLink').href = `${BACKEND_URL}/admin/login`;
+
+        let RAZORPAY_KEY_ID = null;
+
+        // 1. Fetch Configuration on Load
+        async function fetchConfig() {
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/get-config`);
+                const data = await res.json();
+                RAZORPAY_KEY_ID = data.key_id;
+                console.log("System Ready");
+            } catch (error) {
+                console.error("Error connecting to backend:", error);
+            }
+        }
+        fetchConfig();
+
         function closeLicenseModal() {
             document.getElementById('licenseModal').style.display = 'none';
             window.location.reload(); 
         }
 
         async function buyPlan(planType) {
-            // Visual feedback
+            if (!RAZORPAY_KEY_ID) {
+                alert("Connecting to server... please wait 2 seconds and try again.");
+                await fetchConfig();
+                return;
+            }
+
             document.body.style.cursor = 'wait';
             const btns = document.querySelectorAll('button');
             btns.forEach(b => b.disabled = true);
 
             try {
-                // 1. Create Order
-                const res = await fetch('/create_order', {
+                // 2. Create Order via Backend API
+                const res = await fetch(`${BACKEND_URL}/create_order`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({ plan: planType })
@@ -329,12 +297,10 @@
                 const orderData = await res.json();
 
                 if(orderData.error) { 
-                    alert("Order Error: " + orderData.error); 
-                    resetUI();
-                    return; 
+                    throw new Error(orderData.error);
                 }
 
-                // 2. Razorpay Options
+                // 3. Open Razorpay
                 const options = {
                     "key": RAZORPAY_KEY_ID,
                     "amount": orderData.amount,
@@ -342,11 +308,11 @@
                     "name": "Zarqeen Alif",
                     "description": `License: ${planType.toUpperCase()}`,
                     "order_id": orderData.id,
-                    "theme": { "color": "#2563EB" }, // Blue theme
+                    "theme": { "color": "#2563EB" }, 
                     "handler": async function (response){
-                        // 3. Verify Payment
+                        // 4. Verify Payment via Backend API
                         try {
-                            const verifyRes = await fetch('/verify_payment', {
+                            const verifyRes = await fetch(`${BACKEND_URL}/verify_payment`, {
                                 method: 'POST',
                                 headers: {'Content-Type': 'application/json'},
                                 body: JSON.stringify({
@@ -359,7 +325,7 @@
                             const result = await verifyRes.json();
                             
                             if(result.success) {
-                                // 4. Prepare Download
+                                // 5. Download Logic
                                 const licenseKey = result.license_key;
                                 const blob = new Blob([licenseKey], { type: "text/plain" });
                                 const url = window.URL.createObjectURL(blob);
@@ -377,10 +343,9 @@
                                 
                                 keyArea.appendChild(downloadBtn);
                                 
-                                // Show Modal
                                 document.getElementById('licenseModal').style.display = 'block';
                             } else {
-                                alert('Verification failed. Contact support.');
+                                alert('Verification failed. Please contact support.');
                             }
                         } catch (e) {
                             console.error(e);
@@ -399,7 +364,7 @@
 
             } catch(e) {
                 console.error(e);
-                alert("Connection error.");
+                alert("Error: " + e.message);
                 resetUI();
             }
         }
