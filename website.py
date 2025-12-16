@@ -3,23 +3,18 @@ import random
 import string
 import razorpay
 from datetime import datetime
-from functools import wraps # <--- Required for security
+from functools import wraps
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
-from flask_cors import CORS
+from flask_cors import CORS # Import CORS
 from flask_mail import Mail, Message
 
 app = Flask(__name__)
-CORS(app)
 
-# ==========================================
-#  CONFIGURATION
-# ==========================================
+# --- CONFIGURATION ---
+app.secret_key = os.environ.get('SECRET_KEY', 'CHANGE_THIS_SECRET')
 
-# 1. SECURITY KEY (Crucial for Login Sessions)
-app.secret_key = os.environ.get('SECRET_KEY', 'CHANGE_THIS_TO_A_LONG_RANDOM_STRING_IN_RENDER')
-
-# 2. DATABASE
+# DATABASE
 raw_db_url = os.environ.get('DATABASE_URL', 'sqlite:///site.db')
 if raw_db_url.startswith("postgres://"):
     raw_db_url = raw_db_url.replace("postgres://", "postgresql://", 1)
@@ -27,15 +22,11 @@ if raw_db_url.startswith("postgres://"):
 app.config['SQLALCHEMY_DATABASE_URI'] = raw_db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# 3. RAZORPAY
+# RAZORPAY
 RAZORPAY_KEY_ID = os.environ.get('RAZORPAY_KEY_ID')
 RAZORPAY_KEY_SECRET = os.environ.get('RAZORPAY_KEY_SECRET')
 
-# 4. ADMIN CREDENTIALS
-ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', 'admin')
-ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'admin123')
-
-# 5. MAIL
+# MAIL
 app.config['MAIL_SERVER'] = os.environ.get('MAIL_SERVER', 'smtp-relay.brevo.com')
 app.config['MAIL_PORT'] = int(os.environ.get('MAIL_PORT', 587))
 app.config['MAIL_USE_TLS'] = True
@@ -43,13 +34,15 @@ app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
 app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
 app.config['MAIL_DEFAULT_SENDER'] = ('Zarqeen Support', 'zarqeensoftware@gmail.com')
 
+# --- ENABLE CORS (Allow your frontend to talk to this backend) ---
+# Replace 'https://zarqeen.in' with your actual Render Static Site URL later
+CORS(app, resources={r"/*": {"origins": "*"}}) 
+
 mail = Mail(app)
 db = SQLAlchemy(app)
 razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
 
-# ==========================================
-#  DATABASE MODEL
-# ==========================================
+# --- DATABASE MODELS (Keep as is) ---
 class License(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     license_key = db.Column(db.String(50), unique=True, nullable=False)
@@ -60,20 +53,20 @@ class License(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     used_at = db.Column(db.DateTime, nullable=True)
 
-# Create tables
 with app.app_context():
     try:
         db.create_all()
     except Exception as e:
         print(f"DB Error: {e}")
 
-# ==========================================
-#  SECURITY HELPER (The Lock)
-# ==========================================
+# --- ADMIN CREDENTIALS ---
+ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', 'admin')
+ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'admin123')
+
+# --- HELPERS ---
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        # Check if user is NOT logged in
         if not session.get('admin_logged_in'):
             return redirect(url_for('login'))
         return f(*args, **kwargs)
@@ -89,18 +82,21 @@ def generate_unique_key(plan_type):
             return full_key
 
 # ==========================================
-#  PUBLIC ROUTES (Anyone can see)
+#  NEW: API ROUTE FOR FRONTEND CONFIG
 # ==========================================
-@app.route('/')
-def home():
-    return render_template('index.html', key_id=RAZORPAY_KEY_ID)
+@app.route('/api/get-config', methods=['GET'])
+def get_config():
+    """ Sends the Razorpay Key ID to the frontend """
+    return jsonify({'key_id': RAZORPAY_KEY_ID})
 
+# ==========================================
+#  EXISTING API ROUTES
+# ==========================================
 @app.route('/create_order', methods=['POST'])
 def create_order():
     try:
         data = request.json
         plan = data.get('plan')
-        # Amount in Paise (30100 = 301.00 INR)
         amount = 29900 if plan == 'basic' else 59900
         order = razorpay_client.order.create({
             'amount': amount, 
@@ -115,6 +111,7 @@ def create_order():
 def verify_payment():
     data = request.json
     try:
+        # Verify Signature
         params_dict = {
             'razorpay_order_id': data['razorpay_order_id'],
             'razorpay_payment_id': data['razorpay_payment_id'],
@@ -122,6 +119,7 @@ def verify_payment():
         }
         razorpay_client.utility.verify_payment_signature(params_dict)
 
+        # Generate License
         plan_type = data.get('plan_type')
         amount = 299.0 if plan_type == 'basic' else 599.0
         new_key = generate_unique_key(plan_type)
@@ -136,21 +134,18 @@ def verify_payment():
         db.session.commit()
 
         return jsonify({'success': True, 'license_key': new_key})
-
     except Exception as e:
-        print(f"Error: {e}")
         return jsonify({'success': False, 'message': str(e)})
 
 # ==========================================
-#  ADMIN ROUTES (PROTECTED 🔒)
+#  ADMIN ROUTES (Keep these server-side)
 # ==========================================
-
+# Note: Since the admin panel is internal, we keep it served by Flask 
+# to avoid rewriting the whole thing in React.
 @app.route('/admin/login', methods=['GET', 'POST'])
 def login():
-    # If already logged in, go to dashboard
     if session.get('admin_logged_in'):
         return redirect(url_for('dashboard'))
-
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
@@ -162,44 +157,28 @@ def login():
     return render_template('login.html')
 
 @app.route('/admin/dashboard')
-@login_required  # <--- THIS LOCKS THE DASHBOARD
+@login_required
 def dashboard():
     licenses = License.query.order_by(License.created_at.desc()).all()
     return render_template('dashboard.html', licenses=licenses)
 
 @app.route('/admin/delete_license/<int:id>', methods=['POST'])
-@login_required # <--- THIS LOCKS DELETION
+@login_required
 def delete_license(id):
     lic = License.query.get_or_404(id)
-    try:
-        db.session.delete(lic)
-        db.session.commit()
-        flash('License deleted successfully', 'success')
-    except Exception as e:
-        db.session.rollback()
-        flash(f'Error deleting: {str(e)}', 'danger')
+    db.session.delete(lic)
+    db.session.commit()
     return redirect(url_for('dashboard'))
 
 @app.route('/admin/edit_license/<int:id>', methods=['POST'])
-@login_required # <--- THIS LOCKS EDITING
+@login_required
 def edit_license(id):
     lic = License.query.get_or_404(id)
-    try:
-        lic.license_key = request.form.get('license_key')
-        lic.plan_type = request.form.get('plan_type')
-        lic.payment_id = request.form.get('payment_id')
-        
-        is_used_val = request.form.get('is_used')
-        lic.is_used = True if is_used_val == 'on' else False
-        
-        if not lic.is_used:
-            lic.used_at = None
-            
-        db.session.commit()
-        flash('License updated successfully', 'success')
-    except Exception as e:
-        db.session.rollback()
-        flash(f'Error updating: {str(e)}', 'danger')
+    lic.license_key = request.form.get('license_key')
+    lic.plan_type = request.form.get('plan_type')
+    lic.payment_id = request.form.get('payment_id')
+    lic.is_used = True if request.form.get('is_used') == 'on' else False
+    db.session.commit()
     return redirect(url_for('dashboard'))
 
 @app.route('/admin/logout')
@@ -208,14 +187,13 @@ def logout():
     return redirect(url_for('login'))
 
 # ==========================================
-#  SOFTWARE API (For Windows App)
+#  DESKTOP APP API
 # ==========================================
 @app.route('/api/validate_license', methods=['POST'])
 def validate_license():
     data = request.json
     key_input = data.get('license_key', '').strip()
     lic = License.query.filter_by(license_key=key_input).first()
-    
     if lic:
         if lic.is_used:
             return jsonify({'valid': False, 'message': 'License already used.'})
@@ -224,63 +202,12 @@ def validate_license():
         db.session.commit()
         duration = 365 if lic.plan_type == 'basic' else 1095
         return jsonify({'valid': True, 'plan': lic.plan_type, 'duration_days': duration})
-    
     return jsonify({'valid': False, 'message': 'Invalid License Key'})
 
-@app.route('/api/send_otp_remote', methods=['POST'])
-def send_otp_remote():
-    data = request.json
-    email = data.get('email')
-    otp = data.get('otp')
-    if not email or not otp: return jsonify({'success': False}), 400
-    try:
-        msg = Message("Zarqeen Verification Code", recipients=[email])
-        msg.body = f"Code: {otp}"
-        mail.send(msg)
-        return jsonify({'success': True})
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-from flask import jsonify
-
-# =========================================================
-#  API ROUTE: DESKTOP APP UPDATE CHECK
-# =========================================================
-@app.route('/api/version_check', methods=['GET'])
-def version_check():
-    """
-    This endpoint is called by the Desktop App to check for updates.
-    Change the values below when you release a new version.
-    """
-    
-    # 1. SETTINGS FOR THE NEW VERSION
-    # Make sure this is HIGHER than the version in the user's app.py
-    latest_version = "1.3.0" 
-    
-    # 2. DOWNLOAD LINK
-    # Where should the user go to download the .exe or .zip?
-    # This can be a Google Drive link, Dropbox, or a route on this website.
-    download_link = "https://zarqeen.onrender.com/downloads/setup_v1.3.0.exe"
-    
-    # 3. MARKETING TEXT (The Advertisement)
-    # This is what appears in the modal popup on the desktop app.
-    headline_text = "Big Performance Update!"
-    feature_list = [
-        "Faster Invoice Generation",
-        "New Database Backup & Restore",
-        "Staff Management Limits Fixed",
-        "Critical Security Patches"
-    ]
-
-    # 4. RETURN JSON RESPONSE
-    return jsonify({
-        'version': latest_version,
-        'download_url': download_link,
-        'headline': headline_text,
-        'features': feature_list,
-        # Optional: Add an image URL if you implemented the image logic
-        'ad_image': '' 
-    })
+@app.route('/')
+def home():
+    # If someone visits the API URL directly, tell them to go to the main site
+    return "Backend is running. Please visit zarqeen.in"
 
 if __name__ == '__main__':
     app.run(debug=True)
