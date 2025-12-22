@@ -196,6 +196,7 @@ def create_order():
 def verify_payment():
     data = request.json
     try:
+        # 1. Verify Signature
         params_dict = {
             'razorpay_order_id': data['razorpay_order_id'],
             'razorpay_payment_id': data['razorpay_payment_id'],
@@ -203,32 +204,43 @@ def verify_payment():
         }
         razorpay_client.utility.verify_payment_signature(params_dict)
 
+        # 2. Fetch Order Details
         order_info = razorpay_client.order.fetch(data['razorpay_order_id'])
-        distributor_id = order_info['notes'].get('distributor_id')
+        dist_id_val = order_info['notes'].get('distributor_id')
         
-        # Handle "None" string or None type
-        if distributor_id == 'None' or not distributor_id:
-            distributor_id = None
-        else:
-            distributor_id = int(distributor_id)
+        distributor_obj = None
+        
+        # 3. Handle Distributor ID (Check if "None" string or actual ID)
+        if dist_id_val and dist_id_val != "None":
+            try:
+                dist_id = int(dist_id_val)
+                distributor_obj = Distributor.query.get(dist_id)
+            except:
+                distributor_obj = None
 
+        # 4. Generate Key with Distributor Code
         plan_type = data.get('plan_type')
         amount_paid = order_info['amount'] / 100 
-        new_key = generate_unique_key(plan_type)
         
+        # Pass the distributor code if it exists, otherwise None
+        dist_code_str = distributor_obj.code if distributor_obj else None
+        new_key = generate_unique_key(plan_type, dist_code_str)
+        
+        # 5. Save License
         new_license = License(
             license_key=new_key, 
             plan_type=plan_type, 
             payment_id=data['razorpay_payment_id'],
             amount_paid=amount_paid,
-            distributor_id=distributor_id
+            distributor_id=distributor_obj.id if distributor_obj else None
         )
         db.session.add(new_license)
         db.session.commit()
+
         return jsonify({'success': True, 'license_key': new_key})
 
     except Exception as e:
-        print(f"Verify Error: {e}")
+        print(f"Verify Error: {e}") # Check Render Logs
         return jsonify({'success': False, 'message': str(e)})
 
 @app.route('/api/validate_license', methods=['POST'])
@@ -293,12 +305,17 @@ def delete_license(id):
 @login_required
 def add_distributor():
     try:
-        code = request.form.get('code')
+        code = request.form.get('code').strip().upper()
         name = request.form.get('name')
         phone = request.form.get('phone')
         email = request.form.get('email')
         password = request.form.get('password')
         disc = request.form.get('discount')
+        
+        # FORCE 4 CHARACTERS
+        if len(code) != 4 or not code.isalpha():
+            flash('Error: Code must be exactly 4 alphabets (e.g. ABCD)', 'danger')
+            return redirect(url_for('dashboard'))
         
         if Distributor.query.filter((Distributor.code==code) | (Distributor.email==email)).first():
             flash('Error: Distributor Code or Email already exists.', 'danger')
