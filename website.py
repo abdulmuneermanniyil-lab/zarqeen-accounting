@@ -162,7 +162,7 @@ def create_order():
 def verify_payment():
     data = request.json
     try:
-        # Verify Signature
+        # 1. Verify Signature (Keep existing code)
         params_dict = {
             'razorpay_order_id': data['razorpay_order_id'],
             'razorpay_payment_id': data['razorpay_payment_id'],
@@ -170,16 +170,24 @@ def verify_payment():
         }
         razorpay_client.utility.verify_payment_signature(params_dict)
 
-        # Generate License
+        # 2. Get Order Details from Razorpay to find the Distributor ID
+        # (We stored it in notes during create_order)
+        order_info = razorpay_client.order.fetch(data['razorpay_order_id'])
+        distributor_id = order_info['notes'].get('distributor_id')
+        
+        if distributor_id == 'None': distributor_id = None
+
+        # 3. Generate License
         plan_type = data.get('plan_type')
-        amount = 299.0 if plan_type == 'basic' else 599.0
+        amount_paid = order_info['amount'] / 100 # Convert back to Rupees
         new_key = generate_unique_key(plan_type)
         
         new_license = License(
             license_key=new_key, 
             plan_type=plan_type, 
             payment_id=data['razorpay_payment_id'],
-            amount_paid=amount
+            amount_paid=amount_paid,
+            distributor_id=distributor_id  # <--- SAVE ID HERE
         )
         db.session.add(new_license)
         db.session.commit()
@@ -187,6 +195,7 @@ def verify_payment():
         return jsonify({'success': True, 'license_key': new_key})
 
     except Exception as e:
+        print(e)
         return jsonify({'success': False, 'message': str(e)})
 
 # ==========================================
