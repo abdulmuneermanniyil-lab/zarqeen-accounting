@@ -47,6 +47,15 @@ db = SQLAlchemy(app)
 razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
 
 # --- 3. DATABASE MODELS ---
+# --- 3. DATABASE MODELS ---
+class Distributor(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    code = db.Column(db.String(20), unique=True, nullable=False) # e.g., "DIST101"
+    name = db.Column(db.String(100), nullable=False)             # e.g., "Ahmed Computers"
+    phone = db.Column(db.String(20), nullable=False)             # e.g., "+91 9876543210"
+    discount_percent = db.Column(db.Integer, default=10)         # e.g., 10%
+    licenses = db.relationship('License', backref='distributor', lazy=True)
+
 class License(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     license_key = db.Column(db.String(50), unique=True, nullable=False)
@@ -56,10 +65,17 @@ class License(db.Model):
     is_used = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     used_at = db.Column(db.DateTime, nullable=True)
+    # Link to Distributor
+    distributor_id = db.Column(db.Integer, db.ForeignKey('distributor.id'), nullable=True)
 
 with app.app_context():
     try:
         db.create_all()
+        # Create a default distributor for testing if none exists
+        if not Distributor.query.first():
+            demo = Distributor(code="ZARQEEN10", name="Official Support", phone="zarqeensoftware@gmail.com", discount_percent=10)
+            db.session.add(demo)
+            db.session.commit()
     except Exception as e:
         print(f"DB Error: {e}")
 
