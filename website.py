@@ -8,6 +8,7 @@ from flask import Flask, render_template, request, jsonify, session, redirect, u
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from flask_mail import Mail, Message
+from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 
@@ -50,11 +51,24 @@ razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
 # --- 3. DATABASE MODELS ---
 class Distributor(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    code = db.Column(db.String(20), unique=True, nullable=False) # e.g., "DIST101"
-    name = db.Column(db.String(100), nullable=False)             # e.g., "Ahmed Computers"
-    phone = db.Column(db.String(20), nullable=False)             # e.g., "+91 9876543210"
-    discount_percent = db.Column(db.Integer, default=10)         # e.g., 10%
+    code = db.Column(db.String(20), unique=True, nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+    phone = db.Column(db.String(20), nullable=False)
+    
+    # Auth Fields
+    username = db.Column(db.String(50), unique=True, nullable=False)
+    password_hash = db.Column(db.String(256), nullable=False)
+    
+    discount_percent = db.Column(db.Integer, default=10)
+    
+    # Commission/Earnings Logic (Optional: Calculate earnings based on sales)
     licenses = db.relationship('License', backref='distributor', lazy=True)
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
 
 class License(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -335,6 +349,61 @@ def validate_license():
         return jsonify({'valid': True, 'plan': lic.plan_type, 'duration_days': duration})
     
     return jsonify({'valid': False, 'message': 'Invalid License Key'})
+
+
+# ==========================================
+#  DISTRIBUTOR PORTAL ROUTES
+# ==========================================
+
+@app.route('/distributor/login', methods=['GET', 'POST'])
+def distributor_login():
+    if session.get('distributor_id'):
+        return redirect(url_for('distributor_dashboard'))
+        
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        
+        dist = Distributor.query.filter_by(username=username).first()
+        
+        if dist and dist.check_password(password):
+            session['distributor_id'] = dist.id
+            session['distributor_name'] = dist.name
+            return redirect(url_for('distributor_dashboard'))
+        else:
+            flash('Invalid Username or Password', 'danger')
+            
+    return render_template('distributor_login.html')
+
+@app.route('/distributor/dashboard')
+def distributor_dashboard():
+    if not session.get('distributor_id'):
+        return redirect(url_for('distributor_login'))
+    
+    dist_id = session['distributor_id']
+    dist = Distributor.query.get(dist_id)
+    
+    # Fetch licenses linked to this distributor
+    # "Pending" here implies keys generated but not yet used by the customer
+    my_sales = License.query.filter_by(distributor_id=dist_id).order_by(License.created_at.desc()).all()
+    
+    total_sales = len(my_sales)
+    # Calculate simple commission (e.g., 20% of revenue generated)
+    total_revenue = sum(lic.amount_paid for lic in my_sales)
+    commission = total_revenue * 0.20 # Assuming distributor gets 20% cut
+    
+    return render_template('distributor_dashboard.html', 
+                           distributor=dist, 
+                           sales=my_sales, 
+                           total_sales=total_sales,
+                           commission=commission)
+
+@app.route('/distributor/logout')
+def distributor_logout():
+    session.pop('distributor_id', None)
+    session.pop('distributor_name', None)
+    return redirect(url_for('distributor_login'))
+
 
 if __name__ == '__main__':
     app.run(debug=True)
