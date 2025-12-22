@@ -84,17 +84,7 @@ class License(db.Model):
 
 with app.app_context():
     try:
-        # FORCE RESET ON STARTUP
-        db.drop_all()   # <--- Add this
-        db.create_all() # <--- Recreates tables
-        
-        # Create default distributor
-        if not Distributor.query.first():
-            demo = Distributor(code="DEMO", name="Demo", phone="000", username="demo", discount_percent=10)
-            demo.set_password("demo123")
-            db.session.add(demo)
-            db.session.commit()
-            
+        db.create_all()
     except Exception as e:
         print(f"DB Error: {e}")
 
