@@ -290,7 +290,53 @@
             <button class="btn-buy secondary" onclick="closeLicenseModal()">Close</button>
         </div>
     </div>
+<!-- DISTRIBUTOR DASHBOARD (Hidden by Default) -->
+<div id="dashboardSection">
+    <div style="max-width: 1200px; margin: 0 auto;">
+        
+        <!-- Header -->
+        <div class="dash-header">
+            <div>
+                <h2 id="dashName">Distributor Name</h2>
+                <p style="color: #6B7280;">Code: <strong id="dashCode">CODE</strong></p>
+            </div>
+            <button onclick="doLogout()" class="btn-buy secondary" style="width: auto; margin:0; background: #EF4444; color: white;">Logout</button>
+        </div>
 
+        <!-- Stats -->
+        <div class="dash-grid">
+            <div class="dash-card">
+                <div class="dash-val" id="dashTotal">0</div>
+                <div style="color: #6B7280;">Total Licenses Sold</div>
+            </div>
+            <div class="dash-card">
+                <div class="dash-val">₹<span id="dashComm">0</span></div>
+                <div style="color: #6B7280;">Your Commission (Est.)</div>
+            </div>
+            <div class="dash-card">
+                <div class="dash-val"><span id="dashDisc">0</span>%</div>
+                <div style="color: #6B7280;">Current Discount</div>
+            </div>
+        </div>
+
+        <!-- Table -->
+        <h3 style="margin-bottom: 15px;">Sales History</h3>
+        <table class="dash-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Plan</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>License Key</th>
+                </tr>
+            </thead>
+            <tbody id="dashTableBody">
+                <!-- Rows injected by JS -->
+            </tbody>
+        </table>
+    </div>
+</div>
     <!-- 2. LOGIN MODAL -->
     <div id="loginModal" class="modal">
         <div class="modal-content">
