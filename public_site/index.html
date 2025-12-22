@@ -581,54 +581,67 @@
 
         // 7. DISTRIBUTOR HEADLESS LOGIN & DASHBOARD
         
+       // 7. DISTRIBUTOR HEADLESS LOGIN (TOKEN BASED)
+        
         // A. Handle Login Submit
         document.getElementById('distForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    const formData = new FormData(this);
-    const data = Object.fromEntries(formData.entries());
+            e.preventDefault();
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData.entries());
 
-    const btn = this.querySelector('button');
-    const originalText = btn.innerText;
-    btn.innerText = "Logging in...";
-    btn.disabled = true;
+            const btn = this.querySelector('button');
+            const originalText = btn.innerText;
+            btn.innerText = "Logging in...";
+            btn.disabled = true;
 
-    try {
-        // 👇 ADDED credentials: 'include' HERE
-        const res = await fetch(`${BACKEND_URL}/api/distributor/login`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data),
-            credentials: 'include'  // <--- CRITICAL FIX
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/distributor/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await res.json();
+                
+                if (result.success) {
+                    // SAVE TOKEN TO BROWSER STORAGE
+                    localStorage.setItem('dist_token', result.token);
+                    
+                    closeLoginModal();
+                    loadDashboard(); 
+                } else {
+                    alert(result.message || "Login failed");
+                }
+            } catch (error) {
+                console.error(error);
+                alert("Connection error");
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
         });
-        
-        const result = await res.json();
-        
-        if (result.success) {
-            closeLoginModal();
-            loadDashboard(); 
-        } else {
-            alert(result.message || "Login failed");
-        }
-    } catch (error) {
-        console.error(error);
-        alert("Connection error");
-    } finally {
-        btn.innerText = originalText;
-        btn.disabled = false;
-    }
-});
 
         // B. Fetch Data & Show Dashboard
         async function loadDashboard() {
             try {
-                // IMPORTANT: credentials: 'include' passes the session cookie
+                const token = localStorage.getItem('dist_token');
+                
+                if (!token) {
+                    // No token found, user must login
+                    return; 
+                }
+
+                // SEND TOKEN IN HEADERS
                 const res = await fetch(`${BACKEND_URL}/api/distributor/data`, {
                     method: 'GET',
-                    credentials: 'include' 
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
                 });
 
                 if (res.status === 401) {
                     alert("Session expired. Please login again.");
+                    doLogout();
                     return;
                 }
 
@@ -643,7 +656,7 @@
 
                 // Populate Table
                 const tbody = document.getElementById('dashTableBody');
-                tbody.innerHTML = ""; // Clear existing
+                tbody.innerHTML = ""; 
 
                 if (data.sales_history.length === 0) {
                     tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:gray;">No sales found.</td></tr>`;
@@ -663,7 +676,7 @@
                     });
                 }
 
-                // C. SWAP VIEW: Hide Main Site, Show Dashboard
+                // C. SWAP VIEW
                 document.querySelector('header').style.display = 'none';
                 document.querySelector('.hero').style.display = 'none';
                 document.getElementById('features').style.display = 'none';
@@ -680,10 +693,17 @@
         }
 
         // D. Logout Logic
-        async function doLogout() {
-            await fetch(`${BACKEND_URL}/api/logout`, { method: 'POST', credentials: 'include' });
-            window.location.reload(); // Reloads page to show main site again
+        function doLogout() {
+            localStorage.removeItem('dist_token'); // Delete Token
+            window.location.reload(); 
         }
+
+        // E. Check for existing login on page load
+        window.addEventListener('load', function() {
+            if(localStorage.getItem('dist_token')) {
+                loadDashboard();
+            }
+        })
     </script>
 </body>
 </html>
