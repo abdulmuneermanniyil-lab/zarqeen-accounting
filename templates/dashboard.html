@@ -36,12 +36,15 @@
 
         <!-- 1. ADD DISTRIBUTOR -->
         <div class="card">
-            <h2>➕ Add Distributor</h2>
+            <h2>Add Distributor</h2>
             <form action="/admin/add_distributor" method="POST" class="grid-form">
                 <div><label>Business Name</label><input type="text" name="name" required></div>
                 <div><label>Email (Login)</label><input type="email" name="email" required></div>
                 <div><label>Phone</label><input type="text" name="phone" required></div>
-                <div><label>Code</label><input type="text" name="code" style="text-transform:uppercase" required></div>
+                <div>
+    <label>Code (4 Letters)</label>
+    <input type="text" name="code" placeholder="e.g. ALIF" maxlength="4" pattern="[A-Za-z]{4}" title="Must be 4 English letters" style="text-transform:uppercase" required>
+</div>
                 <div><label>Password</label><input type="password" name="password" required></div>
                 <div><label>Discount %</label><input type="number" name="discount" value="10"></div>
                 <div style="display:flex; align-items:end;"><button type="submit" class="btn btn-green" style="width:100%">Create Account</button></div>
