@@ -107,25 +107,25 @@
         .form-group label { display: block; font-size: 0.9rem; margin-bottom: 5px; font-weight: 600; }
         .form-group input { width: 100%; padding: 10px; border: 1px solid #D1D5DB; border-radius: 6px; }
 
+        /* DASHBOARD STYLES */
+        #dashboardSection { display: none; padding: 2rem; background: #F3F4F6; min-height: 100vh; }
+        .dash-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .dash-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .dash-val { font-size: 2rem; font-weight: 700; color: var(--primary); }
+        .dash-table { width: 100%; background: white; border-radius: 12px; border-collapse: collapse; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .dash-table th, .dash-table td { padding: 15px; text-align: left; border-bottom: 1px solid #E5E7EB; }
+        .dash-table th { background: #F9FAFB; font-weight: 600; }
+        .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 700; }
+        .status-installed { background: #D1FAE5; color: #065F46; }
+        .status-pending { background: #FEE2E2; color: #991B1B; }
+
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @media (max-width: 768px) {
             .nav-links { display: none; }
             .hero h1 { font-size: 2.25rem; }
             .plan-card.popular { transform: none; }
         }
-
-        /* DASHBOARD STYLES */
-#dashboardSection { display: none; padding: 2rem; background: #F3F4F6; min-height: 100vh; }
-.dash-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-.dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
-.dash-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-.dash-val { font-size: 2rem; font-weight: 700; color: var(--primary); }
-.dash-table { width: 100%; background: white; border-radius: 12px; border-collapse: collapse; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-.dash-table th, .dash-table td { padding: 15px; text-align: left; border-bottom: 1px solid #E5E7EB; }
-.dash-table th { background: #F9FAFB; font-weight: 600; }
-.status-badge { padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 700; }
-.status-installed { background: #D1FAE5; color: #065F46; }
-.status-pending { background: #FEE2E2; color: #991B1B; }
     </style>
 </head>
 
@@ -280,6 +280,54 @@
         </div>
     </footer>
 
+    <!-- DISTRIBUTOR DASHBOARD (Hidden by Default) -->
+    <div id="dashboardSection">
+        <div style="max-width: 1200px; margin: 0 auto;">
+            
+            <!-- Header -->
+            <div class="dash-header">
+                <div>
+                    <h2 id="dashName">Distributor Name</h2>
+                    <p style="color: #6B7280;">Code: <strong id="dashCode">CODE</strong></p>
+                </div>
+                <button onclick="doLogout()" class="btn-buy secondary" style="width: auto; margin:0; background: #EF4444; color: white;">Logout</button>
+            </div>
+
+            <!-- Stats -->
+            <div class="dash-grid">
+                <div class="dash-card">
+                    <div class="dash-val" id="dashTotal">0</div>
+                    <div style="color: #6B7280;">Total Licenses Sold</div>
+                </div>
+                <div class="dash-card">
+                    <div class="dash-val">₹<span id="dashComm">0</span></div>
+                    <div style="color: #6B7280;">Your Commission (Est.)</div>
+                </div>
+                <div class="dash-card">
+                    <div class="dash-val"><span id="dashDisc">0</span>%</div>
+                    <div style="color: #6B7280;">Current Discount</div>
+                </div>
+            </div>
+
+            <!-- Table -->
+            <h3 style="margin-bottom: 15px;">Sales History</h3>
+            <table class="dash-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Plan</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th>License Key</th>
+                    </tr>
+                </thead>
+                <tbody id="dashTableBody">
+                    <!-- Rows injected by JS -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
     <!-- 1. PAYMENT SUCCESS MODAL -->
     <div id="licenseModal" class="modal">
         <div class="modal-content" style="text-align: center;">
@@ -290,53 +338,7 @@
             <button class="btn-buy secondary" onclick="closeLicenseModal()">Close</button>
         </div>
     </div>
-<!-- DISTRIBUTOR DASHBOARD (Hidden by Default) -->
-<div id="dashboardSection">
-    <div style="max-width: 1200px; margin: 0 auto;">
-        
-        <!-- Header -->
-        <div class="dash-header">
-            <div>
-                <h2 id="dashName">Distributor Name</h2>
-                <p style="color: #6B7280;">Code: <strong id="dashCode">CODE</strong></p>
-            </div>
-            <button onclick="doLogout()" class="btn-buy secondary" style="width: auto; margin:0; background: #EF4444; color: white;">Logout</button>
-        </div>
 
-        <!-- Stats -->
-        <div class="dash-grid">
-            <div class="dash-card">
-                <div class="dash-val" id="dashTotal">0</div>
-                <div style="color: #6B7280;">Total Licenses Sold</div>
-            </div>
-            <div class="dash-card">
-                <div class="dash-val">₹<span id="dashComm">0</span></div>
-                <div style="color: #6B7280;">Your Commission (Est.)</div>
-            </div>
-            <div class="dash-card">
-                <div class="dash-val"><span id="dashDisc">0</span>%</div>
-                <div style="color: #6B7280;">Current Discount</div>
-            </div>
-        </div>
-
-        <!-- Table -->
-        <h3 style="margin-bottom: 15px;">Sales History</h3>
-        <table class="dash-table">
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Plan</th>
-                    <th>Amount</th>
-                    <th>Status</th>
-                    <th>License Key</th>
-                </tr>
-            </thead>
-            <tbody id="dashTableBody">
-                <!-- Rows injected by JS -->
-            </tbody>
-        </table>
-    </div>
-</div>
     <!-- 2. LOGIN MODAL -->
     <div id="loginModal" class="modal">
         <div class="modal-content">
@@ -348,8 +350,8 @@
                 <button class="tab-btn" onclick="switchTab('admin')">Admin</button>
             </div>
 
-            <!-- DISTRIBUTOR FORM -->
-            <form id="distForm" class="login-form active" method="POST">
+            <!-- DISTRIBUTOR FORM (AJAX) -->
+            <form id="distForm" class="login-form active">
                 <div class="form-group">
                     <label>Distributor Username</label>
                     <input type="text" name="username" required>
@@ -361,7 +363,7 @@
                 <button type="submit" class="btn-buy primary">Login as Distributor</button>
             </form>
 
-            <!-- ADMIN FORM -->
+            <!-- ADMIN FORM (POST) -->
             <form id="adminForm" class="login-form" method="POST">
                 <div class="form-group">
                     <label>Admin Username</label>
@@ -386,9 +388,7 @@
         // ⚠️ BACKEND URL (Ensure this matches your Render URL)
         const BACKEND_URL = "https://zarqeen-backend.onrender.com"; 
 
-        // 2. SETUP LOGIN FORMS
-        // This makes sure the forms point to the correct Backend URLs
-        document.getElementById('distForm').action = `${BACKEND_URL}/distributor/login`;
+        // 2. SETUP ADMIN FORM (Redirects to backend)
         document.getElementById('adminForm').action = `${BACKEND_URL}/admin/login`;
 
         // 3. FETCH CONFIG
@@ -577,6 +577,112 @@
                 alert("Error: " + e.message);
                 resetUI();
             }
+        }
+
+        // 7. DISTRIBUTOR HEADLESS LOGIN & DASHBOARD
+        
+        // A. Handle Login Submit
+        document.getElementById('distForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData.entries());
+
+            // UI Feedback
+            const btn = this.querySelector('button');
+            const originalText = btn.innerText;
+            btn.innerText = "Logging in...";
+            btn.disabled = true;
+
+            try {
+                // Send credentials to Backend
+                const res = await fetch(`${BACKEND_URL}/api/distributor/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await res.json();
+                
+                if (result.success) {
+                    closeLoginModal();
+                    loadDashboard(); // Success! Fetch data and switch view
+                } else {
+                    alert(result.message || "Login failed");
+                }
+            } catch (error) {
+                console.error(error);
+                alert("Connection error");
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
+        });
+
+        // B. Fetch Data & Show Dashboard
+        async function loadDashboard() {
+            try {
+                // IMPORTANT: credentials: 'include' passes the session cookie
+                const res = await fetch(`${BACKEND_URL}/api/distributor/data`, {
+                    method: 'GET',
+                    credentials: 'include' 
+                });
+
+                if (res.status === 401) {
+                    alert("Session expired. Please login again.");
+                    return;
+                }
+
+                const data = await res.json();
+
+                // Populate Stats
+                document.getElementById('dashName').innerText = data.name;
+                document.getElementById('dashCode').innerText = data.code;
+                document.getElementById('dashTotal').innerText = data.total_sales;
+                document.getElementById('dashComm').innerText = data.commission;
+                document.getElementById('dashDisc').innerText = data.discount;
+
+                // Populate Table
+                const tbody = document.getElementById('dashTableBody');
+                tbody.innerHTML = ""; // Clear existing
+
+                if (data.sales_history.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:gray;">No sales found.</td></tr>`;
+                } else {
+                    data.sales_history.forEach(row => {
+                        const statusClass = row.status === 'INSTALLED' ? 'status-installed' : 'status-pending';
+                        const html = `
+                            <tr>
+                                <td>${row.date}</td>
+                                <td>${row.plan}</td>
+                                <td>₹${row.amount}</td>
+                                <td><span class="status-badge ${statusClass}">${row.status}</span></td>
+                                <td style="font-family:monospace">${row.key}</td>
+                            </tr>
+                        `;
+                        tbody.insertAdjacentHTML('beforeend', html);
+                    });
+                }
+
+                // C. SWAP VIEW: Hide Main Site, Show Dashboard
+                document.querySelector('header').style.display = 'none';
+                document.querySelector('.hero').style.display = 'none';
+                document.getElementById('features').style.display = 'none';
+                document.getElementById('pricing').style.display = 'none';
+                document.querySelector('footer').style.display = 'none';
+                
+                document.getElementById('dashboardSection').style.display = 'block';
+                window.scrollTo(0, 0);
+
+            } catch (e) {
+                console.error(e);
+                alert("Error loading dashboard data");
+            }
+        }
+
+        // D. Logout Logic
+        async function doLogout() {
+            await fetch(`${BACKEND_URL}/api/logout`, { method: 'POST', credentials: 'include' });
+            window.location.reload(); // Reloads page to show main site again
         }
     </script>
 </body>
