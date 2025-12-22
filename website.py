@@ -126,6 +126,38 @@ def create_order():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+
+@app.route('/create_order', methods=['POST'])
+def create_order():
+    try:
+        data = request.json
+        plan = data.get('plan')
+        code = data.get('distributor_code', '').strip().upper() # Get code from frontend
+
+        # Base Prices (in Paise)
+        base_amount = 29900 if plan == 'basic' else 59900
+        
+        # Check for Distributor Discount
+        dist = Distributor.query.filter_by(code=code).first()
+        final_amount = base_amount
+        
+        if dist:
+            discount_amount = (base_amount * dist.discount_percent) / 100
+            final_amount = int(base_amount - discount_amount)
+        
+        order = razorpay_client.order.create({
+            'amount': final_amount, 
+            'currency': 'INR', 
+            'payment_capture': '1',
+            'notes': {
+                'plan': plan,
+                'distributor_id': dist.id if dist else None
+            }
+        })
+        return jsonify(order)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/verify_payment', methods=['POST'])
 def verify_payment():
     data = request.json
