@@ -166,7 +166,19 @@
     <section id="pricing" class="pricing-section">
         <h2 class="section-title">Unbeatable Pricing</h2>
         <p class="section-subtitle">The cheapest and most reliable software in India.</p>
+<!-- Add this before .pricing-grid -->
+<div style="max-width: 400px; margin: 0 auto 2rem; text-align: center;">
+    <p style="margin-bottom: 10px; font-weight: 600;">Have a Distributor Code?</p>
+    <div style="display: flex; gap: 10px; justify-content: center;">
+        <input type="text" id="distCode" placeholder="Enter Code (e.g. ZARQEEN10)" 
+               style="padding: 10px; border: 1px solid #ccc; border-radius: 6px; width: 60%; text-transform: uppercase;">
+        <button onclick="applyCode()" class="nav-btn" style="cursor: pointer;">Apply</button>
+    </div>
+    <p id="codeMsg" style="font-size: 0.9rem; margin-top: 5px; min-height: 20px;"></p>
+</div>
 
+<div class="pricing-grid">
+   <!-- ... existing pricing cards ... -->
         <div class="pricing-grid">
             
             <!-- Free Plan -->
