@@ -583,40 +583,40 @@
         
         // A. Handle Login Submit
         document.getElementById('distForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const formData = new FormData(this);
-            const data = Object.fromEntries(formData.entries());
+    e.preventDefault();
+    const formData = new FormData(this);
+    const data = Object.fromEntries(formData.entries());
 
-            // UI Feedback
-            const btn = this.querySelector('button');
-            const originalText = btn.innerText;
-            btn.innerText = "Logging in...";
-            btn.disabled = true;
+    const btn = this.querySelector('button');
+    const originalText = btn.innerText;
+    btn.innerText = "Logging in...";
+    btn.disabled = true;
 
-            try {
-                // Send credentials to Backend
-                const res = await fetch(`${BACKEND_URL}/api/distributor/login`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
-                
-                const result = await res.json();
-                
-                if (result.success) {
-                    closeLoginModal();
-                    loadDashboard(); // Success! Fetch data and switch view
-                } else {
-                    alert(result.message || "Login failed");
-                }
-            } catch (error) {
-                console.error(error);
-                alert("Connection error");
-            } finally {
-                btn.innerText = originalText;
-                btn.disabled = false;
-            }
+    try {
+        // 👇 ADDED credentials: 'include' HERE
+        const res = await fetch(`${BACKEND_URL}/api/distributor/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+            credentials: 'include'  // <--- CRITICAL FIX
         });
+        
+        const result = await res.json();
+        
+        if (result.success) {
+            closeLoginModal();
+            loadDashboard(); 
+        } else {
+            alert(result.message || "Login failed");
+        }
+    } catch (error) {
+        console.error(error);
+        alert("Connection error");
+    } finally {
+        btn.innerText = originalText;
+        btn.disabled = false;
+    }
+});
 
         // B. Fetch Data & Show Dashboard
         async function loadDashboard() {
