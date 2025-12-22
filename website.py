@@ -1,9 +1,9 @@
 import os
 import random
 import string
-import secrets  # <--- NEW IMPORT
+import secrets
 import razorpay
-from datetime import datetime
+from datetime import datetime, timedelta
 from functools import wraps
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
@@ -16,6 +16,14 @@ app = Flask(__name__)
 # --- 1. CONFIGURATION ---
 app.secret_key = os.environ.get('SECRET_KEY', 'CHANGE_THIS_SECRET')
 FRONTEND_URL = "https://zarqeen.in"
+
+# Cookie Settings for Cross-Origin Login
+app.config.update(
+    SESSION_COOKIE_SAMESITE='None',
+    SESSION_COOKIE_SECURE=True,
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_DOMAIN=None 
+)
 
 # Database
 raw_db_url = os.environ.get('DATABASE_URL', 'sqlite:///site.db')
@@ -33,17 +41,18 @@ RAZORPAY_KEY_SECRET = os.environ.get('RAZORPAY_KEY_SECRET')
 ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', 'admin')
 ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'admin123')
 
-# Mail
-app.config['MAIL_SERVER'] = os.environ.get('MAIL_SERVER', 'smtp-relay.brevo.com')
+# Mail Configuration (REQUIRED for Forgot Password)
+app.config['MAIL_SERVER'] = os.environ.get('MAIL_SERVER', 'smtp.gmail.com') # Example
 app.config['MAIL_PORT'] = int(os.environ.get('MAIL_PORT', 587))
 app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
 app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
-app.config['MAIL_DEFAULT_SENDER'] = ('Zarqeen Support', 'zarqeensoftware@gmail.com')
+app.config['MAIL_DEFAULT_SENDER'] = ('Zarqeen Support', os.environ.get('MAIL_USERNAME'))
 
-# --- 2. ENABLE CORS ---
-# We allow all origins because we are now using Tokens, not Cookies.
-CORS(app, resources={r"/*": {"origins": "*"}})
+# CORS
+CORS(app, 
+     resources={r"/*": {"origins": ["https://zarqeen.in", "https://www.zarqeen.in"]}}, 
+     supports_credentials=True)
 
 mail = Mail(app)
 db = SQLAlchemy(app)
@@ -55,12 +64,16 @@ class Distributor(db.Model):
     code = db.Column(db.String(20), unique=True, nullable=False)
     name = db.Column(db.String(100), nullable=False)
     phone = db.Column(db.String(20), nullable=False)
-    username = db.Column(db.String(50), unique=True, nullable=False)
+    
+    # Changed Username to Email
+    email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
+    
     discount_percent = db.Column(db.Integer, default=10)
     
-    # NEW: Token for Frontend Login
+    # Auth & Reset Tokens
     api_token = db.Column(db.String(100), nullable=True)
+    reset_token = db.Column(db.String(100), nullable=True)
     
     licenses = db.relationship('License', backref='distributor', lazy=True)
 
@@ -190,7 +203,6 @@ def verify_payment():
         return jsonify({'success': True, 'license_key': new_key})
 
     except Exception as e:
-        print(e)
         return jsonify({'success': False, 'message': str(e)})
 
 @app.route('/api/validate_license', methods=['POST'])
@@ -202,7 +214,6 @@ def validate_license():
     if lic:
         if lic.is_used:
             return jsonify({'valid': False, 'message': 'License already used.'})
-        
         lic.is_used = True
         lic.used_at = datetime.utcnow()
         db.session.commit()
@@ -214,15 +225,7 @@ def validate_license():
             support_name = lic.distributor.name
             support_contact = lic.distributor.phone
 
-        return jsonify({
-            'valid': True, 
-            'plan': lic.plan_type, 
-            'duration_days': duration,
-            'support_info': {
-                'name': support_name,
-                'contact': support_contact
-            }
-        })
+        return jsonify({'valid': True, 'plan': lic.plan_type, 'duration_days': duration, 'support_info': {'name': support_name, 'contact': support_contact}})
     return jsonify({'valid': False, 'message': 'Invalid License Key'})
 
 # ==========================================
@@ -247,7 +250,8 @@ def login():
 @login_required
 def dashboard():
     licenses = License.query.order_by(License.created_at.desc()).all()
-    return render_template('dashboard.html', licenses=licenses)
+    distributors = Distributor.query.all() # Fetch distributors for admin control
+    return render_template('dashboard.html', licenses=licenses, distributors=distributors)
 
 @app.route('/admin/delete_license/<int:id>', methods=['POST'])
 @login_required
@@ -258,19 +262,7 @@ def delete_license(id):
     flash('License deleted', 'success')
     return redirect(url_for('dashboard'))
 
-@app.route('/admin/edit_license/<int:id>', methods=['POST'])
-@login_required
-def edit_license(id):
-    lic = License.query.get_or_404(id)
-    lic.license_key = request.form.get('license_key')
-    lic.plan_type = request.form.get('plan_type')
-    lic.payment_id = request.form.get('payment_id')
-    lic.is_used = True if request.form.get('is_used') == 'on' else False
-    if not lic.is_used: lic.used_at = None
-    db.session.commit()
-    flash('License updated', 'success')
-    return redirect(url_for('dashboard'))
-
+# --- ADMIN: DISTRIBUTOR CONTROL ---
 @app.route('/admin/add_distributor', methods=['POST'])
 @login_required
 def add_distributor():
@@ -278,20 +270,16 @@ def add_distributor():
         code = request.form.get('code')
         name = request.form.get('name')
         phone = request.form.get('phone')
-        username = request.form.get('username')
+        email = request.form.get('email') # Changed from username
         password = request.form.get('password')
         disc = request.form.get('discount')
         
-        if Distributor.query.filter((Distributor.code==code) | (Distributor.username==username)).first():
-            flash('Error: Distributor Code or Username already exists.', 'danger')
+        if Distributor.query.filter((Distributor.code==code) | (Distributor.email==email)).first():
+            flash('Error: Distributor Code or Email already exists.', 'danger')
             return redirect(url_for('dashboard'))
 
         new_dist = Distributor(
-            code=code, 
-            name=name, 
-            phone=phone, 
-            username=username,
-            discount_percent=int(disc)
+            code=code, name=name, phone=phone, email=email, discount_percent=int(disc)
         )
         new_dist.set_password(password)
         db.session.add(new_dist)
@@ -299,7 +287,19 @@ def add_distributor():
         flash('Distributor added successfully!', 'success')
     except Exception as e:
         flash(f'Error adding distributor: {str(e)}', 'danger')
-        
+    return redirect(url_for('dashboard'))
+
+@app.route('/admin/delete_distributor/<int:id>', methods=['POST'])
+@login_required
+def delete_distributor(id):
+    dist = Distributor.query.get_or_404(id)
+    # Optional: Delete associated licenses or keep them? Keeping them for now but setting dist_id to null
+    licenses = License.query.filter_by(distributor_id=id).all()
+    for l in licenses:
+        l.distributor_id = None
+    db.session.delete(dist)
+    db.session.commit()
+    flash('Distributor deleted', 'success')
     return redirect(url_for('dashboard'))
 
 @app.route('/admin/logout')
@@ -308,79 +308,81 @@ def logout():
     return redirect(FRONTEND_URL)
 
 # ==========================================
-#  DISTRIBUTOR API (TOKEN BASED)
+#  DISTRIBUTOR & PASSWORD RESET (TOKEN BASED)
 # ==========================================
 
 @app.route('/api/distributor/login', methods=['POST'])
 def api_distributor_login():
     data = request.json
-    username = data.get('username')
+    email = data.get('email') # Changed to email
     password = data.get('password')
     
-    dist = Distributor.query.filter_by(username=username).first()
+    dist = Distributor.query.filter_by(email=email).first()
     
     if dist and dist.check_password(password):
-        # Generate and save a new token
         token = secrets.token_hex(16)
         dist.api_token = token
         db.session.commit()
-        
-        # Return token to Frontend
         return jsonify({'success': True, 'token': token})
     
-    return jsonify({'success': False, 'message': 'Invalid Credentials'})
+    return jsonify({'success': False, 'message': 'Invalid Email or Password'})
 
 @app.route('/api/distributor/data', methods=['GET'])
 def api_get_distributor_data():
-    # Authenticate via Header
     auth_header = request.headers.get('Authorization')
-    token = None
+    token = auth_header.split(" ")[1] if auth_header else None
     
-    if auth_header and auth_header.startswith("Bearer "):
-        token = auth_header.split(" ")[1]
-    
-    if not token:
-        return jsonify({'error': 'Missing Token'}), 401
-        
     dist = Distributor.query.filter_by(api_token=token).first()
+    if not dist: return jsonify({'error': 'Invalid Token'}), 401
     
-    if not dist:
-        return jsonify({'error': 'Invalid Token'}), 401
-    
-    # Fetch Data
     sales = License.query.filter_by(distributor_id=dist.id).order_by(License.created_at.desc()).all()
-    
-    sales_data = []
-    total_revenue = 0
-    
-    for sale in sales:
-        total_revenue += sale.amount_paid
-        sales_data.append({
-            'date': sale.created_at.strftime('%Y-%m-%d'),
-            'plan': sale.plan_type.upper(),
-            'amount': sale.amount_paid,
-            'status': 'INSTALLED' if sale.is_used else 'PENDING',
-            'key': sale.license_key
-        })
-        
-    commission = total_revenue * 0.20
+    sales_data = [{'date': s.created_at.strftime('%Y-%m-%d'), 'plan': s.plan_type, 'amount': s.amount_paid, 'status': 'INSTALLED' if s.is_used else 'PENDING', 'key': s.license_key} for s in sales]
     
     return jsonify({
-        'name': dist.name,
-        'code': dist.code,
-        'discount': dist.discount_percent,
-        'total_sales': len(sales),
-        'commission': commission,
+        'name': dist.name, 'code': dist.code, 'discount': dist.discount_percent,
+        'total_sales': len(sales), 'commission': sum(s.amount_paid for s in sales) * 0.20,
         'sales_history': sales_data
     })
 
-@app.route('/api/distributor/logout', methods=['POST'])
-def api_dist_logout():
-    # Optional: Clear token from DB to force logout
-    return jsonify({'success': True})
+# --- FORGOT PASSWORD FLOW ---
+@app.route('/api/forgot-password', methods=['POST'])
+def forgot_password():
+    email = request.json.get('email')
+    dist = Distributor.query.filter_by(email=email).first()
+    if not dist:
+        return jsonify({'success': False, 'message': 'Email not found'})
+    
+    reset_token = secrets.token_urlsafe(32)
+    dist.reset_token = reset_token
+    db.session.commit()
+    
+    reset_url = url_for('reset_password_page', token=reset_token, _external=True)
+    
+    try:
+        msg = Message('Password Reset Request - Zarqeen', recipients=[email])
+        msg.body = f"Click here to reset your password: {reset_url}"
+        mail.send(msg)
+        return jsonify({'success': True, 'message': 'Reset link sent to email'})
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'Error sending email: {str(e)}'})
+
+@app.route('/reset-password/<token>', methods=['GET', 'POST'])
+def reset_password_page(token):
+    dist = Distributor.query.filter_by(reset_token=token).first()
+    if not dist:
+        return "Invalid or Expired Token"
+        
+    if request.method == 'POST':
+        new_pass = request.form.get('password')
+        dist.set_password(new_pass)
+        dist.reset_token = None # Clear token
+        db.session.commit()
+        return "<h1>Password Updated!</h1><p>You can now login at zarqeen.in</p>"
+        
+    return render_template('reset_password.html', token=token)
 
 # ==========================================
-#  TEMPORARY DB RESET TOOL
+#  DB RESET
 # ==========================================
 @app.route('/reset-db-now')
 def reset_database_force():
@@ -390,16 +392,13 @@ def reset_database_force():
             db.create_all()
             if not Distributor.query.first():
                 demo = Distributor(
-                    code="DEMO", 
-                    name="Demo Distributor", 
-                    phone="9999999999",
-                    username="demo",
-                    discount_percent=10
+                    code="DEMO", name="Demo Distributor", phone="9999999999",
+                    email="demo@gmail.com", discount_percent=10
                 )
                 demo.set_password("demo123")
                 db.session.add(demo)
                 db.session.commit()
-        return "<h1>✅ Database Reset Successful!</h1> <p>New 'api_token' column added.</p>"
+        return "<h1>✅ Database Reset!</h1><p>New columns: email, reset_token added.</p>"
     except Exception as e:
         return f"<h1>❌ Error: {e}</h1>"
 
