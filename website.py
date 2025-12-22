@@ -14,6 +14,7 @@ app = Flask(__name__)
 
 # --- 1. CONFIGURATION ---
 app.secret_key = os.environ.get('SECRET_KEY', 'CHANGE_THIS_SECRET')
+FRONTEND_URL = "https://zarqeen.in"  # <--- NEW: Your Frontend URL
 
 # Database
 raw_db_url = os.environ.get('DATABASE_URL', 'sqlite:///site.db')
@@ -52,11 +53,8 @@ class Distributor(db.Model):
     code = db.Column(db.String(20), unique=True, nullable=False)
     name = db.Column(db.String(100), nullable=False)
     phone = db.Column(db.String(20), nullable=False)
-    
-    # Auth Fields
     username = db.Column(db.String(50), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
-    
     discount_percent = db.Column(db.Integer, default=10)
     licenses = db.relationship('License', backref='distributor', lazy=True)
 
@@ -75,7 +73,6 @@ class License(db.Model):
     is_used = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     used_at = db.Column(db.DateTime, nullable=True)
-    # Link to Distributor
     distributor_id = db.Column(db.Integer, db.ForeignKey('distributor.id'), nullable=True)
 
 with app.app_context():
@@ -108,7 +105,8 @@ def generate_unique_key(plan_type):
 
 @app.route('/')
 def home():
-    return redirect(url_for('login'))
+    # UPDATED: Redirect to Frontend instead of Backend Login
+    return redirect(FRONTEND_URL)
 
 @app.route('/api/get-config', methods=['GET'])
 def get_config():
@@ -135,10 +133,7 @@ def create_order():
         plan = data.get('plan')
         code = data.get('distributor_code', '').strip().upper() 
 
-        # Base Prices (in Paise)
         base_amount = 29900 if plan == 'basic' else 59900
-        
-        # Check for Distributor Discount
         dist = Distributor.query.filter_by(code=code).first()
         final_amount = base_amount
         
@@ -163,7 +158,6 @@ def create_order():
 def verify_payment():
     data = request.json
     try:
-        # 1. Verify Signature
         params_dict = {
             'razorpay_order_id': data['razorpay_order_id'],
             'razorpay_payment_id': data['razorpay_payment_id'],
@@ -171,13 +165,10 @@ def verify_payment():
         }
         razorpay_client.utility.verify_payment_signature(params_dict)
 
-        # 2. Get Order Details from Razorpay to find the Distributor ID
         order_info = razorpay_client.order.fetch(data['razorpay_order_id'])
         distributor_id = order_info['notes'].get('distributor_id')
-        
         if distributor_id == 'None': distributor_id = None
 
-        # 3. Generate License
         plan_type = data.get('plan_type')
         amount_paid = order_info['amount'] / 100 
         new_key = generate_unique_key(plan_type)
@@ -191,7 +182,6 @@ def verify_payment():
         )
         db.session.add(new_license)
         db.session.commit()
-
         return jsonify({'success': True, 'license_key': new_key})
 
     except Exception as e:
@@ -214,13 +204,10 @@ def validate_license():
         lic.is_used = True
         lic.used_at = datetime.utcnow()
         db.session.commit()
-        
         duration = 365 if lic.plan_type == 'basic' else 1095
         
-        # Fetch Distributor Details for Local Support
         support_name = "Zarqeen Official"
         support_contact = "zarqeensoftware@gmail.com"
-        
         if lic.distributor:
             support_name = lic.distributor.name
             support_contact = lic.distributor.phone
@@ -234,7 +221,6 @@ def validate_license():
                 'contact': support_contact
             }
         })
-    
     return jsonify({'valid': False, 'message': 'Invalid License Key'})
 
 # ==========================================
@@ -290,11 +276,10 @@ def add_distributor():
         code = request.form.get('code')
         name = request.form.get('name')
         phone = request.form.get('phone')
-        username = request.form.get('username') # NEW
-        password = request.form.get('password') # NEW
+        username = request.form.get('username')
+        password = request.form.get('password')
         disc = request.form.get('discount')
         
-        # Check if username or code exists
         if Distributor.query.filter((Distributor.code==code) | (Distributor.username==username)).first():
             flash('Error: Distributor Code or Username already exists.', 'danger')
             return redirect(url_for('dashboard'))
@@ -306,8 +291,7 @@ def add_distributor():
             username=username,
             discount_percent=int(disc)
         )
-        new_dist.set_password(password) # Secure Hash
-        
+        new_dist.set_password(password)
         db.session.add(new_dist)
         db.session.commit()
         flash('Distributor added successfully!', 'success')
@@ -319,7 +303,8 @@ def add_distributor():
 @app.route('/admin/logout')
 def logout():
     session.pop('admin_logged_in', None)
-    return redirect(url_for('login'))
+    # UPDATED: Redirect to Frontend
+    return redirect(FRONTEND_URL)
 
 # ==========================================
 #  DISTRIBUTOR PORTAL
@@ -333,7 +318,6 @@ def distributor_login():
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
-        
         dist = Distributor.query.filter_by(username=username).first()
         
         if dist and dist.check_password(password):
@@ -352,7 +336,6 @@ def distributor_dashboard():
     
     dist_id = session['distributor_id']
     dist = Distributor.query.get(dist_id)
-    
     my_sales = License.query.filter_by(distributor_id=dist_id).order_by(License.created_at.desc()).all()
     
     total_sales = len(my_sales)
@@ -369,10 +352,11 @@ def distributor_dashboard():
 def distributor_logout():
     session.pop('distributor_id', None)
     session.pop('distributor_name', None)
-    return redirect(url_for('distributor_login'))
+    # UPDATED: Redirect to Frontend
+    return redirect(FRONTEND_URL)
 
 # ==========================================
-#  TEMPORARY DB RESET TOOL (Run once)
+#  TEMPORARY DB RESET TOOL
 # ==========================================
 @app.route('/reset-db-now')
 def reset_database_force():
@@ -380,8 +364,6 @@ def reset_database_force():
         with app.app_context():
             db.drop_all()
             db.create_all()
-            
-            # Create a default distributor to prevent empty table issues
             if not Distributor.query.first():
                 demo = Distributor(
                     code="DEMO", 
@@ -393,8 +375,7 @@ def reset_database_force():
                 demo.set_password("demo123")
                 db.session.add(demo)
                 db.session.commit()
-                
-        return "<h1>✅ Database Reset Successful!</h1> <p>You can now use Admin and Distributor logins.</p>"
+        return "<h1>✅ Database Reset Successful!</h1>"
     except Exception as e:
         return f"<h1>❌ Error: {e}</h1>"
 
