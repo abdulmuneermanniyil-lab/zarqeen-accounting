@@ -40,14 +40,12 @@ app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
 app.config['MAIL_DEFAULT_SENDER'] = ('Zarqeen Support', 'zarqeensoftware@gmail.com')
 
 # --- 2. ENABLE CORS ---
-# This allows your Static Site (zarqeen.in) to fetch data from this Backend
 CORS(app, resources={r"/*": {"origins": "*"}})
 
 mail = Mail(app)
 db = SQLAlchemy(app)
 razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
 
-# --- 3. DATABASE MODELS ---
 # --- 3. DATABASE MODELS ---
 class Distributor(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -60,8 +58,6 @@ class Distributor(db.Model):
     password_hash = db.Column(db.String(256), nullable=False)
     
     discount_percent = db.Column(db.Integer, default=10)
-    
-    # Commission/Earnings Logic (Optional: Calculate earnings based on sales)
     licenses = db.relationship('License', backref='distributor', lazy=True)
 
     def set_password(self, password):
@@ -107,28 +103,37 @@ def generate_unique_key(plan_type):
             return full_key
 
 # ==========================================
-#  PUBLIC API ROUTES (Called by Frontend)
+#  PUBLIC API ROUTES
 # ==========================================
 
 @app.route('/')
 def home():
-    # If someone visits the Backend URL directly, send them to Admin Login
     return redirect(url_for('login'))
 
 @app.route('/api/get-config', methods=['GET'])
 def get_config():
-    """ Sends Razorpay Key to Frontend securely """
     return jsonify({'key_id': RAZORPAY_KEY_ID})
 
-
-
+@app.route('/api/check_distributor', methods=['POST'])
+def check_distributor():
+    data = request.json
+    code = data.get('code', '').strip().upper()
+    dist = Distributor.query.filter_by(code=code).first()
+    
+    if dist:
+        return jsonify({
+            'valid': True, 
+            'discount': dist.discount_percent,
+            'name': dist.name
+        })
+    return jsonify({'valid': False})
 
 @app.route('/create_order', methods=['POST'])
 def create_order():
     try:
         data = request.json
         plan = data.get('plan')
-        code = data.get('distributor_code', '').strip().upper() # Get code from frontend
+        code = data.get('distributor_code', '').strip().upper() 
 
         # Base Prices (in Paise)
         base_amount = 29900 if plan == 'basic' else 59900
@@ -158,7 +163,7 @@ def create_order():
 def verify_payment():
     data = request.json
     try:
-        # 1. Verify Signature (Keep existing code)
+        # 1. Verify Signature
         params_dict = {
             'razorpay_order_id': data['razorpay_order_id'],
             'razorpay_payment_id': data['razorpay_payment_id'],
@@ -167,7 +172,6 @@ def verify_payment():
         razorpay_client.utility.verify_payment_signature(params_dict)
 
         # 2. Get Order Details from Razorpay to find the Distributor ID
-        # (We stored it in notes during create_order)
         order_info = razorpay_client.order.fetch(data['razorpay_order_id'])
         distributor_id = order_info['notes'].get('distributor_id')
         
@@ -175,7 +179,7 @@ def verify_payment():
 
         # 3. Generate License
         plan_type = data.get('plan_type')
-        amount_paid = order_info['amount'] / 100 # Convert back to Rupees
+        amount_paid = order_info['amount'] / 100 
         new_key = generate_unique_key(plan_type)
         
         new_license = License(
@@ -183,7 +187,7 @@ def verify_payment():
             plan_type=plan_type, 
             payment_id=data['razorpay_payment_id'],
             amount_paid=amount_paid,
-            distributor_id=distributor_id  # <--- SAVE ID HERE
+            distributor_id=distributor_id
         )
         db.session.add(new_license)
         db.session.commit()
@@ -194,7 +198,9 @@ def verify_payment():
         print(e)
         return jsonify({'success': False, 'message': str(e)})
 
-
+# ==========================================
+#  DESKTOP APP API
+# ==========================================
 @app.route('/api/validate_license', methods=['POST'])
 def validate_license():
     data = request.json
@@ -205,14 +211,13 @@ def validate_license():
         if lic.is_used:
             return jsonify({'valid': False, 'message': 'License already used.'})
         
-        # Mark as used
         lic.is_used = True
         lic.used_at = datetime.utcnow()
         db.session.commit()
         
         duration = 365 if lic.plan_type == 'basic' else 1095
         
-        # Fetch Distributor Details if they exist
+        # Fetch Distributor Details for Local Support
         support_name = "Zarqeen Official"
         support_contact = "zarqeensoftware@gmail.com"
         
@@ -233,7 +238,7 @@ def validate_license():
     return jsonify({'valid': False, 'message': 'Invalid License Key'})
 
 # ==========================================
-#  ADMIN PANEL (Server-Side Rendering)
+#  ADMIN PANEL
 # ==========================================
 
 @app.route('/admin/login', methods=['GET', 'POST'])
@@ -278,19 +283,37 @@ def edit_license(id):
     flash('License updated', 'success')
     return redirect(url_for('dashboard'))
 
-
 @app.route('/admin/add_distributor', methods=['POST'])
 @login_required
 def add_distributor():
-    code = request.form.get('code')
-    name = request.form.get('name')
-    phone = request.form.get('phone')
-    disc = request.form.get('discount')
-    
-    new_dist = Distributor(code=code, name=name, phone=phone, discount_percent=int(disc))
-    db.session.add(new_dist)
-    db.session.commit()
-    flash('Distributor added!', 'success')
+    try:
+        code = request.form.get('code')
+        name = request.form.get('name')
+        phone = request.form.get('phone')
+        username = request.form.get('username') # NEW
+        password = request.form.get('password') # NEW
+        disc = request.form.get('discount')
+        
+        # Check if username or code exists
+        if Distributor.query.filter((Distributor.code==code) | (Distributor.username==username)).first():
+            flash('Error: Distributor Code or Username already exists.', 'danger')
+            return redirect(url_for('dashboard'))
+
+        new_dist = Distributor(
+            code=code, 
+            name=name, 
+            phone=phone, 
+            username=username,
+            discount_percent=int(disc)
+        )
+        new_dist.set_password(password) # Secure Hash
+        
+        db.session.add(new_dist)
+        db.session.commit()
+        flash('Distributor added successfully!', 'success')
+    except Exception as e:
+        flash(f'Error adding distributor: {str(e)}', 'danger')
+        
     return redirect(url_for('dashboard'))
 
 @app.route('/admin/logout')
@@ -298,43 +321,8 @@ def logout():
     session.pop('admin_logged_in', None)
     return redirect(url_for('login'))
 
-@app.route('/api/check_distributor', methods=['POST'])
-def check_distributor():
-    data = request.json
-    code = data.get('code', '').strip().upper()
-    dist = Distributor.query.filter_by(code=code).first()
-    
-    if dist:
-        return jsonify({
-            'valid': True, 
-            'discount': dist.discount_percent,
-            'name': dist.name
-        })
-    return jsonify({'valid': False})
-
 # ==========================================
-#  DESKTOP APP API
-# ==========================================
-@app.route('/api/validate_license', methods=['POST'])
-def validate_license():
-    data = request.json
-    key_input = data.get('license_key', '').strip()
-    lic = License.query.filter_by(license_key=key_input).first()
-    
-    if lic:
-        if lic.is_used:
-            return jsonify({'valid': False, 'message': 'License already used.'})
-        lic.is_used = True
-        lic.used_at = datetime.utcnow()
-        db.session.commit()
-        duration = 365 if lic.plan_type == 'basic' else 1095
-        return jsonify({'valid': True, 'plan': lic.plan_type, 'duration_days': duration})
-    
-    return jsonify({'valid': False, 'message': 'Invalid License Key'})
-
-
-# ==========================================
-#  DISTRIBUTOR PORTAL ROUTES
+#  DISTRIBUTOR PORTAL
 # ==========================================
 
 @app.route('/distributor/login', methods=['GET', 'POST'])
@@ -365,14 +353,11 @@ def distributor_dashboard():
     dist_id = session['distributor_id']
     dist = Distributor.query.get(dist_id)
     
-    # Fetch licenses linked to this distributor
-    # "Pending" here implies keys generated but not yet used by the customer
     my_sales = License.query.filter_by(distributor_id=dist_id).order_by(License.created_at.desc()).all()
     
     total_sales = len(my_sales)
-    # Calculate simple commission (e.g., 20% of revenue generated)
     total_revenue = sum(lic.amount_paid for lic in my_sales)
-    commission = total_revenue * 0.20 # Assuming distributor gets 20% cut
+    commission = total_revenue * 0.20 
     
     return render_template('distributor_dashboard.html', 
                            distributor=dist, 
@@ -387,13 +372,31 @@ def distributor_logout():
     return redirect(url_for('distributor_login'))
 
 # ==========================================
-#  TEMPORARY DB RESET TOOL
-#  (Delete this section after use)
+#  TEMPORARY DB RESET TOOL (Run once)
 # ==========================================
-
-
+@app.route('/reset-db-now')
+def reset_database_force():
+    try:
+        with app.app_context():
+            db.drop_all()
+            db.create_all()
+            
+            # Create a default distributor to prevent empty table issues
+            if not Distributor.query.first():
+                demo = Distributor(
+                    code="DEMO", 
+                    name="Demo Distributor", 
+                    phone="9999999999",
+                    username="demo",
+                    discount_percent=10
+                )
+                demo.set_password("demo123")
+                db.session.add(demo)
+                db.session.commit()
+                
+        return "<h1>✅ Database Reset Successful!</h1> <p>You can now use Admin and Distributor logins.</p>"
+    except Exception as e:
+        return f"<h1>❌ Error: {e}</h1>"
 
 if __name__ == '__main__':
     app.run(debug=True)
-
-
