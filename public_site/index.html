@@ -199,28 +199,28 @@
 
     <!-- FEATURES SECTION -->
     <section id="features" class="features">
-        <div class="feature-card">
-            <div class="icon-box">⚡</div>
-            <h3>Lightning Fast & Offline</h3>
-            <p>Generates bills in seconds. Works 100% offline so your data stays safe on your own computer. No cloud fees.</p>
-        </div>
-        
-        <!-- NEW TEMPLATE FEATURE -->
-        <div class="feature-card">
-            <div class="icon-box">🖨️</div>
-            <h3>All Paper Sizes</h3>
-            <p>Supports A4, A5, and Thermal Printers (2-inch & 3-inch). Print perfectly on any device.</p>
-        </div>
+    <div class="feature-card">
+        <div class="icon-box">⚡</div>
+        <h3>Lightning Fast & Offline</h3>
+        <p>Generates bills in seconds. Works 100% offline so your data stays safe on your own computer. No cloud fees.</p>
+    </div>
+    
+    <div class="feature-card">
+        <div class="icon-box">🖨️</div>
+        <h3>All Paper Sizes</h3>
+        <p>Supports A4, A5, and Thermal Printers (2-inch & 3-inch). Print perfectly on any device.</p>
+    </div>
 
-        
-        <div class="feature-card">
-            <div class="icon-box">
-                <img src="https://flagcdn.com/w80/in.png" alt="India Flag" style="width: 35px; height: auto;">
-            </div>
-            <h3>Exclusively for India</h3>
-            <p>Built specifically for the Indian market. Pre-loaded with Indian State codes and currency formats.</p>
+    <!-- Removed Auto Tax Card as requested -->
+    
+    <div class="feature-card">
+        <div class="icon-box">
+            <img src="https://flagcdn.com/w80/in.png" alt="India Flag" style="width: 35px; height: auto;">
         </div>
-    </section>
+        <h3>Exclusively for India</h3>
+        <p>Built specifically for the Indian market. Pre-loaded with Indian State codes and currency formats.</p>
+    </div>
+</section>
 
     <!-- PRICING SECTION -->
     <section id="pricing" class="pricing-section">
@@ -366,43 +366,59 @@
 
     <!-- 2. LOGIN MODAL -->
     <div id="loginModal" class="modal">
-        <div class="modal-content">
-            <span class="close-icon" onclick="closeLoginModal()">&times;</span>
-            <h2 style="text-align: center; margin-bottom: 20px;">Portal Login</h2>
-            
-            <div class="login-tabs">
-                <button class="tab-btn active" onclick="switchTab('distributor')">Distributor</button>
-                <button class="tab-btn" onclick="switchTab('admin')">Admin</button>
-            </div>
-
-            <!-- DISTRIBUTOR FORM (AJAX) -->
-            <form id="distForm" class="login-form active">
-                <div class="form-group">
-                    <label>Distributor Username</label>
-                    <input type="text" name="username" required>
-                </div>
-                <div class="form-group">
-                    <label>Password</label>
-                    <input type="password" name="password" required>
-                </div>
-                <button type="submit" class="btn-buy primary">Login as Distributor</button>
-            </form>
-
-            <!-- ADMIN FORM (POST) -->
-            <form id="adminForm" class="login-form" method="POST">
-                <div class="form-group">
-                    <label>Admin Username</label>
-                    <input type="text" name="username" required>
-                </div>
-                <div class="form-group">
-                    <label>Password</label>
-                    <input type="password" name="password" required>
-                </div>
-                <button type="submit" class="btn-buy primary" style="background: #111827;">Login as Admin</button>
-            </form>
-
+    <div class="modal-content">
+        <span class="close-icon" onclick="closeLoginModal()">&times;</span>
+        <h2 style="text-align: center; margin-bottom: 20px;">Portal Login</h2>
+        
+        <div class="login-tabs">
+            <button class="tab-btn active" onclick="switchTab('distributor')">Distributor</button>
+            <button class="tab-btn" onclick="switchTab('admin')">Admin</button>
         </div>
+
+        <!-- DISTRIBUTOR FORM -->
+        <form id="distForm" class="login-form active">
+            <div class="form-group">
+                <label>Verified Email</label>
+                <input type="email" name="email" required> <!-- Changed to Email -->
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" name="password" required>
+            </div>
+            <div style="text-align: right; margin-bottom: 10px;">
+                <a onclick="showForgot()" style="color:var(--primary); font-size:0.85rem; cursor:pointer;">Forgot Password?</a>
+            </div>
+            <button type="submit" class="btn-buy primary">Login</button>
+        </form>
+
+        <!-- FORGOT PASSWORD FORM (Hidden by default) -->
+        <form id="forgotForm" class="login-form" style="display:none;">
+            <h3 style="margin-bottom:15px;">Reset Password</h3>
+            <p style="font-size:0.9rem; color:#666; margin-bottom:15px;">Enter your verified email. We will send you a reset link.</p>
+            <div class="form-group">
+                <label>Email Address</label>
+                <input type="email" id="forgotEmail" required>
+            </div>
+            <button type="button" onclick="sendResetLink()" class="btn-buy secondary">Send Reset Link</button>
+            <p style="text-align:center; margin-top:10px;">
+                <a onclick="hideForgot()" style="cursor:pointer; color:#666; font-size:0.9rem;">Back to Login</a>
+            </p>
+        </form>
+
+        <!-- ADMIN FORM -->
+        <form id="adminForm" class="login-form" method="POST">
+            <div class="form-group">
+                <label>Admin Username</label>
+                <input type="text" name="username" required>
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" name="password" required>
+            </div>
+            <button type="submit" class="btn-buy primary" style="background: #111827;">Login as Admin</button>
+        </form>
     </div>
+</div>
 
     <!-- JAVASCRIPT LOGIC -->
     <script>
@@ -754,6 +770,41 @@
                 loadDashboard();
             }
         })
+         function showForgot() {
+        document.getElementById('distForm').style.display = 'none';
+        document.getElementById('forgotForm').style.display = 'block';
+    }
+
+    function hideForgot() {
+        document.getElementById('distForm').style.display = 'block';
+        document.getElementById('forgotForm').style.display = 'none';
+    }
+
+    async function sendResetLink() {
+        const email = document.getElementById('forgotEmail').value;
+        const btn = document.querySelector('#forgotForm button');
+        
+        if(!email) { alert("Please enter email"); return; }
+        
+        btn.innerText = "Sending...";
+        btn.disabled = true;
+
+        try {
+            const res = await fetch(`${BACKEND_URL}/api/forgot-password`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: email })
+            });
+            const data = await res.json();
+            alert(data.message);
+            if(data.success) hideForgot();
+        } catch(e) {
+            alert("Error sending email");
+        } finally {
+            btn.innerText = "Send Reset Link";
+            btn.disabled = false;
+        }
+    }
     </script>
 </body>
 </html>
