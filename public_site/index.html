@@ -483,22 +483,28 @@
         }
 
         function switchTab(type) {
-            const distForm = document.getElementById('distForm');
-            const adminForm = document.getElementById('adminForm');
-            const btns = document.querySelectorAll('.tab-btn');
-            
-            if(type === 'distributor') {
-                distForm.classList.add('active');
-                adminForm.classList.remove('active');
-                btns[0].classList.add('active');
-                btns[1].classList.remove('active');
-            } else {
-                distForm.classList.remove('active');
-                adminForm.classList.add('active');
-                btns[0].classList.remove('active');
-                btns[1].classList.add('active');
-            }
-        }
+    const distForm = document.getElementById('distForm');
+    const adminForm = document.getElementById('adminForm');
+    const forgotForm = document.getElementById('forgotForm'); // Get forgot form
+    const btns = document.querySelectorAll('.tab-btn');
+    
+    // ALWAYS hide the forgot password form when switching tabs
+    forgotForm.style.display = 'none';
+
+    if(type === 'distributor') {
+        distForm.style.display = 'block'; // Force show distributor form
+        distForm.classList.add('active');
+        adminForm.classList.remove('active');
+        btns[0].classList.add('active');
+        btns[1].classList.remove('active');
+    } else {
+        distForm.style.display = 'none'; // Force hide distributor form
+        distForm.classList.remove('active');
+        adminForm.classList.add('active');
+        btns[0].classList.remove('active');
+        btns[1].classList.add('active');
+    }
+}
 
         // Close modal on outside click
         window.onclick = function(event) {
