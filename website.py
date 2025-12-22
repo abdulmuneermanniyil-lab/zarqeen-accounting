@@ -1,6 +1,7 @@
 import os
 import random
 import string
+import secrets  # <--- NEW IMPORT
 import razorpay
 from datetime import datetime
 from functools import wraps
@@ -12,20 +13,11 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 
-# --- 1. CONFIGURATION (UPDATED FOR CROSS-ORIGIN COOKIES) ---
+# --- 1. CONFIGURATION ---
 app.secret_key = os.environ.get('SECRET_KEY', 'CHANGE_THIS_SECRET')
 FRONTEND_URL = "https://zarqeen.in"
 
-# ⚠️ CRITICAL SETTINGS FOR DISTRIBUTOR LOGIN
-# These allow the cookie to travel from 'zarqeen.in' to 'onrender.com'
-app.config.update(
-    SESSION_COOKIE_SAMESITE='None',
-    SESSION_COOKIE_SECURE=True,
-    SESSION_COOKIE_HTTPONLY=True,
-    SESSION_COOKIE_DOMAIN=None  # Leave None so it uses the backend domain
-)
-
-# ... Database Config ...
+# Database
 raw_db_url = os.environ.get('DATABASE_URL', 'sqlite:///site.db')
 if raw_db_url.startswith("postgres://"):
     raw_db_url = raw_db_url.replace("postgres://", "postgresql://", 1)
@@ -50,9 +42,8 @@ app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
 app.config['MAIL_DEFAULT_SENDER'] = ('Zarqeen Support', 'zarqeensoftware@gmail.com')
 
 # --- 2. ENABLE CORS ---
-CORS(app, 
-     resources={r"/*": {"origins": ["https://zarqeen.in", "https://www.zarqeen.in"]}}, 
-     supports_credentials=True)
+# We allow all origins because we are now using Tokens, not Cookies.
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 mail = Mail(app)
 db = SQLAlchemy(app)
@@ -67,6 +58,10 @@ class Distributor(db.Model):
     username = db.Column(db.String(50), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
     discount_percent = db.Column(db.Integer, default=10)
+    
+    # NEW: Token for Frontend Login
+    api_token = db.Column(db.String(100), nullable=True)
+    
     licenses = db.relationship('License', backref='distributor', lazy=True)
 
     def set_password(self, password):
@@ -116,7 +111,6 @@ def generate_unique_key(plan_type):
 
 @app.route('/')
 def home():
-    # UPDATED: Redirect to Frontend instead of Backend Login
     return redirect(FRONTEND_URL)
 
 @app.route('/api/get-config', methods=['GET'])
@@ -199,9 +193,6 @@ def verify_payment():
         print(e)
         return jsonify({'success': False, 'message': str(e)})
 
-# ==========================================
-#  DESKTOP APP API
-# ==========================================
 @app.route('/api/validate_license', methods=['POST'])
 def validate_license():
     data = request.json
@@ -314,15 +305,10 @@ def add_distributor():
 @app.route('/admin/logout')
 def logout():
     session.pop('admin_logged_in', None)
-    # UPDATED: Redirect to Frontend
     return redirect(FRONTEND_URL)
 
 # ==========================================
-#  DISTRIBUTOR PORTAL
-# ==========================================
-
-# ==========================================
-#  DISTRIBUTOR API (JSON)
+#  DISTRIBUTOR API (TOKEN BASED)
 # ==========================================
 
 @app.route('/api/distributor/login', methods=['POST'])
@@ -334,20 +320,35 @@ def api_distributor_login():
     dist = Distributor.query.filter_by(username=username).first()
     
     if dist and dist.check_password(password):
-        session['distributor_id'] = dist.id
-        return jsonify({'success': True})
+        # Generate and save a new token
+        token = secrets.token_hex(16)
+        dist.api_token = token
+        db.session.commit()
+        
+        # Return token to Frontend
+        return jsonify({'success': True, 'token': token})
     
     return jsonify({'success': False, 'message': 'Invalid Credentials'})
 
 @app.route('/api/distributor/data', methods=['GET'])
 def api_get_distributor_data():
-    if not session.get('distributor_id'):
-        return jsonify({'error': 'Unauthorized'}), 401
+    # Authenticate via Header
+    auth_header = request.headers.get('Authorization')
+    token = None
     
-    dist_id = session['distributor_id']
-    dist = Distributor.query.get(dist_id)
+    if auth_header and auth_header.startswith("Bearer "):
+        token = auth_header.split(" ")[1]
     
-    sales = License.query.filter_by(distributor_id=dist_id).order_by(License.created_at.desc()).all()
+    if not token:
+        return jsonify({'error': 'Missing Token'}), 401
+        
+    dist = Distributor.query.filter_by(api_token=token).first()
+    
+    if not dist:
+        return jsonify({'error': 'Invalid Token'}), 401
+    
+    # Fetch Data
+    sales = License.query.filter_by(distributor_id=dist.id).order_by(License.created_at.desc()).all()
     
     sales_data = []
     total_revenue = 0
@@ -373,56 +374,10 @@ def api_get_distributor_data():
         'sales_history': sales_data
     })
 
-@app.route('/api/logout', methods=['POST'])
-def api_logout():
-    session.clear()
+@app.route('/api/distributor/logout', methods=['POST'])
+def api_dist_logout():
+    # Optional: Clear token from DB to force logout
     return jsonify({'success': True})
-
-
-@app.route('/distributor/login', methods=['GET', 'POST'])
-def distributor_login():
-    if session.get('distributor_id'):
-        return redirect(url_for('distributor_dashboard'))
-        
-    if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
-        dist = Distributor.query.filter_by(username=username).first()
-        
-        if dist and dist.check_password(password):
-            session['distributor_id'] = dist.id
-            session['distributor_name'] = dist.name
-            return redirect(url_for('distributor_dashboard'))
-        else:
-            flash('Invalid Username or Password', 'danger')
-            
-    return render_template('distributor_login.html')
-
-@app.route('/distributor/dashboard')
-def distributor_dashboard():
-    if not session.get('distributor_id'):
-        return redirect(url_for('distributor_login'))
-    
-    dist_id = session['distributor_id']
-    dist = Distributor.query.get(dist_id)
-    my_sales = License.query.filter_by(distributor_id=dist_id).order_by(License.created_at.desc()).all()
-    
-    total_sales = len(my_sales)
-    total_revenue = sum(lic.amount_paid for lic in my_sales)
-    commission = total_revenue * 0.20 
-    
-    return render_template('distributor_dashboard.html', 
-                           distributor=dist, 
-                           sales=my_sales, 
-                           total_sales=total_sales,
-                           commission=commission)
-
-@app.route('/distributor/logout')
-def distributor_logout():
-    session.pop('distributor_id', None)
-    session.pop('distributor_name', None)
-    # UPDATED: Redirect to Frontend
-    return redirect(FRONTEND_URL)
 
 # ==========================================
 #  TEMPORARY DB RESET TOOL
@@ -444,7 +399,7 @@ def reset_database_force():
                 demo.set_password("demo123")
                 db.session.add(demo)
                 db.session.commit()
-        return "<h1>✅ Database Reset Successful!</h1>"
+        return "<h1>✅ Database Reset Successful!</h1> <p>New 'api_token' column added.</p>"
     except Exception as e:
         return f"<h1>❌ Error: {e}</h1>"
 
