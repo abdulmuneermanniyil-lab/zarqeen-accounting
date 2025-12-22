@@ -84,12 +84,17 @@ class License(db.Model):
 
 with app.app_context():
     try:
-        db.create_all()
-        # Create a default distributor for testing if none exists
+        # FORCE RESET ON STARTUP
+        db.drop_all()   # <--- Add this
+        db.create_all() # <--- Recreates tables
+        
+        # Create default distributor
         if not Distributor.query.first():
-            demo = Distributor(code="ZARQEEN10", name="Official Support", phone="zarqeensoftware@gmail.com", discount_percent=10)
+            demo = Distributor(code="DEMO", name="Demo", phone="000", username="demo", discount_percent=10)
+            demo.set_password("demo123")
             db.session.add(demo)
             db.session.commit()
+            
     except Exception as e:
         print(f"DB Error: {e}")
 
@@ -402,29 +407,3 @@ if __name__ == '__main__':
     app.run(debug=True)
 
 
-@app.route('/reset-db-now')
-def reset_database_force():
-    try:
-        with app.app_context():
-            # This deletes ALL data and tables
-            db.drop_all()
-            # This creates the new tables with the correct columns
-            db.create_all()
-            
-            # Create a default admin/distributor so you aren't locked out
-            # Optional: Create default distributor
-            if not Distributor.query.first():
-                demo = Distributor(
-                    code="DEMO", 
-                    name="Demo Distributor", 
-                    phone="0000000000",
-                    username="demo",
-                    discount_percent=10
-                )
-                demo.set_password("demo123")
-                db.session.add(demo)
-                db.session.commit()
-                
-        return "<h1>✅ Database Reset Successful!</h1> <p>New columns created. You can now use the app.</p>"
-    except Exception as e:
-        return f"<h1>❌ Error: {e}</h1>"
