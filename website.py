@@ -208,6 +208,20 @@ def logout():
     session.pop('admin_logged_in', None)
     return redirect(url_for('login'))
 
+@app.route('/api/check_distributor', methods=['POST'])
+def check_distributor():
+    data = request.json
+    code = data.get('code', '').strip().upper()
+    dist = Distributor.query.filter_by(code=code).first()
+    
+    if dist:
+        return jsonify({
+            'valid': True, 
+            'discount': dist.discount_percent,
+            'name': dist.name
+        })
+    return jsonify({'valid': False})
+
 # ==========================================
 #  DESKTOP APP API
 # ==========================================
