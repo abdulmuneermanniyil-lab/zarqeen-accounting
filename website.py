@@ -282,6 +282,21 @@ def edit_license(id):
     flash('License updated', 'success')
     return redirect(url_for('dashboard'))
 
+
+@app.route('/admin/add_distributor', methods=['POST'])
+@login_required
+def add_distributor():
+    code = request.form.get('code')
+    name = request.form.get('name')
+    phone = request.form.get('phone')
+    disc = request.form.get('discount')
+    
+    new_dist = Distributor(code=code, name=name, phone=phone, discount_percent=int(disc))
+    db.session.add(new_dist)
+    db.session.commit()
+    flash('Distributor added!', 'success')
+    return redirect(url_for('dashboard'))
+
 @app.route('/admin/logout')
 def logout():
     session.pop('admin_logged_in', None)
