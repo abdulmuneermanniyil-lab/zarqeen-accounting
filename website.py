@@ -102,14 +102,30 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-def generate_unique_key(plan_type):
-    prefix = "BAS" if plan_type == 'basic' else "PRE"
-    while True:
-        part1 = ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
-        part2 = ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
-        full_key = f"ZQ-{prefix}-{part1}-{part2}"
-        if not License.query.filter_by(license_key=full_key).first():
-            return full_key
+def generate_unique_key(plan_type, dist_code=None):
+    # 1. Plan Indicator (3 chars)
+    plan_str = "BAS" if plan_type == 'basic' else "PRE"
+    
+    # 2. Distributor Part (4 chars)
+    # If no distributor, use "ZARQ" (Default)
+    # If distributor code is provided, take first 4 chars, upper case
+    d_part = dist_code.upper()[:4] if dist_code else "ZARQ"
+    
+    # Ensure it is exactly 4 chars (pad with 'X' if shorter)
+    d_part = d_part.ljust(4, 'X') 
+    
+    # 3. Random Suffix (8 chars)
+    # Result example: ZQ-ABCD-PRE-9X8Y2Z1A
+    part1 = ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
+    part2 = ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
+    
+    full_key = f"AL-{d_part}-{plan_str}-{part1}{part2}"
+    
+    # Ensure uniqueness
+    if License.query.filter_by(license_key=full_key).first():
+        return generate_unique_key(plan_type, dist_code)
+        
+    return full_key
 
 # ==========================================
 #  PUBLIC API ROUTES
