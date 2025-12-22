@@ -14,7 +14,10 @@ app = Flask(__name__)
 
 # --- 1. CONFIGURATION ---
 app.secret_key = os.environ.get('SECRET_KEY', 'CHANGE_THIS_SECRET')
-FRONTEND_URL = "https://zarqeen.in"  # <--- NEW: Your Frontend URL
+FRONTEND_URL = "https://zarqeen.in" 
+
+app.config['SESSION_COOKIE_SAMESITE'] = 'None'
+app.config['SESSION_COOKIE_SECURE'] = True 
 
 # Database
 raw_db_url = os.environ.get('DATABASE_URL', 'sqlite:///site.db')
@@ -41,7 +44,9 @@ app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
 app.config['MAIL_DEFAULT_SENDER'] = ('Zarqeen Support', 'zarqeensoftware@gmail.com')
 
 # --- 2. ENABLE CORS ---
-CORS(app, resources={r"/*": {"origins": "*"}})
+CORS(app, 
+     resources={r"/*": {"origins": ["https://zarqeen.in", "https://www.zarqeen.in"]}}, 
+     supports_credentials=True)
 
 mail = Mail(app)
 db = SQLAlchemy(app)
