@@ -13,19 +13,25 @@
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th, td { text-align: left; padding: 12px; border-bottom: 1px solid #E5E7EB; }
         th { background: #F9FAFB; }
-        .btn { padding: 8px 12px; border-radius: 5px; border: none; cursor: pointer; color: white; }
+        .btn { padding: 8px 12px; border-radius: 5px; border: none; cursor: pointer; color: white; margin-right: 5px; text-decoration: none; display: inline-block; font-size: 0.9rem;}
         .btn-red { background: #EF4444; }
         .btn-green { background: #10B981; }
+        .btn-blue { background: #2563EB; }
         input { padding: 8px; border: 1px solid #D1D5DB; border-radius: 5px; width: 100%; box-sizing: border-box; margin-bottom: 10px; }
         label { font-size: 0.85rem; font-weight: 600; color: #4B5563; }
         .grid-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        
+        /* Modal */
+        .modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); backdrop-filter: blur(2px); }
+        .modal-content { background-color: white; margin: 10vh auto; padding: 2rem; border-radius: 12px; width: 90%; max-width: 500px; position: relative; }
+        .close { position: absolute; right: 20px; top: 20px; font-size: 24px; cursor: pointer; color: #9CA3AF; }
     </style>
 </head>
 <body>
     <div class="container">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
             <h1>Admin Dashboard</h1>
-            <a href="/admin/logout" class="btn btn-red" style="text-decoration:none;">Logout</a>
+            <a href="/admin/logout" class="btn btn-red">Logout</a>
         </div>
 
         <!-- 1. ADD DISTRIBUTOR -->
@@ -35,7 +41,7 @@
                 <div><label>Business Name</label><input type="text" name="name" required></div>
                 <div><label>Email (Login)</label><input type="email" name="email" required></div>
                 <div><label>Phone</label><input type="text" name="phone" required></div>
-                <div><label>Code (Unique)</label><input type="text" name="code" style="text-transform:uppercase" required></div>
+                <div><label>Code</label><input type="text" name="code" style="text-transform:uppercase" required></div>
                 <div><label>Password</label><input type="password" name="password" required></div>
                 <div><label>Discount %</label><input type="number" name="discount" value="10"></div>
                 <div style="display:flex; align-items:end;"><button type="submit" class="btn btn-green" style="width:100%">Create Account</button></div>
@@ -47,13 +53,7 @@
             <h2>👥 Manage Distributors</h2>
             <table>
                 <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Code</th>
-                        <th>Discount</th>
-                        <th>Action</th>
-                    </tr>
+                    <tr><th>Name</th><th>Email</th><th>Code</th><th>Discount</th><th>Action</th></tr>
                 </thead>
                 <tbody>
                     {% for dist in distributors %}
@@ -63,7 +63,9 @@
                         <td><strong>{{ dist.code }}</strong></td>
                         <td>{{ dist.discount_percent }}%</td>
                         <td>
-                            <form action="{{ url_for('delete_distributor', id=dist.id) }}" method="POST" onsubmit="return confirm('Delete this distributor?');">
+                            <button class="btn btn-blue" onclick="openEditModal('{{dist.id}}','{{dist.name}}','{{dist.email}}','{{dist.phone}}','{{dist.code}}','{{dist.discount_percent}}')">Edit</button>
+                            
+                            <form action="{{ url_for('delete_distributor', id=dist.id) }}" method="POST" style="display:inline" onsubmit="return confirm('Delete this distributor?');">
                                 <button class="btn btn-red">Delete</button>
                             </form>
                         </td>
@@ -79,9 +81,7 @@
         <div class="card">
             <h2>📂 Recent Licenses</h2>
             <table>
-                <thead>
-                    <tr><th>Date</th><th>Key</th><th>Plan</th><th>Sold By</th><th>Amt</th></tr>
-                </thead>
+                <thead><tr><th>Date</th><th>Key</th><th>Plan</th><th>Sold By</th><th>Amt</th></tr></thead>
                 <tbody>
                     {% for lic in licenses %}
                     <tr>
@@ -96,5 +96,36 @@
             </table>
         </div>
     </div>
+
+    <!-- EDIT MODAL -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeEditModal()">&times;</span>
+            <h2 style="margin-bottom: 20px;">Edit Distributor</h2>
+            <form id="editForm" method="POST" action="">
+                <label>Name</label><input type="text" name="name" id="edit_name" required>
+                <label>Email</label><input type="email" name="email" id="edit_email" required>
+                <label>Phone</label><input type="text" name="phone" id="edit_phone" required>
+                <label>Code</label><input type="text" name="code" id="edit_code" required>
+                <label>Discount %</label><input type="number" name="discount" id="edit_disc" required>
+                <label>Reset Password (Optional)</label><input type="password" name="password" placeholder="Leave blank to keep current">
+                <button type="submit" class="btn btn-blue" style="width:100%; margin-top:10px;">Save Changes</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function openEditModal(id, name, email, phone, code, disc) {
+            document.getElementById('editForm').action = `/admin/edit_distributor/${id}`;
+            document.getElementById('edit_name').value = name;
+            document.getElementById('edit_email').value = email;
+            document.getElementById('edit_phone').value = phone;
+            document.getElementById('edit_code').value = code;
+            document.getElementById('edit_disc').value = disc;
+            document.getElementById('editModal').style.display = 'block';
+        }
+        function closeEditModal() { document.getElementById('editModal').style.display = 'none'; }
+        window.onclick = function(e) { if(e.target == document.getElementById('editModal')) closeEditModal(); }
+    </script>
 </body>
 </html>
