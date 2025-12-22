@@ -395,6 +395,13 @@ def distributor_logout():
 #  TEMPORARY DB RESET TOOL
 #  (Delete this section after use)
 # ==========================================
+
+
+
+if __name__ == '__main__':
+    app.run(debug=True)
+
+
 @app.route('/reset-db-now')
 def reset_database_force():
     try:
@@ -421,7 +428,3 @@ def reset_database_force():
         return "<h1>✅ Database Reset Successful!</h1> <p>New columns created. You can now use the app.</p>"
     except Exception as e:
         return f"<h1>❌ Error: {e}</h1>"
-
-
-if __name__ == '__main__':
-    app.run(debug=True)
