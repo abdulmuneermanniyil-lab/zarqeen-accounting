@@ -310,6 +310,64 @@ def logout():
 #  DISTRIBUTOR PORTAL
 # ==========================================
 
+# ==========================================
+#  DISTRIBUTOR API (JSON)
+# ==========================================
+
+@app.route('/api/distributor/login', methods=['POST'])
+def api_distributor_login():
+    data = request.json
+    username = data.get('username')
+    password = data.get('password')
+    
+    dist = Distributor.query.filter_by(username=username).first()
+    
+    if dist and dist.check_password(password):
+        session['distributor_id'] = dist.id
+        return jsonify({'success': True})
+    
+    return jsonify({'success': False, 'message': 'Invalid Credentials'})
+
+@app.route('/api/distributor/data', methods=['GET'])
+def api_get_distributor_data():
+    if not session.get('distributor_id'):
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    dist_id = session['distributor_id']
+    dist = Distributor.query.get(dist_id)
+    
+    sales = License.query.filter_by(distributor_id=dist_id).order_by(License.created_at.desc()).all()
+    
+    sales_data = []
+    total_revenue = 0
+    
+    for sale in sales:
+        total_revenue += sale.amount_paid
+        sales_data.append({
+            'date': sale.created_at.strftime('%Y-%m-%d'),
+            'plan': sale.plan_type.upper(),
+            'amount': sale.amount_paid,
+            'status': 'INSTALLED' if sale.is_used else 'PENDING',
+            'key': sale.license_key
+        })
+        
+    commission = total_revenue * 0.20
+    
+    return jsonify({
+        'name': dist.name,
+        'code': dist.code,
+        'discount': dist.discount_percent,
+        'total_sales': len(sales),
+        'commission': commission,
+        'sales_history': sales_data
+    })
+
+@app.route('/api/logout', methods=['POST'])
+def api_logout():
+    session.clear()
+    return jsonify({'success': True})
+
+
 @app.route('/distributor/login', methods=['GET', 'POST'])
 def distributor_login():
     if session.get('distributor_id'):
