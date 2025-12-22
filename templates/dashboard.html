@@ -74,7 +74,14 @@
             <a href="/admin/logout" class="btn btn-logout">Logout</a>
         </div>
     </div>
-
+<h3>Add Distributor</h3>
+<form action="/admin/add_distributor" method="POST">
+    <input type="text" name="code" placeholder="Code (e.g. ALI10)" required>
+    <input type="text" name="name" placeholder="Name" required>
+    <input type="text" name="phone" placeholder="Phone" required>
+    <input type="number" name="discount" placeholder="Discount %" value="10" required>
+    <button type="submit">Add</button>
+</form>
     <!-- Messages -->
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
