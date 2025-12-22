@@ -113,6 +113,19 @@
             .hero h1 { font-size: 2.25rem; }
             .plan-card.popular { transform: none; }
         }
+
+        /* DASHBOARD STYLES */
+#dashboardSection { display: none; padding: 2rem; background: #F3F4F6; min-height: 100vh; }
+.dash-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+.dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+.dash-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+.dash-val { font-size: 2rem; font-weight: 700; color: var(--primary); }
+.dash-table { width: 100%; background: white; border-radius: 12px; border-collapse: collapse; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+.dash-table th, .dash-table td { padding: 15px; text-align: left; border-bottom: 1px solid #E5E7EB; }
+.dash-table th { background: #F9FAFB; font-weight: 600; }
+.status-badge { padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 700; }
+.status-installed { background: #D1FAE5; color: #065F46; }
+.status-pending { background: #FEE2E2; color: #991B1B; }
     </style>
 </head>
 
