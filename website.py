@@ -138,31 +138,43 @@ def create_order():
     try:
         data = request.json
         plan = data.get('plan')
-        code = data.get('distributor_code', '').strip().upper() 
-
-        base_amount = 29900 if plan == 'basic' else 59900
-        dist = Distributor.query.filter_by(code=code).first()
-        final_amount = base_amount
         
-        dist_id_str = "None"
+        # 1. Safely get the code
+        raw_code = data.get('distributor_code')
+        code = raw_code.strip().upper() if raw_code else ""
+
+        # 2. Base Amount (Paise)
+        base_amount = 29900 if plan == 'basic' else 59900
+        
+        # 3. Check Distributor (Only if code exists)
+        dist = None
+        if code:
+            dist = Distributor.query.filter_by(code=code).first()
+        
+        final_amount = base_amount
+        dist_id_str = "None" # Razorpay Notes MUST be strings
+
         if dist:
+            # Calculate Discount
             discount_amount = (base_amount * dist.discount_percent) / 100
             final_amount = int(base_amount - discount_amount)
-            dist_id_str = str(dist.id) # ⚠️ FIX: Must be String for Razorpay Notes
+            dist_id_str = str(dist.id)
         
+        # 4. Create Order
         order = razorpay_client.order.create({
             'amount': final_amount, 
             'currency': 'INR', 
             'payment_capture': '1',
             'notes': {
-                'plan': plan,
-                'distributor_id': dist_id_str
+                'plan': str(plan), # Ensure String
+                'distributor_id': dist_id_str # Ensure String
             }
         })
         return jsonify(order)
+
     except Exception as e:
-        print(f"Order Error: {e}")
-        return jsonify({'error': str(e)}), 500
+        print(f"PAYMENT ERROR: {e}") # Check Render Logs if this happens
+        return jsonify({'error': 'Server Error during Order Creation'}), 500
 
 @app.route('/verify_payment', methods=['POST'])
 def verify_payment():
