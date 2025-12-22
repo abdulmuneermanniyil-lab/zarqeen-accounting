@@ -125,20 +125,7 @@ def get_config():
     """ Sends Razorpay Key to Frontend securely """
     return jsonify({'key_id': RAZORPAY_KEY_ID})
 
-@app.route('/create_order', methods=['POST'])
-def create_order():
-    try:
-        data = request.json
-        plan = data.get('plan')
-        amount = 29900 if plan == 'basic' else 59900
-        order = razorpay_client.order.create({
-            'amount': amount, 
-            'currency': 'INR', 
-            'payment_capture': '1'
-        })
-        return jsonify(order)
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+
 
 
 @app.route('/create_order', methods=['POST'])
