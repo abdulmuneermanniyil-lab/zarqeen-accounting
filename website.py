@@ -12,14 +12,20 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 
-# --- 1. CONFIGURATION ---
+# --- 1. CONFIGURATION (UPDATED FOR CROSS-ORIGIN COOKIES) ---
 app.secret_key = os.environ.get('SECRET_KEY', 'CHANGE_THIS_SECRET')
-FRONTEND_URL = "https://zarqeen.in" 
+FRONTEND_URL = "https://zarqeen.in"
 
-app.config['SESSION_COOKIE_SAMESITE'] = 'None'
-app.config['SESSION_COOKIE_SECURE'] = True 
+# ⚠️ CRITICAL SETTINGS FOR DISTRIBUTOR LOGIN
+# These allow the cookie to travel from 'zarqeen.in' to 'onrender.com'
+app.config.update(
+    SESSION_COOKIE_SAMESITE='None',
+    SESSION_COOKIE_SECURE=True,
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_DOMAIN=None  # Leave None so it uses the backend domain
+)
 
-# Database
+# ... Database Config ...
 raw_db_url = os.environ.get('DATABASE_URL', 'sqlite:///site.db')
 if raw_db_url.startswith("postgres://"):
     raw_db_url = raw_db_url.replace("postgres://", "postgresql://", 1)
