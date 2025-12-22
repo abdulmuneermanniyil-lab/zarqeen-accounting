@@ -172,7 +172,7 @@
         </div>
         
         <div class="specs">
-            v1.2.0 • Windows 10/11 • 200MB • No Internet Required
+            v1.2.0 • Supports A4, A5, Thermal 2" & 3" • 200MB • No Internet Required
         </div>
     </section>
 
@@ -183,6 +183,14 @@
             <h3>Lightning Fast & Offline</h3>
             <p>Generates bills in seconds. Works 100% offline so your data stays safe on your own computer. No cloud fees.</p>
         </div>
+        
+        <!-- NEW TEMPLATE FEATURE -->
+        <div class="feature-card">
+            <div class="icon-box">🖨️</div>
+            <h3>All Paper Sizes</h3>
+            <p>Supports A4, A5, and Thermal Printers (2-inch & 3-inch). Print perfectly on any device.</p>
+        </div>
+
         <div class="feature-card">
             <div class="icon-box">📊</div>
             <h3>Auto Tax Calculation</h3>
@@ -395,11 +403,13 @@
         async function fetchConfig() {
             try {
                 const res = await fetch(`${BACKEND_URL}/api/get-config`);
+                if (!res.ok) throw new Error("Backend not reachable");
                 const data = await res.json();
                 RAZORPAY_KEY_ID = data.key_id; 
                 console.log("System Ready.");
             } catch (error) {
                 console.error("Backend offline:", error);
+                // Optional: Alert user if backend is down on load
             }
         }
         fetchConfig();
@@ -491,8 +501,8 @@
         // 6. BUY LOGIC
         async function buyPlan(planType) {
             if (!RAZORPAY_KEY_ID) {
-                alert("Connecting to server... please wait 2 seconds.");
-                await fetchConfig();
+                alert("Trying to connect to payment server... please wait 2 seconds and click again.");
+                await fetchConfig(); // Try fetching again
                 return;
             }
 
@@ -511,7 +521,7 @@
                     })
                 });
                 
-                if (!res.ok) throw new Error(`Server error`);
+                if (!res.ok) throw new Error(`Server error: ${res.status}`);
                 const orderData = await res.json();
                 if(orderData.error) throw new Error(orderData.error);
 
@@ -558,7 +568,7 @@
                                 keyArea.appendChild(downloadBtn);
                                 document.getElementById('licenseModal').style.display = 'block';
                             } else {
-                                alert('Verification failed.');
+                                alert('Verification failed. Contact support.');
                             }
                         } catch (e) {
                             alert("Verification error. Check internet.");
@@ -574,7 +584,7 @@
 
             } catch(e) {
                 console.error(e);
-                alert("Error: " + e.message);
+                alert("Connection Error: Check if backend is running. " + e.message);
                 resetUI();
             }
         }
@@ -612,7 +622,7 @@
                 }
             } catch (error) {
                 console.error(error);
-                alert("Connection error");
+                alert("Connection error: Ensure Backend is live and DB is reset.");
             } finally {
                 btn.innerText = originalText;
                 btn.disabled = false;
@@ -701,7 +711,7 @@
             if(localStorage.getItem('dist_token')) {
                 loadDashboard();
             }
-        });
+        })
     </script>
 </body>
 </html>
