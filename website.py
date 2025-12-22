@@ -198,6 +198,44 @@ def verify_payment():
         print(e)
         return jsonify({'success': False, 'message': str(e)})
 
+
+@app.route('/api/validate_license', methods=['POST'])
+def validate_license():
+    data = request.json
+    key_input = data.get('license_key', '').strip()
+    lic = License.query.filter_by(license_key=key_input).first()
+    
+    if lic:
+        if lic.is_used:
+            return jsonify({'valid': False, 'message': 'License already used.'})
+        
+        # Mark as used
+        lic.is_used = True
+        lic.used_at = datetime.utcnow()
+        db.session.commit()
+        
+        duration = 365 if lic.plan_type == 'basic' else 1095
+        
+        # Fetch Distributor Details if they exist
+        support_name = "Zarqeen Official"
+        support_contact = "zarqeensoftware@gmail.com"
+        
+        if lic.distributor:
+            support_name = lic.distributor.name
+            support_contact = lic.distributor.phone
+
+        return jsonify({
+            'valid': True, 
+            'plan': lic.plan_type, 
+            'duration_days': duration,
+            'support_info': {
+                'name': support_name,
+                'contact': support_contact
+            }
+        })
+    
+    return jsonify({'valid': False, 'message': 'Invalid License Key'})
+
 # ==========================================
 #  ADMIN PANEL (Server-Side Rendering)
 # ==========================================
