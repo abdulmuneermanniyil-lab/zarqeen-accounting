@@ -2,10 +2,12 @@ import os
 import random
 import string
 import secrets
+import csv
+import io
 import razorpay
-from datetime import datetime, timedelta
+from datetime import datetime
 from functools import wraps
-from flask import Flask, render_template, request, jsonify, session, redirect, url_for, flash
+from flask import Flask, render_template, request, jsonify, session, redirect, url_for, flash, make_response, send_file
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from flask_mail import Mail, Message
@@ -13,7 +15,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 
-# --- 1. CONFIGURATION ---
+# --- CONFIGURATION ---
 app.secret_key = os.environ.get('SECRET_KEY', 'CHANGE_THIS_SECRET')
 FRONTEND_URL = "https://zarqeen.in"
 
@@ -24,7 +26,6 @@ app.config.update(
     SESSION_COOKIE_DOMAIN=None 
 )
 
-# Database
 raw_db_url = os.environ.get('DATABASE_URL', 'sqlite:///site.db')
 if raw_db_url.startswith("postgres://"):
     raw_db_url = raw_db_url.replace("postgres://", "postgresql://", 1)
@@ -32,26 +33,19 @@ if raw_db_url.startswith("postgres://"):
 app.config['SQLALCHEMY_DATABASE_URI'] = raw_db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# Razorpay
 RAZORPAY_KEY_ID = os.environ.get('RAZORPAY_KEY_ID')
 RAZORPAY_KEY_SECRET = os.environ.get('RAZORPAY_KEY_SECRET')
-
-# Admin Auth
 ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', 'admin')
 ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'admin123')
 
-# Mail
-app.config['MAIL_SERVER'] = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
-app.config['MAIL_PORT'] = int(os.environ.get('MAIL_PORT', 587))
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
 app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
 app.config['MAIL_DEFAULT_SENDER'] = ('Zarqeen Support', os.environ.get('MAIL_USERNAME'))
 
-# CORS
-CORS(app, 
-     resources={r"/*": {"origins": ["https://zarqeen.in", "https://www.zarqeen.in"]}}, 
-     supports_credentials=True)
+CORS(app, resources={r"/*": {"origins": ["https://zarqeen.in", "https://www.zarqeen.in"]}}, supports_credentials=True)
 
 mail = Mail(app)
 db = SQLAlchemy(app)
@@ -66,15 +60,18 @@ class Distributor(db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
     discount_percent = db.Column(db.Integer, default=10)
+    
+    # NEW BANKING & COMMISSION FIELDS
+    bank_details = db.Column(db.String(500), nullable=True) # Account No, IFSC, etc.
+    upi_id = db.Column(db.String(100), nullable=True)       # GPay/PhonePe
+    commission_paid = db.Column(db.Float, default=0.0)      # Total amount paid to them
+    
     api_token = db.Column(db.String(100), nullable=True)
     reset_token = db.Column(db.String(100), nullable=True)
     licenses = db.relationship('License', backref='distributor', lazy=True)
 
-    def set_password(self, password):
-        self.password_hash = generate_password_hash(password)
-
-    def check_password(self, password):
-        return check_password_hash(self.password_hash, password)
+    def set_password(self, password): self.password_hash = generate_password_hash(password)
+    def check_password(self, password): return check_password_hash(self.password_hash, password)
 
 class License(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -88,65 +85,39 @@ class License(db.Model):
     distributor_id = db.Column(db.Integer, db.ForeignKey('distributor.id'), nullable=True)
 
 with app.app_context():
-    try:
-        db.create_all()
-    except Exception as e:
-        print(f"DB Error: {e}")
+    db.create_all()
 
-# --- HELPER FUNCTIONS ---
+# --- HELPERS ---
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if not session.get('admin_logged_in'):
-            return redirect(url_for('login'))
+        if not session.get('admin_logged_in'): return redirect(url_for('login'))
         return f(*args, **kwargs)
     return decorated_function
 
 def generate_unique_key(plan_type, dist_code=None):
-    # 1. Plan Indicator (3 chars)
     plan_str = "BAS" if plan_type == 'basic' else "PRE"
-    
-    # 2. Distributor Part (4 chars)
-    # If no distributor, use "ZARQ" (Default)
-    # If distributor code is provided, take first 4 chars, upper case
     d_part = dist_code.upper()[:4] if dist_code else "ZARQ"
-    
-    # Ensure it is exactly 4 chars (pad with 'X' if shorter)
     d_part = d_part.ljust(4, 'X') 
-    
-    # 3. Random Suffix (8 chars)
-    # Result example: ZQ-ABCD-PRE-9X8Y2Z1A
     part1 = ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
     part2 = ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
-    
-    full_key = f"AL-{d_part}-{plan_str}-{part1}{part2}"
-    
-    # Ensure uniqueness
-    if License.query.filter_by(license_key=full_key).first():
-        return generate_unique_key(plan_type, dist_code)
-        
+    full_key = f"ZQ-{d_part}-{plan_str}-{part1}{part2}"
+    if License.query.filter_by(license_key=full_key).first(): return generate_unique_key(plan_type, dist_code)
     return full_key
 
-# ==========================================
-#  PUBLIC API ROUTES
-# ==========================================
-
+# --- PUBLIC ROUTES ---
 @app.route('/')
-def home():
-    return redirect(FRONTEND_URL)
+def home(): return redirect(FRONTEND_URL)
 
 @app.route('/api/get-config', methods=['GET'])
-def get_config():
-    return jsonify({'key_id': RAZORPAY_KEY_ID})
+def get_config(): return jsonify({'key_id': RAZORPAY_KEY_ID})
 
 @app.route('/api/check_distributor', methods=['POST'])
 def check_distributor():
     data = request.json
     code = data.get('code', '').strip().upper()
     dist = Distributor.query.filter_by(code=code).first()
-    
-    if dist:
-        return jsonify({'valid': True, 'discount': dist.discount_percent, 'name': dist.name})
+    if dist: return jsonify({'valid': True, 'discount': dist.discount_percent, 'name': dist.name})
     return jsonify({'valid': False})
 
 @app.route('/create_order', methods=['POST'])
@@ -154,298 +125,234 @@ def create_order():
     try:
         data = request.json
         plan = data.get('plan')
-        
-        # 1. Safely get the code
-        raw_code = data.get('distributor_code')
-        code = raw_code.strip().upper() if raw_code else ""
-
-        # 2. Base Amount (Paise)
+        code = data.get('distributor_code', '').strip().upper() if data.get('distributor_code') else ""
         base_amount = 29900 if plan == 'basic' else 59900
-        
-        # 3. Check Distributor (Only if code exists)
-        dist = None
-        if code:
-            dist = Distributor.query.filter_by(code=code).first()
+        dist = Distributor.query.filter_by(code=code).first() if code else None
         
         final_amount = base_amount
-        dist_id_str = "None" # Razorpay Notes MUST be strings
-
+        dist_id_str = "None"
         if dist:
-            # Calculate Discount
-            discount_amount = (base_amount * dist.discount_percent) / 100
-            final_amount = int(base_amount - discount_amount)
+            final_amount = int(base_amount - ((base_amount * dist.discount_percent) / 100))
             dist_id_str = str(dist.id)
         
-        # 4. Create Order
         order = razorpay_client.order.create({
-            'amount': final_amount, 
-            'currency': 'INR', 
-            'payment_capture': '1',
-            'notes': {
-                'plan': str(plan), # Ensure String
-                'distributor_id': dist_id_str # Ensure String
-            }
+            'amount': final_amount, 'currency': 'INR', 'payment_capture': '1',
+            'notes': {'plan': str(plan), 'distributor_id': dist_id_str}
         })
         return jsonify(order)
-
-    except Exception as e:
-        print(f"PAYMENT ERROR: {e}") # Check Render Logs if this happens
-        return jsonify({'error': 'Server Error during Order Creation'}), 500
+    except Exception as e: return jsonify({'error': str(e)}), 500
 
 @app.route('/verify_payment', methods=['POST'])
 def verify_payment():
     data = request.json
     try:
-        # 1. Verify Signature
-        params_dict = {
+        razorpay_client.utility.verify_payment_signature({
             'razorpay_order_id': data['razorpay_order_id'],
             'razorpay_payment_id': data['razorpay_payment_id'],
             'razorpay_signature': data['razorpay_signature']
-        }
-        razorpay_client.utility.verify_payment_signature(params_dict)
-
-        # 2. Fetch Order Details
+        })
         order_info = razorpay_client.order.fetch(data['razorpay_order_id'])
         dist_id_val = order_info['notes'].get('distributor_id')
+        dist_obj = Distributor.query.get(int(dist_id_val)) if dist_id_val and dist_id_val != "None" else None
         
-        distributor_obj = None
-        
-        # 3. Handle Distributor ID (Check if "None" string or actual ID)
-        if dist_id_val and dist_id_val != "None":
-            try:
-                dist_id = int(dist_id_val)
-                distributor_obj = Distributor.query.get(dist_id)
-            except:
-                distributor_obj = None
-
-        # 4. Generate Key with Distributor Code
-        plan_type = data.get('plan_type')
-        amount_paid = order_info['amount'] / 100 
-        
-        # Pass the distributor code if it exists, otherwise None
-        dist_code_str = distributor_obj.code if distributor_obj else None
-        new_key = generate_unique_key(plan_type, dist_code_str)
-        
-        # 5. Save License
+        new_key = generate_unique_key(data.get('plan_type'), dist_obj.code if dist_obj else None)
         new_license = License(
-            license_key=new_key, 
-            plan_type=plan_type, 
-            payment_id=data['razorpay_payment_id'],
-            amount_paid=amount_paid,
-            distributor_id=distributor_obj.id if distributor_obj else None
+            license_key=new_key, plan_type=data.get('plan_type'), payment_id=data['razorpay_payment_id'],
+            amount_paid=order_info['amount'] / 100, distributor_id=dist_obj.id if dist_obj else None
         )
         db.session.add(new_license)
         db.session.commit()
-
         return jsonify({'success': True, 'license_key': new_key})
+    except Exception as e: return jsonify({'success': False, 'message': str(e)})
 
-    except Exception as e:
-        print(f"Verify Error: {e}") # Check Render Logs
-        return jsonify({'success': False, 'message': str(e)})
+# --- NEW DOWNLOAD ROUTES ---
+@app.route('/download/license/<key>')
+def download_license_file(key):
+    # Generates a text file on the fly
+    return send_file(
+        io.BytesIO(key.encode()),
+        mimetype='text/plain',
+        as_attachment=True,
+        download_name=f'license_{key}.zarqeen'
+    )
 
-@app.route('/api/validate_license', methods=['POST'])
-def validate_license():
-    data = request.json
-    key_input = data.get('license_key', '').strip()
-    lic = License.query.filter_by(license_key=key_input).first()
+@app.route('/admin/export/<type>')
+@login_required
+def export_data(type):
+    si = io.StringIO()
+    cw = csv.writer(si)
     
-    if lic:
-        if lic.is_used:
-            return jsonify({'valid': False, 'message': 'License already used.'})
-        lic.is_used = True
-        lic.used_at = datetime.utcnow()
-        db.session.commit()
-        duration = 365 if lic.plan_type == 'basic' else 1095
-        
-        support_name = "Zarqeen Official"
-        support_contact = "zarqeensoftware@gmail.com"
-        if lic.distributor:
-            support_name = lic.distributor.name
-            support_contact = lic.distributor.phone
+    if type == 'licenses':
+        cw.writerow(['Date', 'Key', 'Plan', 'Amount', 'Distributor', 'Status'])
+        records = License.query.all()
+        for r in records:
+            d_name = r.distributor.name if r.distributor else 'Direct'
+            cw.writerow([r.created_at, r.license_key, r.plan_type, r.amount_paid, d_name, r.is_used])
+            
+    elif type == 'distributors':
+        cw.writerow(['Name', 'Code', 'Email', 'Phone', 'Bank', 'UPI', 'Total Earned', 'Paid', 'Balance'])
+        records = Distributor.query.all()
+        for r in records:
+            total_earned = sum(l.amount_paid for l in r.licenses) * 0.20
+            balance = total_earned - r.commission_paid
+            cw.writerow([r.name, r.code, r.email, r.phone, r.bank_details, r.upi_id, total_earned, r.commission_paid, balance])
+            
+    output = make_response(si.getvalue())
+    output.headers["Content-Disposition"] = f"attachment; filename=export_{type}.csv"
+    output.headers["Content-type"] = "text/csv"
+    return output
 
-        return jsonify({'valid': True, 'plan': lic.plan_type, 'duration_days': duration, 'support_info': {'name': support_name, 'contact': support_contact}})
-    return jsonify({'valid': False, 'message': 'Invalid License Key'})
-
-# ==========================================
-#  ADMIN PANEL
-# ==========================================
-
-@app.route('/admin/login', methods=['GET', 'POST'])
-def login():
-    if session.get('admin_logged_in'):
-        return redirect(url_for('dashboard'))
-    if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
-        if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
-            session['admin_logged_in'] = True
-            return redirect(url_for('dashboard'))
-        else:
-            flash('Invalid Credentials', 'danger')
-    return render_template('login.html')
-
+# --- ADMIN PANEL ---
 @app.route('/admin/dashboard')
 @login_required
 def dashboard():
     licenses = License.query.order_by(License.created_at.desc()).all()
     distributors = Distributor.query.all()
-    return render_template('dashboard.html', licenses=licenses, distributors=distributors)
+    
+    # Calculate totals for view
+    dist_data = []
+    for d in distributors:
+        earned = sum(l.amount_paid for l in d.licenses) * 0.20
+        balance = earned - d.commission_paid
+        dist_data.append({'obj': d, 'earned': earned, 'balance': balance})
+        
+    return render_template('dashboard.html', licenses=licenses, distributors=dist_data)
 
-@app.route('/admin/delete_license/<int:id>', methods=['POST'])
-@login_required
-def delete_license(id):
-    lic = License.query.get_or_404(id)
-    db.session.delete(lic)
-    db.session.commit()
-    flash('License deleted', 'success')
-    return redirect(url_for('dashboard'))
-
-# --- ADMIN: DISTRIBUTOR CONTROL ---
 @app.route('/admin/add_distributor', methods=['POST'])
 @login_required
 def add_distributor():
     try:
-        code = request.form.get('code').strip().upper()
-        name = request.form.get('name')
-        phone = request.form.get('phone')
-        email = request.form.get('email')
-        password = request.form.get('password')
-        disc = request.form.get('discount')
-        
-        # FORCE 4 CHARACTERS
-        if len(code) != 4 or not code.isalpha():
-            flash('Error: Code must be exactly 4 alphabets (e.g. ABCD)', 'danger')
+        code = request.form.get('code')
+        if Distributor.query.filter((Distributor.code==code) | (Distributor.email==request.form.get('email'))).first():
+            flash('Exists already', 'danger')
             return redirect(url_for('dashboard'))
         
-        if Distributor.query.filter((Distributor.code==code) | (Distributor.email==email)).first():
-            flash('Error: Distributor Code or Email already exists.', 'danger')
-            return redirect(url_for('dashboard'))
-
-        new_dist = Distributor(code=code, name=name, phone=phone, email=email, discount_percent=int(disc))
-        new_dist.set_password(password)
+        new_dist = Distributor(
+            code=code, name=request.form.get('name'), phone=request.form.get('phone'),
+            email=request.form.get('email'), discount_percent=int(request.form.get('discount')),
+            bank_details=request.form.get('bank_details'), upi_id=request.form.get('upi_id')
+        )
+        new_dist.set_password(request.form.get('password'))
         db.session.add(new_dist)
         db.session.commit()
-        flash('Distributor added successfully!', 'success')
-    except Exception as e:
-        flash(f'Error adding distributor: {str(e)}', 'danger')
+        flash('Added', 'success')
+    except Exception as e: flash(str(e), 'danger')
     return redirect(url_for('dashboard'))
 
 @app.route('/admin/edit_distributor/<int:id>', methods=['POST'])
 @login_required
 def edit_distributor(id):
     dist = Distributor.query.get_or_404(id)
-    try:
-        dist.name = request.form.get('name')
-        dist.email = request.form.get('email')
-        dist.phone = request.form.get('phone')
-        dist.code = request.form.get('code')
-        dist.discount_percent = int(request.form.get('discount'))
+    dist.name = request.form.get('name')
+    dist.email = request.form.get('email')
+    dist.phone = request.form.get('phone')
+    dist.bank_details = request.form.get('bank_details')
+    dist.upi_id = request.form.get('upi_id')
+    
+    # Handle Payment Update
+    payment_add = request.form.get('add_payment')
+    if payment_add and float(payment_add) > 0:
+        dist.commission_paid += float(payment_add)
         
-        # Only update password if provided
-        new_pass = request.form.get('password')
-        if new_pass and new_pass.strip():
-            dist.set_password(new_pass)
-            
-        db.session.commit()
-        flash('Distributor updated successfully', 'success')
-    except Exception as e:
-        db.session.rollback()
-        flash(f'Error updating: {str(e)}', 'danger')
+    if request.form.get('password'): dist.set_password(request.form.get('password'))
+    db.session.commit()
     return redirect(url_for('dashboard'))
 
 @app.route('/admin/delete_distributor/<int:id>', methods=['POST'])
 @login_required
 def delete_distributor(id):
     dist = Distributor.query.get_or_404(id)
-    licenses = License.query.filter_by(distributor_id=id).all()
-    for l in licenses:
-        l.distributor_id = None
     db.session.delete(dist)
     db.session.commit()
-    flash('Distributor deleted', 'success')
     return redirect(url_for('dashboard'))
+
+@app.route('/admin/delete_license/<int:id>', methods=['POST'])
+@login_required
+def delete_license(id):
+    db.session.delete(License.query.get_or_404(id))
+    db.session.commit()
+    return redirect(url_for('dashboard'))
+
+@app.route('/admin/edit_license/<int:id>', methods=['POST'])
+@login_required
+def edit_license(id):
+    lic = License.query.get_or_404(id)
+    lic.is_used = True if request.form.get('is_used') == 'on' else False
+    db.session.commit()
+    return redirect(url_for('dashboard'))
+
+@app.route('/admin/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        if request.form.get('username') == ADMIN_USERNAME and request.form.get('password') == ADMIN_PASSWORD:
+            session['admin_logged_in'] = True
+            return redirect(url_for('dashboard'))
+    return render_template('login.html')
 
 @app.route('/admin/logout')
 def logout():
     session.pop('admin_logged_in', None)
     return redirect(FRONTEND_URL)
 
-# ==========================================
-#  DISTRIBUTOR & PASSWORD RESET
-# ==========================================
-
+# --- DISTRIBUTOR API ---
 @app.route('/api/distributor/login', methods=['POST'])
 def api_distributor_login():
     data = request.json
-    email = data.get('email')
-    password = data.get('password')
-    dist = Distributor.query.filter_by(email=email).first()
-    if dist and dist.check_password(password):
-        token = secrets.token_hex(16)
-        dist.api_token = token
+    dist = Distributor.query.filter_by(email=data.get('email')).first()
+    if dist and dist.check_password(data.get('password')):
+        dist.api_token = secrets.token_hex(16)
         db.session.commit()
-        return jsonify({'success': True, 'token': token})
-    return jsonify({'success': False, 'message': 'Invalid Email or Password'})
+        return jsonify({'success': True, 'token': dist.api_token})
+    return jsonify({'success': False})
 
 @app.route('/api/distributor/data', methods=['GET'])
 def api_get_distributor_data():
-    auth_header = request.headers.get('Authorization')
-    token = auth_header.split(" ")[1] if auth_header else None
+    token = request.headers.get('Authorization').split(" ")[1] if request.headers.get('Authorization') else None
     dist = Distributor.query.filter_by(api_token=token).first()
     if not dist: return jsonify({'error': 'Invalid Token'}), 401
     
     sales = License.query.filter_by(distributor_id=dist.id).order_by(License.created_at.desc()).all()
+    total_earned = sum(l.amount_paid for l in sales) * 0.20
+    
     sales_data = [{'date': s.created_at.strftime('%Y-%m-%d'), 'plan': s.plan_type, 'amount': s.amount_paid, 'status': 'INSTALLED' if s.is_used else 'PENDING', 'key': s.license_key} for s in sales]
+    
     return jsonify({
         'name': dist.name, 'code': dist.code, 'discount': dist.discount_percent,
-        'total_sales': len(sales), 'commission': sum(s.amount_paid for s in sales) * 0.20,
-        'sales_history': sales_data
+        'total_sales': len(sales), 
+        'commission_earned': total_earned,
+        'commission_paid': dist.commission_paid,
+        'balance_due': total_earned - dist.commission_paid,
+        'sales_history': sales_data,
+        'backend_url': request.host_url # To construct download links
     })
 
 @app.route('/api/forgot-password', methods=['POST'])
 def forgot_password():
-    email = request.json.get('email')
-    dist = Distributor.query.filter_by(email=email).first()
+    dist = Distributor.query.filter_by(email=request.json.get('email')).first()
     if not dist: return jsonify({'success': False, 'message': 'Email not found'})
-    
-    reset_token = secrets.token_urlsafe(32)
-    dist.reset_token = reset_token
+    dist.reset_token = secrets.token_urlsafe(32)
     db.session.commit()
-    reset_url = url_for('reset_password_page', token=reset_token, _external=True)
-    try:
-        msg = Message('Password Reset Request - Zarqeen', recipients=[email])
-        msg.body = f"Click here to reset your password: {reset_url}"
-        mail.send(msg)
-        return jsonify({'success': True, 'message': 'Reset link sent to email'})
-    except Exception as e:
-        return jsonify({'success': False, 'message': f'Error sending email: {str(e)}'})
+    # In real world, send email here. For now, print to logs for testing if email fails
+    print(f"RESET LINK: {url_for('reset_password_page', token=dist.reset_token, _external=True)}")
+    return jsonify({'success': True, 'message': 'Reset link sent/generated'})
 
 @app.route('/reset-password/<token>', methods=['GET', 'POST'])
 def reset_password_page(token):
     dist = Distributor.query.filter_by(reset_token=token).first()
-    if not dist: return "Invalid or Expired Token"
     if request.method == 'POST':
-        new_pass = request.form.get('password')
-        dist.set_password(new_pass)
+        dist.set_password(request.form.get('password'))
         dist.reset_token = None
         db.session.commit()
-        return "<h1>Password Updated!</h1><p>You can now login at zarqeen.in</p>"
+        return "Password Updated"
     return render_template('reset_password.html', token=token)
 
+# --- RESET DB ---
 @app.route('/reset-db-now')
-def reset_database_force():
-    try:
-        with app.app_context():
-            db.drop_all()
-            db.create_all()
-            if not Distributor.query.first():
-                demo = Distributor(code="DEMO", name="Demo Distributor", phone="999", email="demo@gmail.com", discount_percent=10)
-                demo.set_password("demo123")
-                db.session.add(demo)
-                db.session.commit()
-        return "<h1>✅ Database Reset!</h1>"
-    except Exception as e:
-        return f"<h1>❌ Error: {e}</h1>"
+def reset_db():
+    with app.app_context():
+        db.drop_all()
+        db.create_all()
+    return "DB Reset. New columns added."
 
 if __name__ == '__main__':
     app.run(debug=True)
