@@ -1,312 +1,247 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Zarqeen Admin Dashboard</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Segoe UI', sans-serif; padding: 20px; background: #f3f4f6; color: #1f2937; }
-        
-        /* Header Area */
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); flex-wrap: wrap; gap: 10px; }
-        h1 { margin: 0; font-size: 1.5rem; color: #4F46E5; }
-        
-        /* Controls */
-        .controls { display: flex; gap: 10px; align-items: center; }
-        .search-input { padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 4px; width: 250px; font-size: 0.9rem; }
-
-        /* Buttons */
-        .btn { padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; text-decoration: none; font-size: 0.85rem; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 4px; transition: opacity 0.2s; }
-        .btn:hover { opacity: 0.9; }
-
-        .btn-logout { background: #dc2626; color: white; padding: 8px 16px; }
-        .btn-excel { background: #10B981; color: white; padding: 8px 16px; }
-        
-        /* Action Buttons */
-        .btn-download { background: #8B5CF6; color: white; margin-right: 4px; } /* Purple for Download */
-        .btn-edit { background: #3b82f6; color: white; margin-right: 4px; }    /* Blue for Edit */
-        .btn-delete { background: #ef4444; color: white; }                        /* Red for Delete */
-        
-        /* Table */
-        .table-container { overflow-x: auto; background: white; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        table { width: 100%; border-collapse: collapse; min-width: 900px; }
-        
-        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #e5e7eb; }
-        
-        th { 
-            background-color: #f9fafb; font-weight: 600; text-transform: uppercase; font-size: 0.75rem; color: #6b7280; 
-            cursor: pointer; user-select: none; 
+        :root {
+            --primary: #2563EB;
+            --danger: #EF4444;
+            --success: #10B981;
+            --bg: #F3F4F6;
+            --text: #1F2937;
+            --white: #ffffff;
+            --border: #E5E7EB;
         }
-        th:hover { background-color: #e5e7eb; color: #111827; }
 
-        th.sort-asc::after { content: " ▲"; font-size: 0.7rem; color: #4F46E5; }
-        th.sort-desc::after { content: " ▼"; font-size: 0.7rem; color: #4F46E5; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; }
         
-        tr:hover { background-color: #f9fafb; }
-        
-        /* Status Badges */
-        .status { padding: 4px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 700; }
-        .status-used { background: #fee2e2; color: #991b1b; }
-        .status-new { background: #d1fae5; color: #065f46; }
+        /* Navbar */
+        nav { background: var(--white); border-bottom: 1px solid var(--border); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+        .brand { font-weight: 800; font-size: 1.25rem; color: var(--primary); }
+        .logout-btn { background: var(--danger); color: white; text-decoration: none; padding: 8px 16px; border-radius: 6px; font-size: 0.9rem; transition: 0.2s; }
+        .logout-btn:hover { background: #DC2626; }
 
-        /* Modal */
-        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); }
-        .modal-content { background-color: white; margin: 10% auto; padding: 25px; border-radius: 8px; width: 400px; position: relative; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
-        .close-modal { position: absolute; top: 10px; right: 15px; font-size: 1.5rem; cursor: pointer; color: #6b7280; }
+        /* Main Container */
+        .container { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; }
+
+        /* Alerts */
+        .alert { padding: 1rem; margin-bottom: 1.5rem; border-radius: 6px; font-weight: 500; }
+        .alert-success { background: #D1FAE5; color: #065F46; border: 1px solid #A7F3D0; }
+        .alert-danger { background: #FEE2E2; color: #991B1B; border: 1px solid #FECACA; }
+
+        /* Cards */
+        .card { background: var(--white); border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); padding: 2rem; margin-bottom: 2rem; border: 1px solid var(--border); }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+        .card-title { font-size: 1.25rem; font-weight: 700; color: #111827; margin: 0; }
+
+        /* Forms */
+        .grid-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; }
+        .form-group label { display: block; font-size: 0.85rem; font-weight: 600; color: #4B5563; margin-bottom: 0.5rem; }
+        .form-group input { width: 100%; padding: 0.75rem; border: 1px solid #D1D5DB; border-radius: 6px; font-size: 0.95rem; box-sizing: border-box; }
+        .form-group input:focus { outline: none; border-color: var(--primary); ring: 2px solid var(--primary); }
         
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.9rem; }
-        .form-group input, .form-group select { width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 4px; }
-        .btn-save { width: 100%; background: #4F46E5; color: white; margin-top: 10px; padding: 10px; }
+        .btn-submit { background: var(--success); color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; font-weight: 600; cursor: pointer; transition: 0.2s; width: 100%; margin-top: 24px; }
+        .btn-submit:hover { background: #059669; }
+
+        /* Table */
+        .table-container { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+        th { text-align: left; padding: 1rem; background: #F9FAFB; font-weight: 600; color: #6B7280; border-bottom: 1px solid var(--border); white-space: nowrap; }
+        td { padding: 1rem; border-bottom: 1px solid var(--border); color: #374151; vertical-align: middle; }
+        tr:last-child td { border-bottom: none; }
         
-        .alert { padding: 10px; margin-bottom: 20px; border-radius: 4px; background: #d1fae5; color: #065f46; text-align: center; }
-        .alert.danger { background: #fee2e2; color: #991b1b; }
+        /* Badges */
+        .badge { display: inline-block; padding: 4px 10px; border-radius: 99px; font-size: 0.75rem; font-weight: 700; }
+        .badge-basic { background: #DBEAFE; color: #1E40AF; }
+        .badge-premium { background: #FEF3C7; color: #92400E; }
+        .badge-used { background: #D1FAE5; color: #065F46; }
+        .badge-unused { background: #F3F4F6; color: #4B5563; }
+        .badge-distributor { background: #E0E7FF; color: #3730A3; font-family: monospace; }
+
+        /* Actions */
+        .btn-icon { background: none; border: none; cursor: pointer; padding: 6px; border-radius: 4px; transition: 0.2s; }
+        .btn-icon:hover { background: #F3F4F6; }
+        .btn-delete { color: var(--danger); }
+        .btn-edit { color: var(--primary); }
+
+        /* Edit Modal */
+        .modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); backdrop-filter: blur(2px); }
+        .modal-content { background-color: white; margin: 10vh auto; padding: 2rem; border-radius: 12px; width: 90%; max-width: 500px; position: relative; }
+        .close { position: absolute; right: 20px; top: 20px; font-size: 24px; cursor: pointer; color: #9CA3AF; }
     </style>
 </head>
 <body>
 
-    <!-- Header -->
-    <div class="header">
-        <h1>License Database</h1>
+    <!-- NAV -->
+    <nav>
+        <div class="brand">Zarqeen Admin Panel</div>
+        <a href="/admin/logout" class="logout-btn">Log Out</a>
+    </nav>
+
+    <div class="container">
         
-        <div class="controls">
-            <input type="text" id="searchInput" onkeyup="filterTable()" class="search-input" placeholder="🔍 Search keys, names, IDs...">
-            <button onclick="downloadExcel()" class="btn btn-excel">📥 Export Excel</button>
-            <a href="/admin/logout" class="btn btn-logout">Logout</a>
+        <!-- FLASH MESSAGES -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- SECTION 1: ADD DISTRIBUTOR -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">✨ Add New Distributor</h2>
+            </div>
+            <form action="/admin/add_distributor" method="POST" class="grid-form">
+                <div class="form-group">
+                    <label>Business Name</label>
+                    <input type="text" name="name" placeholder="e.g. Ali Computers" required>
+                </div>
+                <div class="form-group">
+                    <label>Discount Code (Unique)</label>
+                    <input type="text" name="code" placeholder="e.g. ALI20" required style="text-transform: uppercase;">
+                </div>
+                <div class="form-group">
+                    <label>Phone Number</label>
+                    <input type="text" name="phone" placeholder="+91..." required>
+                </div>
+                <div class="form-group">
+                    <label>Discount %</label>
+                    <input type="number" name="discount" value="10" min="0" max="100" required>
+                </div>
+                
+                <!-- NEW AUTH FIELDS -->
+                <div class="form-group">
+                    <label>Login Username</label>
+                    <input type="text" name="username" placeholder="dist_user" required>
+                </div>
+                <div class="form-group">
+                    <label>Login Password</label>
+                    <input type="password" name="password" placeholder="******" required>
+                </div>
+
+                <div class="form-group">
+                    <button type="submit" class="btn-submit">Create Account</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- SECTION 2: LICENSE MANAGEMENT -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">📂 License Management</h2>
+            </div>
+            
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>License Key</th>
+                            <th>Plan</th>
+                            <th>Sold By</th> <!-- New Column -->
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for lic in licenses %}
+                        <tr>
+                            <td>{{ lic.created_at.strftime('%d-%b-%Y') }}</td>
+                            <td style="font-family: monospace; font-weight: 600;">{{ lic.license_key }}</td>
+                            <td>
+                                <span class="badge {{ 'badge-basic' if lic.plan_type == 'basic' else 'badge-premium' }}">
+                                    {{ lic.plan_type|upper }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if lic.distributor %}
+                                    <span class="badge badge-distributor">{{ lic.distributor.name }}</span>
+                                {% else %}
+                                    <span style="color: #9CA3AF; font-size: 0.85rem;">Direct</span>
+                                {% endif %}
+                            </td>
+                            <td>₹{{ lic.amount_paid }}</td>
+                            <td>
+                                {% if lic.is_used %}
+                                    <span class="badge badge-used">Active</span>
+                                {% else %}
+                                    <span class="badge badge-unused">Unused</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <button class="btn-icon btn-edit" onclick="openEditModal('{{ lic.id }}', '{{ lic.license_key }}', '{{ lic.plan_type }}', '{{ lic.payment_id }}', '{{ lic.is_used }}')">
+                                    ✏️
+                                </button>
+                                
+                                <form action="{{ url_for('delete_license', id=lic.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure? This cannot be undone.');">
+                                    <button type="submit" class="btn-icon btn-delete">🗑️</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="7" style="text-align: center; padding: 2rem; color: #6B7280;">No licenses generated yet.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
-<h3>Add Distributor</h3>
-<form action="/admin/add_distributor" method="POST">
-    <input type="text" name="code" placeholder="Code (e.g. ALI10)" required>
-    <input type="text" name="name" placeholder="Name" required>
-    <input type="text" name="phone" placeholder="Phone" required>
-    <input type="number" name="discount" placeholder="Discount %" value="10" required>
-    <button type="submit">Add</button>
-</form>
-    <!-- Messages -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                <div class="alert {{ category }}">{{ message }}</div>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
 
-    <!-- Table -->
-    <div class="table-container">
-        <table id="licenseTable">
-            <thead>
-                <tr>
-                    <th onclick="sortTable(0)">ID</th>
-                    <th onclick="sortTable(1)">License Key</th>
-                    <th onclick="sortTable(2)">Plan</th>
-                    <th onclick="sortTable(3)">Payment ID</th>
-                    <th onclick="sortTable(4)">Status</th>
-                    <th onclick="sortTable(5)">Created At</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for lic in licenses %}
-                <tr>
-                    <td>{{ lic.id }}</td>
-                    <td style="font-family: monospace;">{{ lic.license_key }}</td>
-                    <td>{{ lic.plan_type.upper() }}</td>
-                    <td>{{ lic.payment_id }}</td>
-                    <td>
-                        {% if lic.is_used %}
-                            <span class="status status-used">USED</span>
-                        {% else %}
-                            <span class="status status-new">ACTIVE</span>
-                        {% endif %}
-                    </td>
-                    <td>{{ lic.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
-                    <td>
-                        <!-- 1. DOWNLOAD BUTTON (New) -->
-                        <button class="btn btn-download" title="Download File" 
-                            onclick="downloadSingleFile('{{ lic.license_key }}')">
-                            ⬇
-                        </button>
-
-                        <!-- 2. EDIT BUTTON -->
-                        <button class="btn btn-edit" title="Edit"
-                            onclick="openEditModal('{{ lic.id }}', '{{ lic.license_key }}', '{{ lic.plan_type }}', '{{ lic.payment_id }}', '{{ lic.is_used }}')">
-                            ✎
-                        </button>
-
-                        <!-- 3. DELETE BUTTON -->
-                        <form action="/admin/delete_license/{{ lic.id }}" method="POST" style="display:inline;" onsubmit="return confirm('Delete this license?');">
-                            <button type="submit" class="btn btn-delete" title="Delete">✖</button>
-                        </form>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-
-    <!-- Edit Modal -->
+    <!-- EDIT MODAL -->
     <div id="editModal" class="modal">
         <div class="modal-content">
-            <span class="close-modal" onclick="closeEditModal()">&times;</span>
-            <h2 style="margin-top:0; margin-bottom: 20px;">Edit License</h2>
+            <span class="close" onclick="closeEditModal()">&times;</span>
+            <h2 class="card-title" style="margin-bottom: 20px;">Edit License</h2>
             
-            <form id="editForm" method="POST">
-                <div class="form-group">
-                    <label>License Key</label>
-                    <input type="text" name="license_key" id="editKey" required>
+            <form id="editForm" method="POST" action="">
+                <div class="grid-form" style="grid-template-columns: 1fr;">
+                    <div class="form-group">
+                        <label>License Key</label>
+                        <input type="text" name="license_key" id="edit_key" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Plan Type</label>
+                        <select name="plan_type" id="edit_plan" style="width: 100%; padding: 0.75rem; border: 1px solid #D1D5DB; border-radius: 6px;">
+                            <option value="basic">basic</option>
+                            <option value="premium">premium</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Payment ID</label>
+                        <input type="text" name="payment_id" id="edit_payment" required>
+                    </div>
+                    <div class="form-group" style="display: flex; align-items: center; gap: 10px;">
+                        <input type="checkbox" name="is_used" id="edit_used" style="width: auto;">
+                        <label for="edit_used" style="margin:0;">Mark as Used/Active</label>
+                    </div>
+                    <button type="submit" class="btn-submit">Save Changes</button>
                 </div>
-                <div class="form-group">
-                    <label>Plan Type</label>
-                    <select name="plan_type" id="editPlan">
-                        <option value="basic">basic</option>
-                        <option value="premium">premium</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Payment ID</label>
-                    <input type="text" name="payment_id" id="editPaymentId" required>
-                </div>
-                <div class="form-group" style="display: flex; align-items: center; gap: 10px;">
-                    <input type="checkbox" name="is_used" id="editIsUsed" style="width: auto;">
-                    <label for="editIsUsed" style="margin: 0; cursor: pointer;">Mark as Used</label>
-                </div>
-                <button type="submit" class="btn btn-save">Save Changes</button>
             </form>
         </div>
     </div>
 
-    <!-- JavaScript -->
     <script>
-        // --- NEW: DOWNLOAD SINGLE FILE FUNCTION ---
-        function downloadSingleFile(keyString) {
-            // Clean the key string just in case
-            const cleanKey = keyString.trim();
+        function openEditModal(id, key, plan, payment, used) {
+            const form = document.getElementById('editForm');
+            form.action = `/admin/edit_license/${id}`;
             
-            // Create a blob (file-like object)
-            const blob = new Blob([cleanKey], { type: "text/plain" });
-            const url = window.URL.createObjectURL(blob);
+            document.getElementById('edit_key').value = key;
+            document.getElementById('edit_plan').value = plan;
+            document.getElementById('edit_payment').value = payment;
+            document.getElementById('edit_used').checked = (used === 'True');
             
-            // Create invisible link and click it
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = "license.zarqeen"; // Standard filename
-            document.body.appendChild(a);
-            a.click();
-            
-            // Cleanup
-            document.body.removeChild(a);
-            window.URL.revokeObjectURL(url);
-        }
-
-        // --- SEARCH FUNCTION ---
-        function filterTable() {
-            let input = document.getElementById("searchInput");
-            let filter = input.value.toUpperCase();
-            let table = document.getElementById("licenseTable");
-            let tr = table.getElementsByTagName("tr");
-
-            for (let i = 1; i < tr.length; i++) {
-                let showRow = false;
-                let tds = tr[i].getElementsByTagName("td");
-                for(let j = 0; j < tds.length - 1; j++) {
-                    if (tds[j]) {
-                        let txtValue = tds[j].textContent || tds[j].innerText;
-                        if (txtValue.toUpperCase().indexOf(filter) > -1) {
-                            showRow = true;
-                            break;
-                        }
-                    }
-                }
-                tr[i].style.display = showRow ? "" : "none";
-            }
-        }
-
-        // --- SORT FUNCTION ---
-        function sortTable(n) {
-            var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
-            table = document.getElementById("licenseTable");
-            switching = true;
-            dir = "asc"; 
-            
-            var headers = table.getElementsByTagName("th");
-            for (var h = 0; h < headers.length; h++) {
-                headers[h].classList.remove("sort-asc", "sort-desc");
-            }
-
-            while (switching) {
-                switching = false;
-                rows = table.rows;
-                for (i = 1; i < (rows.length - 1); i++) {
-                    shouldSwitch = false;
-                    x = rows[i].getElementsByTagName("TD")[n];
-                    y = rows[i + 1].getElementsByTagName("TD")[n];
-                    
-                    var xContent = x.innerHTML.toLowerCase();
-                    var yContent = y.innerHTML.toLowerCase();
-                    var isNum = !isNaN(parseFloat(xContent)) && isFinite(xContent) && !isNaN(parseFloat(yContent)) && isFinite(yContent);
-
-                    if (dir == "asc") {
-                        if (isNum) {
-                            if (parseFloat(xContent) > parseFloat(yContent)) { shouldSwitch = true; break; }
-                        } else {
-                            if (xContent > yContent) { shouldSwitch = true; break; }
-                        }
-                    } else if (dir == "desc") {
-                        if (isNum) {
-                            if (parseFloat(xContent) < parseFloat(yContent)) { shouldSwitch = true; break; }
-                        } else {
-                            if (xContent < yContent) { shouldSwitch = true; break; }
-                        }
-                    }
-                }
-                if (shouldSwitch) {
-                    rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
-                    switching = true;
-                    switchcount ++;
-                } else {
-                    if (switchcount == 0 && dir == "asc") {
-                        dir = "desc";
-                        switching = true;
-                    }
-                }
-            }
-            headers[n].classList.add(dir == "asc" ? "sort-asc" : "sort-desc");
-        }
-
-        // --- EXPORT EXCEL ---
-        function downloadExcel() {
-            let table = document.getElementById("licenseTable");
-            let rows = Array.from(table.rows);
-            let csvContent = "";
-
-            rows.forEach(function(row) {
-                if (row.style.display === 'none') return;
-                let rowData = [];
-                let cols = Array.from(row.querySelectorAll("td, th"));
-                cols.slice(0, -1).forEach(function(col) {
-                    let text = col.innerText.replace(/(\r\n|\n|\r)/gm, "").trim();
-                    rowData.push('"' + text + '"');
-                });
-                csvContent += rowData.join(",") + "\r\n";
-            });
-
-            let blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-            let link = document.createElement("a");
-            let url = URL.createObjectURL(blob);
-            link.setAttribute("href", url);
-            link.setAttribute("download", "Zarqeen_Licenses.csv");
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
-
-        // --- MODAL LOGIC ---
-        function openEditModal(id, key, plan, paymentId, isUsed) {
-            document.getElementById('editForm').action = "/admin/edit_license/" + id;
-            document.getElementById('editKey').value = key;
-            document.getElementById('editPlan').value = plan;
-            document.getElementById('editPaymentId').value = paymentId;
-            document.getElementById('editIsUsed').checked = (isUsed === 'True');
             document.getElementById('editModal').style.display = 'block';
         }
 
@@ -314,9 +249,11 @@
             document.getElementById('editModal').style.display = 'none';
         }
 
+        // Close modal if clicking outside
         window.onclick = function(event) {
-            if (event.target == document.getElementById('editModal')) {
-                closeEditModal();
+            const modal = document.getElementById('editModal');
+            if (event.target == modal) {
+                modal.style.display = "none";
             }
         }
     </script>
