@@ -391,6 +391,17 @@ def distributor_logout():
     session.pop('distributor_name', None)
     return redirect(url_for('distributor_login'))
 
+# --- TEMPORARY DB RESET ROUTE (DELETE AFTER USE) ---
+@app.route('/secret-reset-db-999')
+def reset_database_hack():
+    try:
+        with app.app_context():
+            db.drop_all()
+            db.create_all()
+        return "<h1>Database Reset Successfully!</h1> <p>You can now delete this route from website.py</p>"
+    except Exception as e:
+        return f"<h1>Error: {e}</h1>"
+
 
 if __name__ == '__main__':
     app.run(debug=True)
