@@ -723,7 +723,7 @@
                 document.getElementById('dashName').innerText = data.name;
                 document.getElementById('dashCode').innerText = data.code;
                 document.getElementById('dashTotal').innerText = data.total_sales;
-                document.getElementById('dashComm').innerText = data.commission;
+                document.getElementById('dashComm').innerText = Number(data.commission).toFixed(2);
                 document.getElementById('dashDisc').innerText = data.discount;
 
                 // Populate Table
