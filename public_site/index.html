@@ -265,149 +265,135 @@
     <!-- LOGIC -->
     <!-- LOGIC -->
     <script>
-        // 1. GLOBAL VARIABLES (Must be at the top)
-        document.getElementById('year').textContent = new Date().getFullYear();
-        let RAZORPAY_KEY_ID = null; 
+       // Global variable to store active code
+let ACTIVE_DISTRIBUTOR_CODE = null;
 
-        // ⚠️ REPLACE THIS with your actual Backend URL from Render
-        // Example: "https://zarqeen-backend.onrender.com"
-        const BACKEND_URL = "https://zarqeen-backend.onrender.com"; 
+async function applyCode() {
+    const codeInput = document.getElementById('distCode');
+    const msg = document.getElementById('codeMsg');
+    const code = codeInput.value.trim();
 
-        // Update Admin Link automatically
-        const adminLink = document.getElementById('adminLink');
-        if(adminLink) {
-            adminLink.href = `${BACKEND_URL}/admin/login`;
+    if(!code) return;
+
+    msg.textContent = "Checking...";
+    msg.style.color = "grey";
+
+    try {
+        const res = await fetch(`${BACKEND_URL}/api/check_distributor`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ code: code })
+        });
+        const data = await res.json();
+
+        if (data.valid) {
+            ACTIVE_DISTRIBUTOR_CODE = code;
+            msg.textContent = `✅ Success! ${data.name} discount applied (${data.discount}% OFF)`;
+            msg.style.color = "green";
+            codeInput.style.borderColor = "green";
+            // Optional: You could update the visible prices on the cards here using JS
+        } else {
+            ACTIVE_DISTRIBUTOR_CODE = null;
+            msg.textContent = "❌ Invalid Code";
+            msg.style.color = "red";
+            codeInput.style.borderColor = "red";
         }
+    } catch (e) {
+        console.error(e);
+        msg.textContent = "Error checking code";
+    }
+}
 
-        // 2. Fetch Configuration on Page Load
-        async function fetchConfig() {
-            try {
-                const res = await fetch(`${BACKEND_URL}/api/get-config`);
-                const data = await res.json();
-                
-                // Update the global variable
-                RAZORPAY_KEY_ID = data.key_id; 
-                console.log("System Ready. Key loaded.");
-            } catch (error) {
-                console.error("Error connecting to backend:", error);
-            }
-        }
+async function buyPlan(planType) {
+    if (!RAZORPAY_KEY_ID) {
+        alert("Connecting to server... please wait.");
+        await fetchConfig();
+        return;
+    }
+
+    document.body.style.cursor = 'wait';
+    const btns = document.querySelectorAll('button');
+    btns.forEach(b => b.disabled = true);
+
+    try {
+        // SEND DISTRIBUTOR CODE TO BACKEND
+        const payload = { 
+            plan: planType,
+            distributor_code: ACTIVE_DISTRIBUTOR_CODE // <--- NEW
+        };
+
+        const res = await fetch(`${BACKEND_URL}/create_order`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload)
+        });
         
-        // Run immediately
-        fetchConfig();
+        // ... REST OF YOUR EXISTING CODE (Razorpay options etc) ...
+        // (Ensure the rest of the existing buyPlan logic remains here)
+        
+        if (!res.ok) throw new Error(`Server error: ${res.status}`);
+        const orderData = await res.json();
+        if(orderData.error) throw new Error(orderData.error);
 
-        // 3. UI Functions
-        function closeLicenseModal() {
-            document.getElementById('licenseModal').style.display = 'none';
-            window.location.reload(); 
-        }
-
-        function resetUI() {
-            document.body.style.cursor = 'default';
-            const btns = document.querySelectorAll('button');
-            btns.forEach(b => b.disabled = false);
-        }
-
-        // 4. Buy Logic
-        async function buyPlan(planType) {
-            // Check if key is loaded
-            if (!RAZORPAY_KEY_ID) {
-                alert("Connecting to server... please wait 2 seconds and try again.");
-                await fetchConfig(); // Try fetching again
-                return;
-            }
-
-            // Visual feedback
-            document.body.style.cursor = 'wait';
-            const btns = document.querySelectorAll('button');
-            btns.forEach(b => b.disabled = true);
-
-            try {
-                // A. Create Order via Backend
-                const res = await fetch(`${BACKEND_URL}/create_order`, {
+        const options = {
+            "key": RAZORPAY_KEY_ID,
+            "amount": orderData.amount, // This will now be the discounted amount
+            "currency": "INR",
+            "name": "Zarqeen Alif",
+            "description": `License: ${planType.toUpperCase()}`,
+            "order_id": orderData.id,
+            "theme": { "color": "#2563EB" },
+            "handler": async function (response){
+                // ... Verify Payment Logic ...
+                // Ensure you send plan_type inside the body just like before
+                 const verifyRes = await fetch(`${BACKEND_URL}/verify_payment`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ plan: planType })
+                    body: JSON.stringify({
+                        razorpay_payment_id: response.razorpay_payment_id,
+                        razorpay_order_id: response.razorpay_order_id,
+                        razorpay_signature: response.razorpay_signature,
+                        plan_type: planType
+                    })
                 });
-                
-                if (!res.ok) {
-                    throw new Error(`Server error: ${res.status}`);
+                const result = await verifyRes.json();
+                if(result.success) {
+                    // ... Download Logic (Same as before) ...
+                    // The license file is just the key. 
+                    // The DESKTOP APP will fetch distributor details using the API.
+                     const licenseKey = result.license_key;
+                     const blob = new Blob([licenseKey], { type: "text/plain" });
+                     const url = window.URL.createObjectURL(blob);
+                     
+                     const keyArea = document.getElementById('licenseKeyArea');
+                     keyArea.innerHTML = ""; 
+                     
+                     const downloadBtn = document.createElement("a");
+                     downloadBtn.href = url;
+                     downloadBtn.download = "license.zarqeen"; 
+                     downloadBtn.className = "btn-buy primary";
+                     downloadBtn.style.display = "inline-block";
+                     downloadBtn.style.textDecoration = "none";
+                     downloadBtn.innerText = "⬇ Download License File";
+                     
+                     keyArea.appendChild(downloadBtn);
+                     document.getElementById('licenseModal').style.display = 'block';
+                } else {
+                    alert('Verification failed.');
                 }
-
-                const orderData = await res.json();
-
-                if(orderData.error) { 
-                    throw new Error(orderData.error);
-                }
-
-                // B. Open Razorpay
-                const options = {
-                    "key": RAZORPAY_KEY_ID, // Uses the global variable
-                    "amount": orderData.amount,
-                    "currency": "INR",
-                    "name": "Zarqeen Alif",
-                    "description": `License: ${planType.toUpperCase()}`,
-                    "order_id": orderData.id,
-                    "theme": { "color": "#2563EB" }, 
-                    "handler": async function (response){
-                        // C. Verify Payment via Backend
-                        try {
-                            const verifyRes = await fetch(`${BACKEND_URL}/verify_payment`, {
-                                method: 'POST',
-                                headers: {'Content-Type': 'application/json'},
-                                body: JSON.stringify({
-                                    razorpay_payment_id: response.razorpay_payment_id,
-                                    razorpay_order_id: response.razorpay_order_id,
-                                    razorpay_signature: response.razorpay_signature,
-                                    plan_type: planType
-                                })
-                            });
-                            const result = await verifyRes.json();
-                            
-                            if(result.success) {
-                                // D. Download Logic
-                                const licenseKey = result.license_key;
-                                const blob = new Blob([licenseKey], { type: "text/plain" });
-                                const url = window.URL.createObjectURL(blob);
-                                
-                                const keyArea = document.getElementById('licenseKeyArea');
-                                keyArea.innerHTML = ""; 
-                                
-                                const downloadBtn = document.createElement("a");
-                                downloadBtn.href = url;
-                                downloadBtn.download = "license.zarqeen"; 
-                                downloadBtn.className = "btn-buy primary";
-                                downloadBtn.style.display = "inline-block";
-                                downloadBtn.style.textDecoration = "none";
-                                downloadBtn.innerText = "⬇ Download License File";
-                                
-                                keyArea.appendChild(downloadBtn);
-                                
-                                document.getElementById('licenseModal').style.display = 'block';
-                            } else {
-                                alert('Verification failed. Please contact support.');
-                            }
-                        } catch (e) {
-                            console.error(e);
-                            alert("Verification error. Check internet.");
-                        } finally {
-                            resetUI();
-                        }
-                    },
-                    "modal": {
-                        "ondismiss": function(){ resetUI(); }
-                    }
-                };
-                
-                const rzp1 = new Razorpay(options);
-                rzp1.open();
-
-            } catch(e) {
-                console.error(e);
-                alert("Error: " + e.message);
                 resetUI();
-            }
-        }
+            },
+            "modal": { "ondismiss": function(){ resetUI(); } }
+        };
+        const rzp1 = new Razorpay(options);
+        rzp1.open();
+
+    } catch(e) {
+        console.error(e);
+        alert("Error: " + e.message);
+        resetUI();
+    }
+}
     </script>
 </body>
 </html>
