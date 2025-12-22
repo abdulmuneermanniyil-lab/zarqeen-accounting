@@ -694,27 +694,19 @@
         });
 
         // B. Fetch Data & Show Dashboard
+        // B. Fetch Data & Show Dashboard
         async function loadDashboard() {
             try {
                 const token = localStorage.getItem('dist_token');
-                
-                if (!token) {
-                    // No token found, user must login
-                    return; 
-                }
+                if (!token) return; 
 
-                // SEND TOKEN IN HEADERS
                 const res = await fetch(`${BACKEND_URL}/api/distributor/data`, {
                     method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
+                    headers: { 'Authorization': `Bearer ${token}` }
                 });
 
                 if (res.status === 401) {
-                    alert("Session expired. Please login again.");
-                    doLogout();
-                    return;
+                    alert("Session expired."); doLogout(); return;
                 }
 
                 const data = await res.json();
@@ -723,18 +715,27 @@
                 document.getElementById('dashName').innerText = data.name;
                 document.getElementById('dashCode').innerText = data.code;
                 document.getElementById('dashTotal').innerText = data.total_sales;
-                document.getElementById('dashComm').innerText = Number(data.commission).toFixed(2);
+                
+                // NEW: Financial Stats
+                document.getElementById('dashComm').innerHTML = `
+                    <span style="color:#2563EB">Earned: ₹${Number(data.commission_earned).toFixed(2)}</span><br>
+                    <span style="color:#059669; font-size:0.8em">Paid: ₹${Number(data.commission_paid).toFixed(2)}</span><br>
+                    <span style="color:#DC2626; font-size:0.9em; font-weight:800">Balance: ₹${Number(data.balance_due).toFixed(2)}</span>
+                `;
                 document.getElementById('dashDisc').innerText = data.discount;
 
-                // Populate Table
+                // Populate Table with DOWNLOAD button
                 const tbody = document.getElementById('dashTableBody');
                 tbody.innerHTML = ""; 
 
                 if (data.sales_history.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:gray;">No sales found.</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:gray;">No sales found.</td></tr>`;
                 } else {
                     data.sales_history.forEach(row => {
                         const statusClass = row.status === 'INSTALLED' ? 'status-installed' : 'status-pending';
+                        // Construct Download URL
+                        const downUrl = `${data.backend_url}download/license/${row.key}`;
+                        
                         const html = `
                             <tr>
                                 <td>${row.date}</td>
@@ -742,25 +743,25 @@
                                 <td>₹${row.amount}</td>
                                 <td><span class="status-badge ${statusClass}">${row.status}</span></td>
                                 <td style="font-family:monospace">${row.key}</td>
+                                <td><a href="${downUrl}" target="_blank" class="nav-btn" style="padding:4px 8px; font-size:0.8rem;">⬇</a></td>
                             </tr>
                         `;
                         tbody.insertAdjacentHTML('beforeend', html);
                     });
                 }
 
-                // C. SWAP VIEW
+                // SWAP VIEW
                 document.querySelector('header').style.display = 'none';
                 document.querySelector('.hero').style.display = 'none';
                 document.getElementById('features').style.display = 'none';
                 document.getElementById('pricing').style.display = 'none';
                 document.querySelector('footer').style.display = 'none';
-                
                 document.getElementById('dashboardSection').style.display = 'block';
                 window.scrollTo(0, 0);
 
             } catch (e) {
                 console.error(e);
-                alert("Error loading dashboard data");
+                alert("Error loading dashboard");
             }
         }
 
