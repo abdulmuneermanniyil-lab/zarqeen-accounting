@@ -3,259 +3,98 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zarqeen Admin Dashboard</title>
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <title>Zarqeen Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --primary: #2563EB;
-            --danger: #EF4444;
-            --success: #10B981;
-            --bg: #F3F4F6;
-            --text: #1F2937;
-            --white: #ffffff;
-            --border: #E5E7EB;
-        }
-
-        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; }
-        
-        /* Navbar */
-        nav { background: var(--white); border-bottom: 1px solid var(--border); padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
-        .brand { font-weight: 800; font-size: 1.25rem; color: var(--primary); }
-        .logout-btn { background: var(--danger); color: white; text-decoration: none; padding: 8px 16px; border-radius: 6px; font-size: 0.9rem; transition: 0.2s; }
-        .logout-btn:hover { background: #DC2626; }
-
-        /* Main Container */
-        .container { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; }
-
-        /* Alerts */
-        .alert { padding: 1rem; margin-bottom: 1.5rem; border-radius: 6px; font-weight: 500; }
-        .alert-success { background: #D1FAE5; color: #065F46; border: 1px solid #A7F3D0; }
-        .alert-danger { background: #FEE2E2; color: #991B1B; border: 1px solid #FECACA; }
-
-        /* Cards */
-        .card { background: var(--white); border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); padding: 2rem; margin-bottom: 2rem; border: 1px solid var(--border); }
-        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
-        .card-title { font-size: 1.25rem; font-weight: 700; color: #111827; margin: 0; }
-
-        /* Forms */
-        .grid-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; }
-        .form-group label { display: block; font-size: 0.85rem; font-weight: 600; color: #4B5563; margin-bottom: 0.5rem; }
-        .form-group input { width: 100%; padding: 0.75rem; border: 1px solid #D1D5DB; border-radius: 6px; font-size: 0.95rem; box-sizing: border-box; }
-        .form-group input:focus { outline: none; border-color: var(--primary); ring: 2px solid var(--primary); }
-        
-        .btn-submit { background: var(--success); color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; font-weight: 600; cursor: pointer; transition: 0.2s; width: 100%; margin-top: 24px; }
-        .btn-submit:hover { background: #059669; }
-
-        /* Table */
-        .table-container { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
-        th { text-align: left; padding: 1rem; background: #F9FAFB; font-weight: 600; color: #6B7280; border-bottom: 1px solid var(--border); white-space: nowrap; }
-        td { padding: 1rem; border-bottom: 1px solid var(--border); color: #374151; vertical-align: middle; }
-        tr:last-child td { border-bottom: none; }
-        
-        /* Badges */
-        .badge { display: inline-block; padding: 4px 10px; border-radius: 99px; font-size: 0.75rem; font-weight: 700; }
-        .badge-basic { background: #DBEAFE; color: #1E40AF; }
-        .badge-premium { background: #FEF3C7; color: #92400E; }
-        .badge-used { background: #D1FAE5; color: #065F46; }
-        .badge-unused { background: #F3F4F6; color: #4B5563; }
-        .badge-distributor { background: #E0E7FF; color: #3730A3; font-family: monospace; }
-
-        /* Actions */
-        .btn-icon { background: none; border: none; cursor: pointer; padding: 6px; border-radius: 4px; transition: 0.2s; }
-        .btn-icon:hover { background: #F3F4F6; }
-        .btn-delete { color: var(--danger); }
-        .btn-edit { color: var(--primary); }
-
-        /* Edit Modal */
-        .modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); backdrop-filter: blur(2px); }
-        .modal-content { background-color: white; margin: 10vh auto; padding: 2rem; border-radius: 12px; width: 90%; max-width: 500px; position: relative; }
-        .close { position: absolute; right: 20px; top: 20px; font-size: 24px; cursor: pointer; color: #9CA3AF; }
+        body { font-family: 'Inter', sans-serif; background: #F3F4F6; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .card { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        h2 { margin-top: 0; color: #1F2937; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { text-align: left; padding: 12px; border-bottom: 1px solid #E5E7EB; }
+        th { background: #F9FAFB; }
+        .btn { padding: 8px 12px; border-radius: 5px; border: none; cursor: pointer; color: white; }
+        .btn-red { background: #EF4444; }
+        .btn-green { background: #10B981; }
+        input { padding: 8px; border: 1px solid #D1D5DB; border-radius: 5px; width: 100%; box-sizing: border-box; margin-bottom: 10px; }
+        label { font-size: 0.85rem; font-weight: 600; color: #4B5563; }
+        .grid-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
     </style>
 </head>
 <body>
-
-    <!-- NAV -->
-    <nav>
-        <div class="brand">Zarqeen Admin Panel</div>
-        <a href="/admin/logout" class="logout-btn">Log Out</a>
-    </nav>
-
     <div class="container">
-        
-        <!-- FLASH MESSAGES -->
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category }}">
-                        {{ message }}
-                    </div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <h1>Admin Dashboard</h1>
+            <a href="/admin/logout" class="btn btn-red" style="text-decoration:none;">Logout</a>
+        </div>
 
-        <!-- SECTION 1: ADD DISTRIBUTOR -->
+        <!-- 1. ADD DISTRIBUTOR -->
         <div class="card">
-            <div class="card-header">
-                <h2 class="card-title">✨ Add New Distributor</h2>
-            </div>
+            <h2>➕ Add Distributor</h2>
             <form action="/admin/add_distributor" method="POST" class="grid-form">
-                <div class="form-group">
-                    <label>Business Name</label>
-                    <input type="text" name="name" placeholder="e.g. Ali Computers" required>
-                </div>
-                <div class="form-group">
-                    <label>Discount Code (Unique)</label>
-                    <input type="text" name="code" placeholder="e.g. ALI20" required style="text-transform: uppercase;">
-                </div>
-                <div class="form-group">
-                    <label>Phone Number</label>
-                    <input type="text" name="phone" placeholder="+91..." required>
-                </div>
-                <div class="form-group">
-                    <label>Discount %</label>
-                    <input type="number" name="discount" value="10" min="0" max="100" required>
-                </div>
-                
-                <!-- NEW AUTH FIELDS -->
-                <div class="form-group">
-                    <label>Login Username</label>
-                    <input type="text" name="username" placeholder="dist_user" required>
-                </div>
-                <div class="form-group">
-                    <label>Login Password</label>
-                    <input type="password" name="password" placeholder="******" required>
-                </div>
-
-                <div class="form-group">
-                    <button type="submit" class="btn-submit">Create Account</button>
-                </div>
+                <div><label>Business Name</label><input type="text" name="name" required></div>
+                <div><label>Email (Login)</label><input type="email" name="email" required></div>
+                <div><label>Phone</label><input type="text" name="phone" required></div>
+                <div><label>Code (Unique)</label><input type="text" name="code" style="text-transform:uppercase" required></div>
+                <div><label>Password</label><input type="password" name="password" required></div>
+                <div><label>Discount %</label><input type="number" name="discount" value="10"></div>
+                <div style="display:flex; align-items:end;"><button type="submit" class="btn btn-green" style="width:100%">Create Account</button></div>
             </form>
         </div>
 
-        <!-- SECTION 2: LICENSE MANAGEMENT -->
+        <!-- 2. MANAGE DISTRIBUTORS -->
         <div class="card">
-            <div class="card-header">
-                <h2 class="card-title">📂 License Management</h2>
-            </div>
-            
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>License Key</th>
-                            <th>Plan</th>
-                            <th>Sold By</th> <!-- New Column -->
-                            <th>Amount</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for lic in licenses %}
-                        <tr>
-                            <td>{{ lic.created_at.strftime('%d-%b-%Y') }}</td>
-                            <td style="font-family: monospace; font-weight: 600;">{{ lic.license_key }}</td>
-                            <td>
-                                <span class="badge {{ 'badge-basic' if lic.plan_type == 'basic' else 'badge-premium' }}">
-                                    {{ lic.plan_type|upper }}
-                                </span>
-                            </td>
-                            <td>
-                                {% if lic.distributor %}
-                                    <span class="badge badge-distributor">{{ lic.distributor.name }}</span>
-                                {% else %}
-                                    <span style="color: #9CA3AF; font-size: 0.85rem;">Direct</span>
-                                {% endif %}
-                            </td>
-                            <td>₹{{ lic.amount_paid }}</td>
-                            <td>
-                                {% if lic.is_used %}
-                                    <span class="badge badge-used">Active</span>
-                                {% else %}
-                                    <span class="badge badge-unused">Unused</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <button class="btn-icon btn-edit" onclick="openEditModal('{{ lic.id }}', '{{ lic.license_key }}', '{{ lic.plan_type }}', '{{ lic.payment_id }}', '{{ lic.is_used }}')">
-                                    ✏️
-                                </button>
-                                
-                                <form action="{{ url_for('delete_license', id=lic.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure? This cannot be undone.');">
-                                    <button type="submit" class="btn-icon btn-delete">🗑️</button>
-                                </form>
-                            </td>
-                        </tr>
-                        {% else %}
-                        <tr>
-                            <td colspan="7" style="text-align: center; padding: 2rem; color: #6B7280;">No licenses generated yet.</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+            <h2>👥 Manage Distributors</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Code</th>
+                        <th>Discount</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for dist in distributors %}
+                    <tr>
+                        <td>{{ dist.name }}</td>
+                        <td>{{ dist.email }}</td>
+                        <td><strong>{{ dist.code }}</strong></td>
+                        <td>{{ dist.discount_percent }}%</td>
+                        <td>
+                            <form action="{{ url_for('delete_distributor', id=dist.id) }}" method="POST" onsubmit="return confirm('Delete this distributor?');">
+                                <button class="btn btn-red">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="5" style="text-align:center; color:gray;">No distributors found.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 3. LICENSES -->
+        <div class="card">
+            <h2>📂 Recent Licenses</h2>
+            <table>
+                <thead>
+                    <tr><th>Date</th><th>Key</th><th>Plan</th><th>Sold By</th><th>Amt</th></tr>
+                </thead>
+                <tbody>
+                    {% for lic in licenses %}
+                    <tr>
+                        <td>{{ lic.created_at.strftime('%d-%b') }}</td>
+                        <td style="font-family:monospace">{{ lic.license_key }}</td>
+                        <td>{{ lic.plan_type }}</td>
+                        <td>{{ lic.distributor.name if lic.distributor else 'Direct' }}</td>
+                        <td>₹{{ lic.amount_paid }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
-
-    <!-- EDIT MODAL -->
-    <div id="editModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeEditModal()">&times;</span>
-            <h2 class="card-title" style="margin-bottom: 20px;">Edit License</h2>
-            
-            <form id="editForm" method="POST" action="">
-                <div class="grid-form" style="grid-template-columns: 1fr;">
-                    <div class="form-group">
-                        <label>License Key</label>
-                        <input type="text" name="license_key" id="edit_key" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Plan Type</label>
-                        <select name="plan_type" id="edit_plan" style="width: 100%; padding: 0.75rem; border: 1px solid #D1D5DB; border-radius: 6px;">
-                            <option value="basic">basic</option>
-                            <option value="premium">premium</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Payment ID</label>
-                        <input type="text" name="payment_id" id="edit_payment" required>
-                    </div>
-                    <div class="form-group" style="display: flex; align-items: center; gap: 10px;">
-                        <input type="checkbox" name="is_used" id="edit_used" style="width: auto;">
-                        <label for="edit_used" style="margin:0;">Mark as Used/Active</label>
-                    </div>
-                    <button type="submit" class="btn-submit">Save Changes</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <script>
-        function openEditModal(id, key, plan, payment, used) {
-            const form = document.getElementById('editForm');
-            form.action = `/admin/edit_license/${id}`;
-            
-            document.getElementById('edit_key').value = key;
-            document.getElementById('edit_plan').value = plan;
-            document.getElementById('edit_payment').value = payment;
-            document.getElementById('edit_used').checked = (used === 'True');
-            
-            document.getElementById('editModal').style.display = 'block';
-        }
-
-        function closeEditModal() {
-            document.getElementById('editModal').style.display = 'none';
-        }
-
-        // Close modal if clicking outside
-        window.onclick = function(event) {
-            const modal = document.getElementById('editModal');
-            if (event.target == modal) {
-                modal.style.display = "none";
-            }
-        }
-    </script>
 </body>
 </html>
