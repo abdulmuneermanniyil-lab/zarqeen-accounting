@@ -49,13 +49,17 @@ ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', 'admin')
 ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'admin123')
 
 # --- BREVO MAIL CONFIGURATION (FROM YOUR CODE) ---
-app.config['MAIL_SERVER'] = 'smtp-relay.brevo.com'
-app.config['MAIL_PORT'] = 587
-app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USE_SSL'] = False
-app.config['MAIL_USERNAME'] = '9cd21d001@smtp-brevo.com'
-app.config['MAIL_PASSWORD'] = 'bskrnT85t4SOLS4' # Provided Key
-app.config['MAIL_DEFAULT_SENDER'] = ('Zarqeen Support', 'zarqeensoftware@gmail.com')
+app.config.update(
+    MAIL_SERVER='smtp-relay.brevo.com',
+    MAIL_PORT=587,
+    MAIL_USE_TLS=True,
+    MAIL_USE_SSL=False,
+    MAIL_USERNAME='9cd21d001@smtp-brevo.com',
+    MAIL_PASSWORD=os.environ.get('BREVO_KEY'),  # ⬅ move to env var
+    MAIL_DEFAULT_SENDER=('Zarqeen Support', 'zarqeensoftware@gmail.com'),
+    MAIL_TIMEOUT=10   # 🔥 ADD THIS
+)
+
 
 CORS(app, resources={r"/*": {"origins": ["https://zarqeen.in", "https://www.zarqeen.in"]}}, supports_credentials=True)
 
