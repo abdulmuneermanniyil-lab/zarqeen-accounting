@@ -301,6 +301,7 @@
     </footer>
 
     <!-- DISTRIBUTOR DASHBOARD (Hidden by Default) -->
+   <!-- DISTRIBUTOR DASHBOARD (Hidden by Default) -->
     <div id="dashboardSection">
         <div style="max-width: 1200px; margin: 0 auto;">
             
@@ -313,8 +314,8 @@
                 <button onclick="doLogout()" class="btn-buy secondary" style="width: auto; margin:0; background: #EF4444; color: white;">Logout</button>
             </div>
 
-            <!-- Stats -->
             <div class="dash-grid">
+                <!-- Stats -->
                 <div class="dash-card">
                     <div class="dash-val" id="dashTotal">0</div>
                     <div style="color: #6B7280;">Total Licenses Sold</div>
@@ -327,6 +328,23 @@
                     <div class="dash-val"><span id="dashDisc">0</span>%</div>
                     <div style="color: #6B7280;">Current Discount</div>
                 </div>
+            </div>
+
+            <!-- NEW: PROFILE & BANK DETAILS CARD -->
+            <div class="dash-header" style="display:block; margin-top:-10px;">
+                <h3 style="margin-bottom:10px;">My Banking Details</h3>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; font-size:0.95rem;">
+                    <div>
+                        <p style="color:#6B7280;">Bank Name: <strong id="d_bank" style="color:#111"></strong></p>
+                        <p style="color:#6B7280;">Account Holder: <strong id="d_holder" style="color:#111"></strong></p>
+                    </div>
+                    <div>
+                        <p style="color:#6B7280;">Account No: <strong id="d_acct" style="color:#111"></strong></p>
+                        <p style="color:#6B7280;">IFSC Code: <strong id="d_ifsc" style="color:#111"></strong></p>
+                        <p style="color:#6B7280;">UPI ID: <strong id="d_upi" style="color:#111"></strong></p>
+                    </div>
+                </div>
+                <p style="font-size:0.8rem; color:#EF4444; margin-top:10px;">* To change these details, please contact Admin.</p>
             </div>
 
             <!-- Table -->
