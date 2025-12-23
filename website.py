@@ -367,15 +367,32 @@ def api_get_distributor_data():
     token = request.headers.get('Authorization').split(" ")[1] if request.headers.get('Authorization') else None
     dist = Distributor.query.filter_by(api_token=token).first()
     if not dist: return jsonify({'error': 'Invalid Token'}), 401
+    
     sales = License.query.filter_by(distributor_id=dist.id).order_by(License.created_at.desc()).all()
     total_earned = sum(safe_float(l.amount_paid) for l in sales) * 0.20
+    
     sales_data = [{'date': s.created_at.strftime('%Y-%m-%d'), 'plan': s.plan_type, 'amount': s.amount_paid, 'status': 'INSTALLED' if s.is_used else 'PENDING', 'key': s.license_key} for s in sales]
+    
     return jsonify({
-        'name': dist.name, 'code': dist.code, 'discount': dist.discount_percent,
-        'total_sales': len(sales), 'commission_earned': total_earned,
+        'name': dist.name, 
+        'code': dist.code, 
+        'discount': dist.discount_percent,
+        'email': dist.email,
+        'phone': dist.phone,
+        'total_sales': len(sales), 
+        'commission_earned': total_earned,
         'commission_paid': safe_float(dist.commission_paid),
         'balance_due': total_earned - safe_float(dist.commission_paid),
-        'sales_history': sales_data, 'backend_url': request.host_url
+        'sales_history': sales_data, 
+        'backend_url': request.host_url,
+        # SEND BANK DETAILS
+        'bank_info': {
+            'bank_name': dist.bank_name,
+            'account_holder': dist.account_holder,
+            'account_number': dist.account_number,
+            'ifsc': dist.ifsc_code,
+            'upi': dist.upi_id
+        }
     })
 
 @app.route('/api/forgot-password', methods=['POST'])
