@@ -34,12 +34,12 @@ if raw_db_url.startswith("postgres://"):
 app.config['SQLALCHEMY_DATABASE_URI'] = raw_db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# ⚠️ FIX FOR SSL SYSCALL ERROR (Connection Keep-Alive)
+# ⚠️ MEMORY & CONNECTION OPTIMIZATION (Fixes SIGKILL & SSL Errors)
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
-    "pool_pre_ping": True,  # Checks connection before using
-    "pool_recycle": 300,    # Refresh connection every 5 minutes
-    "pool_size": 10,
-    "max_overflow": 20
+    "pool_pre_ping": True,
+    "pool_recycle": 300,
+    "pool_size": 2,       # Reduced to save memory
+    "max_overflow": 1     # Reduced to save memory
 }
 
 # Credentials
@@ -48,13 +48,13 @@ RAZORPAY_KEY_SECRET = os.environ.get('RAZORPAY_KEY_SECRET')
 ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', 'admin')
 ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'admin123')
 
-# Mail (Brevo/SMTP) - Prevents Crash if Env Vars missing
-app.config['MAIL_SERVER'] = 'smtp-relay.brevo.com'
-app.config['MAIL_PORT'] = 587
+# Mail (Safe Config)
+app.config['MAIL_SERVER'] = os.environ.get('MAIL_SERVER', 'smtp-relay.brevo.com')
+app.config['MAIL_PORT'] = int(os.environ.get('MAIL_PORT', 587))
 app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
 app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
-app.config['MAIL_DEFAULT_SENDER'] = ('Zarqeen Support', os.environ.get('MAIL_USERNAME', 'noreply@zarqeen.in'))
+app.config['MAIL_DEFAULT_SENDER'] = ('Zarqeen Support', os.environ.get('MAIL_USERNAME'))
 
 CORS(app, resources={r"/*": {"origins": ["https://zarqeen.in", "https://www.zarqeen.in"]}}, supports_credentials=True)
 
@@ -101,11 +101,10 @@ class License(db.Model):
     used_at = db.Column(db.DateTime, nullable=True)
     distributor_id = db.Column(db.Integer, db.ForeignKey('distributor.id'), nullable=True)
 
-with app.app_context():
-    try: db.create_all()
-    except: pass
+# ⚠️ REMOVED db.create_all() FROM STARTUP TO PREVENT OOM CRASHES
+# Use the /reset-db-now route to initialize DB instead.
 
-# --- HELPERS ---
+# --- HELPER FUNCTIONS ---
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -183,8 +182,8 @@ def verify_payment():
             'razorpay_signature': data['razorpay_signature']
         })
         order_info = razorpay_client.order.fetch(data['razorpay_order_id'])
-        dist_id_val = order_info['notes'].get('distributor_id')
         
+        dist_id_val = order_info['notes'].get('distributor_id')
         dist_obj = None
         if dist_id_val and dist_id_val != "None":
             try: dist_obj = Distributor.query.get(int(dist_id_val))
@@ -429,7 +428,7 @@ def reset_db():
             d.set_password("demo123")
             db.session.add(d)
             db.session.commit()
-    return "DB Reset. otp_expiry added."
+    return "DB Reset"
 
 if __name__ == '__main__':
     app.run(debug=True)
