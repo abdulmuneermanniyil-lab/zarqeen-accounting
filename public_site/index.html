@@ -682,6 +682,13 @@
                 `;
                 document.getElementById('dashDisc').innerText = data.discount;
 
+                // POPULATE BANK INFO
+                document.getElementById('d_bank').innerText = data.bank_info.bank_name || '-';
+                document.getElementById('d_holder').innerText = data.bank_info.account_holder || '-';
+                document.getElementById('d_acct').innerText = data.bank_info.account_number || '-';
+                document.getElementById('d_ifsc').innerText = data.bank_info.ifsc || '-';
+                document.getElementById('d_upi').innerText = data.bank_info.upi || '-';
+
                 // Table
                 const tbody = document.getElementById('dashTableBody');
                 tbody.innerHTML = ""; 
