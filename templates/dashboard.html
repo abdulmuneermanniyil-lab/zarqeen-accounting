@@ -134,40 +134,76 @@
     </div>
 
     <!-- EDIT MODAL -->
+    <!-- EDIT MODAL -->
     <div id="editModal" class="modal">
         <div class="modal-content">
             <span style="float:right; cursor:pointer; font-size:24px;" onclick="document.getElementById('editModal').style.display='none'">&times;</span>
-            <h2 style="margin-bottom:20px;">Edit Distributor & Payments</h2>
+            <h2 style="margin-bottom:20px; border-bottom:1px solid #eee; padding-bottom:10px;">Edit Distributor</h2>
+            
             <form id="editForm" method="POST" action="">
+                
+                <!-- 1. Profile Info -->
+                <h4 style="margin:10px 0 5px; color:#4B5563;">Profile Details</h4>
                 <div class="grid-form">
                     <div><label>Name</label><input type="text" name="name" id="e_name" required></div>
                     <div><label>Email</label><input type="email" name="email" id="e_email" required></div>
                     <div><label>Phone</label><input type="text" name="phone" id="e_phone"></div>
+                    <div><label>Password (Optional)</label><input type="password" name="password" placeholder="New password"></div>
+                </div>
+
+                <!-- 2. Banking -->
+                <h4 style="margin:15px 0 5px; color:#4B5563;">Banking Info</h4>
+                <div class="grid-form">
                     <div><label>Bank Details</label><input type="text" name="bank_details" id="e_bank"></div>
                     <div><label>UPI ID</label><input type="text" name="upi_id" id="e_upi"></div>
+                </div>
+
+                <!-- 3. Payment Management -->
+                <h4 style="margin:15px 0 5px; color:#059669;">Payment Management</h4>
+                <div style="background:#F0FDF4; padding:15px; border-radius:8px; border:1px solid #BBF7D0;">
                     
-                    <div style="grid-column: span 1; background:#ECFDF5; padding:15px; border-radius:8px; border:1px solid #10B981;">
-                        <label style="color:#047857; font-size:0.9rem;">💰 Make Payment (Pay Commission)</label>
-                        <input type="number" name="add_payment" placeholder="Amount paid today (e.g. 500)" style="border-color:#10B981; margin-bottom:0;">
-                        <small style="color:#059669;">Entering amount here increases 'Paid' total and reduces Balance.</small>
+                    <!-- Option A: Pay -->
+                    <div style="margin-bottom:15px;">
+                        <label style="color:#047857; font-weight:700;">➕ Add Payment (Normal)</label>
+                        <input type="number" step="0.01" name="add_payment" placeholder="e.g. 500 (Increases Total Paid)" style="border-color:#10B981;">
+                        <small style="color:#059669;">Use this when you transfer money to them.</small>
+                    </div>
+
+                    <!-- Option B: Correct -->
+                    <div style="border-top:1px dashed #10B981; padding-top:10px;">
+                        <label style="color:#B91C1C; font-weight:700;">✏️ Overwrite Total Paid (Correction)</label>
+                        <input type="number" step="0.01" name="manual_paid_total" id="e_paid_total" placeholder="Directly set Total Paid" style="border-color:#FECACA;">
+                        <small style="color:#B91C1C;">Use this ONLY to fix mistakes. Current Paid: <b>₹<span id="display_current_paid">0</span></b></small>
                     </div>
                 </div>
-                <button type="submit" class="btn btn-blue" style="width:100%; margin-top:20px; padding:12px;">Save Changes</button>
+
+                <button type="submit" class="btn btn-blue" style="width:100%; margin-top:20px; padding:12px; font-weight:bold;">Save Changes</button>
             </form>
         </div>
     </div>
 
     <script>
-        function openEdit(id, name, email, phone, bank, upi) {
+        function openEdit(id, name, email, phone, bank, upi, currentPaid) {
             document.getElementById('editForm').action = `/admin/edit_distributor/${id}`;
             document.getElementById('e_name').value = name;
             document.getElementById('e_email').value = email;
             document.getElementById('e_phone').value = phone;
-            document.getElementById('e_bank').value = (bank && bank != 'None') ? bank : '';
-            document.getElementById('e_upi').value = (upi && upi != 'None') ? upi : '';
+            
+            // Handle 'None' values from Python
+            document.getElementById('e_bank').value = (bank && bank !== 'None') ? bank : '';
+            document.getElementById('e_upi').value = (upi && upi !== 'None') ? upi : '';
+            
+            // Show current paid amount for reference
+            document.getElementById('display_current_paid').innerText = currentPaid;
+            
+            // Clear payment inputs
+            document.getElementsByName('add_payment')[0].value = '';
+            document.getElementById('e_paid_total').value = '';
+
             document.getElementById('editModal').style.display = 'block';
         }
         
+        // Close modal clicking outside
         window.onclick = function(event) {
             if (event.target == document.getElementById('editModal')) {
                 document.getElementById('editModal').style.display = 'none';
