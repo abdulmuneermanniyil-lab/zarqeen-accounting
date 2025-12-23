@@ -11,7 +11,7 @@
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <link rel="icon" type="image/png" href="static/header.png">
     <style>
-        /* ... (Same CSS as previous) ... */
+        /* ... (Keep CSS same as before) ... */
         :root { --primary: #2563EB; --primary-dark: #1E40AF; --accent: #F59E0B; --bg-light: #F3F4F6; --text-main: #111827; --text-muted: #6B7280; --white: #ffffff; --success: #10B981; }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; scroll-behavior: smooth; }
         body { background-color: var(--bg-light); color: var(--text-main); line-height: 1.6; }
@@ -132,7 +132,8 @@
     <section class="hero">
         <div class="tagline"><img src="https://flagcdn.com/w40/in.png" alt="India" style="height:14px; margin-right:5px;"> MADE FOR INDIA</div>
         <h1>India's Best Value <br><span>Invoicing Software</span></h1>
-        <p>The easiest offline billing software. Automatically calculates taxes. Designed specifically for Indian businesses who want simplicity and speed.</p>
+        <p>The easiest offline billing software. Automatically calculates taxes. 
+        <strong>Specially designed for Retail Indian Businesses</strong> who want simplicity and speed.</p>
         <div class="cta-group">
             <a href="https://drive.google.com/drive/folders/17O3vY4KYUzd7Rma4o8rp3j2iIrpqhJe9?usp=drive_link" target="_blank"><button class="btn-lg btn-primary">Download Free Trial</button></a>
             <a href="#pricing"><button class="btn-lg btn-outline">See Best Prices</button></a>
@@ -256,11 +257,7 @@
             const loader = document.getElementById('actionLoader');
             document.getElementById('loaderText').innerText = txt || "Loading...";
             loader.style.display = 'flex';
-            
-            // Timeout warning for slow cold starts
-            setTimeout(() => {
-                document.getElementById('loaderSubText').innerText = "Waking up server... please wait.";
-            }, 3000);
+            setTimeout(() => { document.getElementById('loaderSubText').innerText = "Waking up server... please wait."; }, 3000);
         }
         function hideLoader() { document.getElementById('actionLoader').style.display = 'none'; }
 
