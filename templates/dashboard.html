@@ -13,23 +13,19 @@
         table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9rem; }
         th, td { text-align: left; padding: 12px; border-bottom: 1px solid #E5E7EB; }
         th { background: #F9FAFB; }
-        
         .btn { padding: 6px 12px; border-radius: 5px; border: none; cursor: pointer; color: white; margin-right: 5px; text-decoration: none; display: inline-block; font-size: 0.85rem;}
         .btn-red { background: #EF4444; }
         .btn-green { background: #10B981; }
         .btn-blue { background: #2563EB; }
         .btn-gray { background: #6B7280; }
-        .btn-outline { background: white; border: 1px solid #D1D5DB; color: #374151; }
-        
         input { padding: 8px; border: 1px solid #D1D5DB; border-radius: 5px; width: 100%; box-sizing: border-box; margin-bottom: 10px; }
         label { font-size: 0.8rem; font-weight: 600; color: #4B5563; }
         .grid-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
-        
-        /* Modal */
         .modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); backdrop-filter: blur(2px); }
         .modal-content { background-color: white; margin: 5vh auto; padding: 2rem; border-radius: 12px; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; }
         .balance-pos { color: #059669; font-weight: bold; }
         .balance-neg { color: #DC2626; font-weight: bold; }
+        .bank-details-block { font-size: 0.75rem; color: #4B5563; line-height: 1.3; }
     </style>
 </head>
 <body>
@@ -38,9 +34,7 @@
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
-                    <div style="padding:15px; margin-bottom:20px; border-radius:5px; 
-                        background: {{ '#D1FAE5' if category == 'success' else '#FEE2E2' }}; 
-                        color: {{ '#065F46' if category == 'success' else '#991B1B' }};">
+                    <div style="padding:15px; margin-bottom:20px; border-radius:5px; background: {{ '#D1FAE5' if category == 'success' else '#FEE2E2' }}; color: {{ '#065F46' if category == 'success' else '#991B1B' }};">
                         {{ message }}
                     </div>
                 {% endfor %}
@@ -68,28 +62,45 @@
                     <div><label>Code (4 Char)</label><input type="text" name="code" maxlength="4" style="text-transform:uppercase" required></div>
                     <div><label>Password</label><input type="password" name="password" required></div>
                     <div><label>Discount %</label><input type="number" name="discount" value="10"></div>
-                    <div><label>Bank Details</label><input type="text" name="bank_details" placeholder="Acct No / IFSC"></div>
+                    
+                    <!-- NEW BANK FIELDS -->
+                    <div><label>Bank Name</label><input type="text" name="bank_name" placeholder="HDFC"></div>
+                    <div><label>Account Holder</label><input type="text" name="account_holder" placeholder="Name"></div>
+                    <div><label>Account No</label><input type="text" name="account_number" placeholder="123xxx"></div>
+                    <div><label>IFSC Code</label><input type="text" name="ifsc_code" placeholder="HDFC0001" style="text-transform:uppercase"></div>
                     <div><label>UPI ID</label><input type="text" name="upi_id" placeholder="user@upi"></div>
+                    
                     <div style="display:flex; align-items:end;"><button type="submit" class="btn btn-green" style="width:100%">Add Distributor</button></div>
                 </form>
             </details>
 
             <table>
                 <thead>
-                    <tr><th>Name</th><th>Code</th><th>Total Earned</th><th>Paid</th><th>Balance Due</th><th>Bank/UPI</th><th>Action</th></tr>
+                    <tr><th>Name</th><th>Code</th><th>Financials</th><th>Bank Details</th><th>Action</th></tr>
                 </thead>
                 <tbody>
                     {% for d in distributors %}
                     <tr>
                         <td>{{ d.obj.name }}<br><span style="font-size:0.75rem; color:gray">{{ d.obj.email }}</span></td>
                         <td><strong>{{ d.obj.code }}</strong></td>
-                        <td>₹{{ "%.2f"|format(d.earned) }}</td>
-                        <td>₹{{ "%.2f"|format(d.obj.commission_paid) }}</td>
-                        <td class="{{ 'balance-neg' if d.balance > 0 else 'balance-pos' }}">₹{{ "%.2f"|format(d.balance) }}</td>
-                        <td style="font-size:0.8rem;">{{ d.obj.bank_details or '-' }}<br>{{ d.obj.upi_id or '' }}</td>
+                        <td style="font-size:0.85rem">
+                            Earned: ₹{{ "%.2f"|format(d.earned) }}<br>
+                            Paid: ₹{{ "%.2f"|format(d.obj.commission_paid) }}<br>
+                            Bal: <span class="{{ 'balance-neg' if d.balance > 0 else 'balance-pos' }}">₹{{ "%.2f"|format(d.balance) }}</span>
+                        </td>
+                        <td class="bank-details-block">
+                            {% if d.obj.bank_name %}
+                                <b>{{ d.obj.bank_name }}</b><br>
+                                {{ d.obj.account_number }}<br>
+                                {{ d.obj.ifsc_code }}<br>
+                            {% endif %}
+                            {% if d.obj.upi_id %}
+                                UPI: {{ d.obj.upi_id }}
+                            {% endif %}
+                        </td>
                         <td>
-                            <button class="btn btn-blue" onclick="openEdit('{{d.obj.id}}', '{{d.obj.name}}', '{{d.obj.email}}', '{{d.obj.phone}}', '{{d.obj.bank_details}}', '{{d.obj.upi_id}}', '{{d.obj.commission_paid}}')">Edit/Pay</button>
-                            <form action="{{ url_for('delete_distributor', id=d.obj.id) }}" method="POST" style="display:inline" onsubmit="return confirm('Delete distributor?');"><button class="btn btn-red">Del</button></form>
+                            <button class="btn btn-blue" onclick="openEdit('{{d.obj.id}}', '{{d.obj.name}}', '{{d.obj.email}}', '{{d.obj.phone}}', '{{d.obj.bank_name}}', '{{d.obj.account_holder}}', '{{d.obj.account_number}}', '{{d.obj.ifsc_code}}', '{{d.obj.upi_id}}', '{{d.obj.commission_paid}}')">Edit/Pay</button>
+                            <form action="{{ url_for('delete_distributor', id=d.obj.id) }}" method="POST" style="display:inline" onsubmit="return confirm('Delete?');"><button class="btn btn-red">X</button></form>
                         </td>
                     </tr>
                     {% endfor %}
@@ -114,17 +125,12 @@
                         <td>{{ lic.distributor.name if lic.distributor else 'Direct' }}</td>
                         <td>₹{{ lic.amount_paid }}</td>
                         <td>
-                            <!-- Action: Download -->
-                            <a href="/download/license/{{ lic.license_key }}" class="btn btn-green" title="Download">⬇</a>
-                            
-                            <!-- Action: Edit (Toggle Active/Used) -->
+                            <a href="/download/license/{{ lic.license_key }}" class="btn btn-green">⬇</a>
                             <form action="{{ url_for('edit_license', id=lic.id) }}" method="POST" style="display:inline;">
                                 <input type="hidden" name="is_used" value="{{ 'off' if lic.is_used else 'on' }}">
-                                <button class="btn btn-blue" title="Toggle Status">{{ 'Revoke' if lic.is_used else 'Active' }}</button>
+                                <button class="btn btn-blue">{{ 'Revoke' if lic.is_used else 'Active' }}</button>
                             </form>
-                            
-                            <!-- Action: Delete -->
-                            <form action="{{ url_for('delete_license', id=lic.id) }}" method="POST" style="display:inline" onsubmit="return confirm('Delete license?');"><button class="btn btn-red" title="Delete">Del</button></form>
+                            <form action="{{ url_for('delete_license', id=lic.id) }}" method="POST" style="display:inline" onsubmit="return confirm('Delete?');"><button class="btn btn-red">X</button></form>
                         </td>
                     </tr>
                     {% endfor %}
@@ -134,76 +140,57 @@
     </div>
 
     <!-- EDIT MODAL -->
-    <!-- EDIT MODAL -->
     <div id="editModal" class="modal">
         <div class="modal-content">
             <span style="float:right; cursor:pointer; font-size:24px;" onclick="document.getElementById('editModal').style.display='none'">&times;</span>
-            <h2 style="margin-bottom:20px; border-bottom:1px solid #eee; padding-bottom:10px;">Edit Distributor</h2>
-            
+            <h2 style="margin-bottom:20px;">Edit Distributor</h2>
             <form id="editForm" method="POST" action="">
-                
-                <!-- 1. Profile Info -->
-                <h4 style="margin:10px 0 5px; color:#4B5563;">Profile Details</h4>
                 <div class="grid-form">
                     <div><label>Name</label><input type="text" name="name" id="e_name" required></div>
                     <div><label>Email</label><input type="email" name="email" id="e_email" required></div>
                     <div><label>Phone</label><input type="text" name="phone" id="e_phone"></div>
-                    <div><label>Password (Optional)</label><input type="password" name="password" placeholder="New password"></div>
-                </div>
-
-                <!-- 2. Banking -->
-                <h4 style="margin:15px 0 5px; color:#4B5563;">Banking Info</h4>
-                <div class="grid-form">
-                    <div><label>Bank Details</label><input type="text" name="bank_details" id="e_bank"></div>
-                    <div><label>UPI ID</label><input type="text" name="upi_id" id="e_upi"></div>
-                </div>
-
-                <!-- 3. Payment Management -->
-                <h4 style="margin:15px 0 5px; color:#059669;">Payment Management</h4>
-                <div style="background:#F0FDF4; padding:15px; border-radius:8px; border:1px solid #BBF7D0;">
                     
-                    <!-- Option A: Pay -->
-                    <div style="margin-bottom:15px;">
-                        <label style="color:#047857; font-weight:700;">➕ Add Payment (Normal)</label>
-                        <input type="number" step="0.01" name="add_payment" placeholder="e.g. 500 (Increases Total Paid)" style="border-color:#10B981;">
-                        <small style="color:#059669;">Use this when you transfer money to them.</small>
+                    <div><label>Bank Name</label><input type="text" name="bank_name" id="e_bank_name"></div>
+                    <div><label>Holder Name</label><input type="text" name="account_holder" id="e_acct_holder"></div>
+                    <div><label>Account No</label><input type="text" name="account_number" id="e_acct_no"></div>
+                    <div><label>IFSC Code</label><input type="text" name="ifsc_code" id="e_ifsc"></div>
+                    <div><label>UPI ID</label><input type="text" name="upi_id" id="e_upi"></div>
+                    
+                    <div style="grid-column: span 1; background:#ECFDF5; padding:15px; border-radius:8px; border:1px solid #10B981;">
+                        <label style="color:#047857;">💰 Make Payment</label>
+                        <input type="number" name="add_payment" placeholder="Amount (e.g. 500)" style="border-color:#10B981;">
                     </div>
-
-                    <!-- Option B: Correct -->
-                    <div style="border-top:1px dashed #10B981; padding-top:10px;">
-                        <label style="color:#B91C1C; font-weight:700;">✏️ Overwrite Total Paid (Correction)</label>
-                        <input type="number" step="0.01" name="manual_paid_total" id="e_paid_total" placeholder="Directly set Total Paid" style="border-color:#FECACA;">
-                        <small style="color:#B91C1C;">Use this ONLY to fix mistakes. Current Paid: <b>₹<span id="display_current_paid">0</span></b></small>
+                    <div style="grid-column: span 1; border-top:1px dashed #ccc; padding-top:10px;">
+                        <label style="color:#B91C1C;">✏️ Correct Total Paid</label>
+                        <input type="number" name="manual_paid_total" id="e_paid_total" placeholder="Overwrite Total Paid">
                     </div>
                 </div>
-
-                <button type="submit" class="btn btn-blue" style="width:100%; margin-top:20px; padding:12px; font-weight:bold;">Save Changes</button>
+                <button type="submit" class="btn btn-blue" style="width:100%; margin-top:20px; padding:12px;">Save Changes</button>
             </form>
         </div>
     </div>
 
     <script>
-        function openEdit(id, name, email, phone, bank, upi, currentPaid) {
+        function openEdit(id, name, email, phone, bName, bHolder, bNo, ifsc, upi, currentPaid) {
             document.getElementById('editForm').action = `/admin/edit_distributor/${id}`;
             document.getElementById('e_name').value = name;
             document.getElementById('e_email').value = email;
             document.getElementById('e_phone').value = phone;
             
-            // Handle 'None' values from Python
-            document.getElementById('e_bank').value = (bank && bank !== 'None') ? bank : '';
-            document.getElementById('e_upi').value = (upi && upi !== 'None') ? upi : '';
+            // Banking
+            document.getElementById('e_bank_name').value = bName != 'None' ? bName : '';
+            document.getElementById('e_acct_holder').value = bHolder != 'None' ? bHolder : '';
+            document.getElementById('e_acct_no').value = bNo != 'None' ? bNo : '';
+            document.getElementById('e_ifsc').value = ifsc != 'None' ? ifsc : '';
+            document.getElementById('e_upi').value = upi != 'None' ? upi : '';
             
-            // Show current paid amount for reference
-            document.getElementById('display_current_paid').innerText = currentPaid;
-            
-            // Clear payment inputs
+            // Payments
+            document.getElementById('e_paid_total').placeholder = `Current: ${currentPaid}`;
             document.getElementsByName('add_payment')[0].value = '';
-            document.getElementById('e_paid_total').value = '';
-
+            
             document.getElementById('editModal').style.display = 'block';
         }
         
-        // Close modal clicking outside
         window.onclick = function(event) {
             if (event.target == document.getElementById('editModal')) {
                 document.getElementById('editModal').style.display = 'none';
