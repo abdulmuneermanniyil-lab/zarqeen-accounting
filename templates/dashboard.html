@@ -2,34 +2,33 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Zarqeen Admin</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; background: #F3F4F6; padding: 20px; }
         .container { max-width: 1400px; margin: 0 auto; }
         .card { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        h2 { margin-top: 0; color: #1F2937; display: flex; justify-content: space-between; }
+        h2 { margin-top: 0; color: #1F2937; display: flex; justify-content: space-between; align-items: center; }
+        
         table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9rem; }
         th, td { text-align: left; padding: 12px; border-bottom: 1px solid #E5E7EB; }
-        th { background: #F9FAFB; }
+        th { background: #F9FAFB; cursor: pointer; }
         
-        .btn { padding: 6px 12px; border-radius: 5px; border: none; cursor: pointer; color: white; margin-right: 5px; text-decoration: none; display: inline-block; font-size: 0.85rem;}
-        .btn-red { background: #EF4444; }
-        .btn-green { background: #10B981; }
-        .btn-blue { background: #2563EB; }
-        .btn-gray { background: #6B7280; }
+        .btn { padding: 6px 12px; border-radius: 5px; border: none; cursor: pointer; color: white; margin-right: 3px; font-size: 0.8rem;}
+        .btn-red { background: #EF4444; } .btn-green { background: #10B981; } .btn-blue { background: #2563EB; } .btn-gray { background: #6B7280; }
         
-        input { padding: 8px; border: 1px solid #D1D5DB; border-radius: 5px; width: 100%; box-sizing: border-box; margin-bottom: 10px; }
-        label { font-size: 0.8rem; font-weight: 600; color: #4B5563; }
-        .grid-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        input, select { padding: 8px; border: 1px solid #D1D5DB; border-radius: 5px; box-sizing: border-box; }
+        .search-bar { width: 100%; margin-bottom: 15px; padding: 10px; border: 1px solid #ccc; border-radius: 6px; }
         
-        /* Modal */
+        .pagination { display: flex; justify-content: flex-end; margin-top: 15px; gap: 5px; }
+        .page-btn { background: white; border: 1px solid #ccc; color: #333; padding: 5px 10px; cursor: pointer; }
+        .page-btn.active { background: #2563EB; color: white; border-color: #2563EB; }
+        .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
         .modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); backdrop-filter: blur(2px); }
-        .modal-content { background-color: white; margin: 5vh auto; padding: 2rem; border-radius: 12px; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; }
-        .balance-pos { color: #059669; font-weight: bold; }
-        .balance-neg { color: #DC2626; font-weight: bold; }
-        .bank-details-block { font-size: 0.75rem; color: #4B5563; line-height: 1.3; }
+        .modal-content { background-color: white; margin: 10vh auto; padding: 2rem; border-radius: 12px; width: 90%; max-width: 500px; }
+        .close { float: right; cursor: pointer; font-size: 24px; }
+        .grid-form { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     </style>
 </head>
 <body>
@@ -50,162 +49,231 @@
             <a href="/admin/logout" class="btn btn-red">Logout</a>
         </div>
 
-        <!-- DISTRIBUTORS -->
+        <!-- 1. DISTRIBUTORS TABLE -->
         <div class="card">
             <h2>
                 <span>👥 Distributors</span>
                 <a href="/admin/export/distributors" class="btn btn-gray">⬇ CSV</a>
             </h2>
             
-            <!-- ADD FORM -->
             <details style="margin-bottom: 20px; border: 1px solid #eee; padding: 10px; border-radius: 8px;">
                 <summary style="cursor:pointer; font-weight:600; color:#2563EB;">+ Add New Distributor</summary>
                 <form action="/admin/add_distributor" method="POST" class="grid-form" style="margin-top:15px;">
-                    <div><label>Business Name</label><input type="text" name="name" required></div>
-                    <div><label>Email</label><input type="email" name="email" required></div>
-                    <div><label>Phone</label><input type="text" name="phone" required></div>
-                    <div><label>Code (4 Char)</label><input type="text" name="code" maxlength="4" style="text-transform:uppercase" required></div>
-                    <div><label>Password</label><input type="password" name="password" required></div>
-                    <div><label>Discount %</label><input type="number" name="discount" value="10"></div>
-                    <div><label>Bank Name</label><input type="text" name="bank_name" placeholder="HDFC"></div>
-                    <div><label>Account Holder</label><input type="text" name="account_holder" placeholder="Name"></div>
-                    <div><label>Account No</label><input type="text" name="account_number" placeholder="123xxx"></div>
-                    <div><label>IFSC Code</label><input type="text" name="ifsc_code" placeholder="HDFC0001" style="text-transform:uppercase"></div>
-                    <div><label>UPI ID</label><input type="text" name="upi_id" placeholder="user@upi"></div>
-                    <div style="display:flex; align-items:end;"><button type="submit" class="btn btn-green" style="width:100%">Add Distributor</button></div>
+                    <input type="text" name="name" placeholder="Business Name" required>
+                    <input type="email" name="email" placeholder="Email" required>
+                    <input type="text" name="phone" placeholder="Phone" required>
+                    <input type="text" name="code" maxlength="4" placeholder="Code (4 Chars)" style="text-transform:uppercase" required>
+                    <input type="password" name="password" placeholder="Password" required>
+                    <input type="number" name="discount" value="10" placeholder="Discount %">
+                    <input type="text" name="bank_name" placeholder="Bank Name">
+                    <input type="text" name="account_holder" placeholder="Acct Holder">
+                    <input type="text" name="account_number" placeholder="Acct No">
+                    <input type="text" name="ifsc_code" placeholder="IFSC">
+                    <input type="text" name="upi_id" placeholder="UPI ID">
+                    <button type="submit" class="btn btn-green" style="grid-column: span 2;">Add Distributor</button>
                 </form>
             </details>
 
-            <!-- TABLE -->
-            <table>
+            <input type="text" class="search-bar" id="searchDist" placeholder="Search Distributors..." onkeyup="filterTable('distTable', 'searchDist')">
+            
+            <table id="distTable">
                 <thead>
-                    <tr><th>Name</th><th>Code</th><th>Financials</th><th>Bank Details</th><th>Action</th></tr>
+                    <tr><th>Name/Email</th><th>Code</th><th>Financials</th><th>Bank Details</th><th>Action</th></tr>
                 </thead>
-                <tbody>
+                <tbody id="distBody">
                     {% for d in distributors %}
                     <tr>
-                        <td>{{ d.obj.name }}<br><span style="font-size:0.75rem; color:gray">{{ d.obj.email }}</span></td>
-                        <td><strong>{{ d.obj.code }}</strong><br><span style="font-size:0.75rem; color:#2563EB">Disc: {{d.obj.discount_percent}}%</span></td>
+                        <td>{{ d.obj.name }}<br><small style="color:gray">{{ d.obj.email }}</small></td>
+                        <td><strong>{{ d.obj.code }}</strong><br><small style="color:blue">{{d.obj.discount_percent}}%</small></td>
                         <td style="font-size:0.85rem">
                             Earned: ₹{{ "%.2f"|format(d.earned) }}<br>
                             Paid: ₹{{ "%.2f"|format(d.obj.commission_paid) }}<br>
-                            Bal: <span class="{{ 'balance-neg' if d.balance > 0 else 'balance-pos' }}">₹{{ "%.2f"|format(d.balance) }}</span>
+                            Bal: <b style="color:{{ 'red' if d.balance > 0 else 'green' }}">₹{{ "%.2f"|format(d.balance) }}</b>
                         </td>
-                        <td class="bank-details-block">
-                            {% if d.obj.bank_name %}
-                                <b>{{ d.obj.bank_name }}</b><br>
-                                {{ d.obj.account_number }}<br>
-                                {{ d.obj.ifsc_code }}<br>
-                            {% endif %}
-                            {% if d.obj.upi_id %}
-                                UPI: {{ d.obj.upi_id }}
-                            {% endif %}
+                        <td style="font-size:0.8rem">
+                            {{ d.obj.bank_name or '' }} {{ d.obj.account_number or '' }}<br>
+                            {{ d.obj.ifsc_code or '' }}<br>
+                            {{ d.obj.upi_id or '' }}
                         </td>
                         <td>
-                            <!-- BUTTON WITH DISCOUNT PARAMETER -->
-                            <button class="btn btn-blue" onclick="openEdit('{{d.obj.id}}', '{{d.obj.name}}', '{{d.obj.email}}', '{{d.obj.phone}}', '{{d.obj.discount_percent}}', '{{d.obj.bank_name}}', '{{d.obj.account_holder}}', '{{d.obj.account_number}}', '{{d.obj.ifsc_code}}', '{{d.obj.upi_id}}', '{{d.obj.commission_paid}}')">Edit/Pay</button>
-                            
+                            <button class="btn btn-blue" onclick="openEdit('{{d.obj.id}}', '{{d.obj.name}}', '{{d.obj.email}}', '{{d.obj.phone}}', '{{d.obj.discount_percent}}', '{{d.obj.bank_name}}', '{{d.obj.account_holder}}', '{{d.obj.account_number}}', '{{d.obj.ifsc_code}}', '{{d.obj.upi_id}}', '{{d.obj.commission_paid}}')">Edit</button>
                             <form action="{{ url_for('delete_distributor', id=d.obj.id) }}" method="POST" style="display:inline" onsubmit="return confirm('Delete?');"><button class="btn btn-red">X</button></form>
                         </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
+            <div class="pagination" id="distPagination"></div>
         </div>
 
-        <!-- LICENSES -->
+        <!-- 2. LICENSES TABLE -->
         <div class="card">
             <h2>
                 <span>📂 Licenses</span>
                 <a href="/admin/export/licenses" class="btn btn-gray">⬇ CSV</a>
             </h2>
-            <table>
-                <thead><tr><th>Date</th><th>Key</th><th>Plan</th><th>Distributor</th><th>Amt</th><th>Actions</th></tr></thead>
-                <tbody>
+            
+            <input type="text" class="search-bar" id="searchLic" placeholder="Search Licenses (Key, Plan, Distributor)..." onkeyup="filterTable('licTable', 'searchLic')">
+            
+            <table id="licTable">
+                <thead><tr><th>Date</th><th>Key</th><th>Plan</th><th>Distributor</th><th>Amt</th><th>Status</th><th>Actions</th></tr></thead>
+                <tbody id="licBody">
                     {% for lic in licenses %}
                     <tr>
-                        <td>{{ lic.created_at.strftime('%d-%b') }}</td>
-                        <td style="font-family:monospace">{{ lic.license_key }}</td>
+                        <td>{{ lic.created_at.strftime('%Y-%m-%d') }}</td>
+                        <td style="font-family:monospace; font-weight:bold;">{{ lic.license_key }}</td>
                         <td>{{ lic.plan_type }}</td>
                         <td>{{ lic.distributor.name if lic.distributor else 'Direct' }}</td>
                         <td>₹{{ lic.amount_paid }}</td>
                         <td>
-                            <a href="/download/license/{{ lic.license_key }}" class="btn btn-green">⬇</a>
-                            <form action="{{ url_for('edit_license', id=lic.id) }}" method="POST" style="display:inline;">
-                                <input type="hidden" name="is_used" value="{{ 'off' if lic.is_used else 'on' }}">
-                                <button class="btn btn-blue">{{ 'Revoke' if lic.is_used else 'Active' }}</button>
-                            </form>
+                            <span style="padding:2px 6px; border-radius:4px; font-size:0.8rem; background:{{ '#D1FAE5' if lic.is_used else '#F3F4F6' }}; color:{{ '#065F46' if lic.is_used else '#666' }}">
+                                {{ 'USED' if lic.is_used else 'ACTIVE' }}
+                            </span>
+                        </td>
+                        <td>
+                            <a href="/download/license/{{ lic.license_key }}" class="btn btn-green" title="Download">⬇</a>
+                            <!-- EDIT STATUS BUTTON -->
+                            <button class="btn btn-blue" onclick="openLicEdit('{{lic.id}}', '{{lic.license_key}}', '{{lic.is_used}}')">Edit</button>
                             <form action="{{ url_for('delete_license', id=lic.id) }}" method="POST" style="display:inline" onsubmit="return confirm('Delete?');"><button class="btn btn-red">X</button></form>
                         </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
+            <div class="pagination" id="licPagination"></div>
         </div>
     </div>
 
-    <!-- EDIT MODAL -->
+    <!-- DISTRIBUTOR EDIT MODAL -->
     <div id="editModal" class="modal">
         <div class="modal-content">
-            <span style="float:right; cursor:pointer; font-size:24px;" onclick="document.getElementById('editModal').style.display='none'">&times;</span>
-            <h2 style="margin-bottom:20px;">Edit Distributor</h2>
-            <form id="editForm" method="POST" action="">
+            <span class="close" onclick="document.getElementById('editModal').style.display='none'">&times;</span>
+            <h2>Edit Distributor</h2>
+            <form id="editForm" method="POST">
                 <div class="grid-form">
-                    <div><label>Name</label><input type="text" name="name" id="e_name" required></div>
-                    <div><label>Email</label><input type="email" name="email" id="e_email" required></div>
-                    <div><label>Phone</label><input type="text" name="phone" id="e_phone"></div>
+                    <input type="text" name="name" id="e_name" required placeholder="Name">
+                    <input type="email" name="email" id="e_email" required placeholder="Email">
+                    <input type="text" name="phone" id="e_phone" placeholder="Phone">
+                    <input type="number" name="discount" id="e_disc" required placeholder="Discount %">
                     
-                    <!-- DISCOUNT FIELD -->
-                    <div><label>Discount %</label><input type="number" name="discount" id="e_disc" required></div>
-                    
-                    <div><label>Password (Optional)</label><input type="password" name="password" placeholder="New password"></div>
-                    
-                    <div><label>Bank Name</label><input type="text" name="bank_name" id="e_bank_name"></div>
-                    <div><label>Holder Name</label><input type="text" name="account_holder" id="e_acct_holder"></div>
-                    <div><label>Account No</label><input type="text" name="account_number" id="e_acct_no"></div>
-                    <div><label>IFSC Code</label><input type="text" name="ifsc_code" id="e_ifsc"></div>
-                    <div><label>UPI ID</label><input type="text" name="upi_id" id="e_upi"></div>
-                    
-                    <div style="grid-column: span 1; background:#ECFDF5; padding:15px; border-radius:8px; border:1px solid #10B981;">
-                        <label style="color:#047857;">💰 Make Payment</label>
-                        <input type="number" name="add_payment" placeholder="Amount (e.g. 500)" style="border-color:#10B981;">
-                    </div>
-                    <div style="grid-column: span 1; border-top:1px dashed #ccc; padding-top:10px;">
-                        <label style="color:#B91C1C;">✏️ Correct Total Paid</label>
-                        <input type="number" name="manual_paid_total" id="e_paid_total" placeholder="Overwrite Total Paid">
-                    </div>
+                    <input type="text" name="bank_name" id="e_bank_name" placeholder="Bank">
+                    <input type="text" name="account_holder" id="e_acct_holder" placeholder="Holder">
+                    <input type="text" name="account_number" id="e_acct_no" placeholder="Acct No">
+                    <input type="text" name="ifsc_code" id="e_ifsc" placeholder="IFSC">
+                    <input type="text" name="upi_id" id="e_upi" placeholder="UPI">
+                    <input type="password" name="password" placeholder="New Password (Optional)">
                 </div>
-                <button type="submit" class="btn btn-blue" style="width:100%; margin-top:20px; padding:12px;">Save Changes</button>
+                <div style="margin-top:15px; padding:10px; background:#f0fdf4; border:1px solid #10b981;">
+                    <label>Add Payment</label>
+                    <input type="number" name="add_payment" placeholder="Amount">
+                    <label>Correct Total</label>
+                    <input type="number" name="manual_paid_total" id="e_paid_total" placeholder="Total Paid">
+                </div>
+                <button type="submit" class="btn btn-blue" style="width:100%; margin-top:15px; padding:10px;">Save</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- LICENSE EDIT MODAL (Status) -->
+    <div id="licEditModal" class="modal">
+        <div class="modal-content" style="max-width:400px;">
+            <span class="close" onclick="document.getElementById('licEditModal').style.display='none'">&times;</span>
+            <h2>Edit License Status</h2>
+            <p id="licKeyDisplay" style="font-family:monospace; color:#2563EB; font-weight:bold;"></p>
+            <form id="licEditForm" method="POST">
+                <label>Status:</label>
+                <select name="status" id="licStatus" style="width:100%; padding:10px; margin-bottom:15px;">
+                    <option value="active">Active (Unused)</option>
+                    <option value="used">Used (Installed)</option>
+                </select>
+                <button type="submit" class="btn btn-blue" style="width:100%;">Update Status</button>
             </form>
         </div>
     </div>
 
     <script>
+        // --- MODAL LOGIC ---
         function openEdit(id, name, email, phone, disc, bName, bHolder, bNo, ifsc, upi, currentPaid) {
             document.getElementById('editForm').action = `/admin/edit_distributor/${id}`;
             document.getElementById('e_name').value = name;
             document.getElementById('e_email').value = email;
             document.getElementById('e_phone').value = phone;
-            document.getElementById('e_disc').value = disc; // SET DISCOUNT VALUE
-            
-            // Banking
+            document.getElementById('e_disc').value = disc;
             document.getElementById('e_bank_name').value = bName != 'None' ? bName : '';
             document.getElementById('e_acct_holder').value = bHolder != 'None' ? bHolder : '';
             document.getElementById('e_acct_no').value = bNo != 'None' ? bNo : '';
             document.getElementById('e_ifsc').value = ifsc != 'None' ? ifsc : '';
             document.getElementById('e_upi').value = upi != 'None' ? upi : '';
-            
-            // Payments
-            document.getElementById('e_paid_total').placeholder = `Current: ${currentPaid}`;
-            document.getElementsByName('add_payment')[0].value = '';
-            
+            document.getElementById('e_paid_total').placeholder = `Current Paid: ${currentPaid}`;
             document.getElementById('editModal').style.display = 'block';
         }
-        
-        window.onclick = function(event) {
-            if (event.target == document.getElementById('editModal')) {
-                document.getElementById('editModal').style.display = 'none';
+
+        function openLicEdit(id, key, isUsed) {
+            document.getElementById('licEditForm').action = `/admin/edit_license/${id}`;
+            document.getElementById('licKeyDisplay').innerText = key;
+            document.getElementById('licStatus').value = (isUsed === 'True') ? 'used' : 'active';
+            document.getElementById('licEditModal').style.display = 'block';
+        }
+
+        // --- CLIENT SIDE PAGINATION & SEARCH ---
+        function setupPagination(tableId, bodyId, paginationId, rowsPerPage=10) {
+            const table = document.getElementById(tableId);
+            const tbody = document.getElementById(bodyId);
+            const pagination = document.getElementById(paginationId);
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+            
+            let currentPage = 1;
+            
+            function displayRows(page, filteredRows) {
+                const start = (page - 1) * rowsPerPage;
+                const end = start + rowsPerPage;
+                
+                rows.forEach(r => r.style.display = 'none'); // Hide all first
+                
+                // Show only slice of filtered rows
+                filteredRows.slice(start, end).forEach(r => r.style.display = '');
             }
+
+            function setupButtons(filteredRows) {
+                pagination.innerHTML = "";
+                const pageCount = Math.ceil(filteredRows.length / rowsPerPage);
+                
+                for (let i = 1; i <= pageCount; i++) {
+                    const btn = document.createElement('button');
+                    btn.innerText = i;
+                    btn.className = `page-btn ${i === currentPage ? 'active' : ''}`;
+                    btn.onclick = () => {
+                        currentPage = i;
+                        displayRows(currentPage, filteredRows);
+                        setupButtons(filteredRows); // Re-render buttons to update active state
+                    };
+                    pagination.appendChild(btn);
+                }
+            }
+
+            // Expose filter function globally
+            window.filterTable = function(tblId, inputId) {
+                const term = document.getElementById(inputId).value.toLowerCase();
+                const filtered = rows.filter(row => row.innerText.toLowerCase().includes(term));
+                
+                currentPage = 1; // Reset to page 1 on search
+                displayRows(currentPage, filtered);
+                if(paginationId) setupButtons(filtered);
+            };
+
+            // Init
+            displayRows(1, rows);
+            setupButtons(rows);
+        }
+
+        // Initialize on Load
+        document.addEventListener('DOMContentLoaded', () => {
+            setupPagination('distTable', 'distBody', 'distPagination', 10);
+            setupPagination('licTable', 'licBody', 'licPagination', 10);
+        });
+
+        window.onclick = function(e) {
+            if(e.target.className === 'modal') e.target.style.display = 'none';
         }
     </script>
 </body>
