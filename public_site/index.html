@@ -31,12 +31,11 @@
         a { text-decoration: none; }
         ul { list-style: none; }
         
-        /* --- LOADING SCREEN CSS --- */
-        #startupLoader {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #ffffff; z-index: 999999;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            transition: opacity 0.5s ease;
+        /* LOADING OVERLAY (Hidden by default) */
+        #actionLoader {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255, 255, 255, 0.9); z-index: 999999;
+            flex-direction: column; align-items: center; justify-content: center;
         }
         .spinner {
             width: 50px; height: 50px;
@@ -44,10 +43,7 @@
             border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .loader-text { font-weight: 700; color: var(--text-main); font-size: 1.2rem; margin-bottom: 5px; }
-        .loader-sub { color: var(--text-muted); font-size: 0.9rem; }
         
-        /* REST OF CSS */
         header { background: var(--white); box-shadow: 0 1px 3px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 1000; }
         .nav-container { max-width: 1200px; margin: 0 auto; padding: 1rem 1.5rem; display: flex; justify-content: space-between; align-items: center; }
         .logo-area { display: flex; align-items: center; gap: 12px; }
@@ -145,11 +141,11 @@
 
 <body>
 
-    <!-- LOADING SCREEN -->
-    <div id="startupLoader">
+    <!-- LOADING SCREEN (Hidden initially) -->
+    <div id="actionLoader">
         <div class="spinner"></div>
-        <div class="loader-text" id="loaderText">Connecting to Secure Server...</div>
-        <div class="loader-sub" id="loaderSubText">Please wait, this ensures a secure connection.</div>
+        <div class="loader-text" id="loaderText">Connecting to Server...</div>
+        <div class="loader-sub" id="loaderSubText">Waking up backend service.</div>
     </div>
 
     <!-- NAVBAR -->
@@ -199,28 +195,27 @@
 
     <!-- FEATURES SECTION -->
     <section id="features" class="features">
-    <div class="feature-card">
-        <div class="icon-box">⚡</div>
-        <h3>Lightning Fast & Offline</h3>
-        <p>Generates bills in seconds. Works 100% offline so your data stays safe on your own computer. No cloud fees.</p>
-    </div>
-    
-    <div class="feature-card">
-        <div class="icon-box">🖨️</div>
-        <h3>All Paper Sizes</h3>
-        <p>Supports A4, A5, and Thermal Printers (2-inch & 3-inch). Print perfectly on any device.</p>
-    </div>
-
-    <!-- Removed Auto Tax Card as requested -->
-    
-    <div class="feature-card">
-        <div class="icon-box">
-            <img src="https://flagcdn.com/w80/in.png" alt="India Flag" style="width: 35px; height: auto;">
+        <div class="feature-card">
+            <div class="icon-box">⚡</div>
+            <h3>Lightning Fast & Offline</h3>
+            <p>Generates bills in seconds. Works 100% offline so your data stays safe on your own computer. No cloud fees.</p>
         </div>
-        <h3>Exclusively for India</h3>
-        <p>Built specifically for the Indian market. Pre-loaded with Indian State codes and currency formats.</p>
-    </div>
-</section>
+        
+        <!-- NEW TEMPLATE FEATURE -->
+        <div class="feature-card">
+            <div class="icon-box">🖨️</div>
+            <h3>All Paper Sizes</h3>
+            <p>Supports A4, A5, and Thermal Printers (2-inch & 3-inch). Print perfectly on any device.</p>
+        </div>
+
+        <div class="feature-card">
+            <div class="icon-box">
+                <img src="https://flagcdn.com/w80/in.png" alt="India Flag" style="width: 35px; height: auto;">
+            </div>
+            <h3>Exclusively for India</h3>
+            <p>Built specifically for the Indian market. Pre-loaded with Indian State codes and currency formats.</p>
+        </div>
+    </section>
 
     <!-- PRICING SECTION -->
     <section id="pricing" class="pricing-section">
@@ -344,6 +339,7 @@
                         <th>Amount</th>
                         <th>Status</th>
                         <th>License Key</th>
+                        <th>Action</th>
                     </tr>
                 </thead>
                 <tbody id="dashTableBody">
@@ -366,59 +362,43 @@
 
     <!-- 2. LOGIN MODAL -->
     <div id="loginModal" class="modal">
-    <div class="modal-content">
-        <span class="close-icon" onclick="closeLoginModal()">&times;</span>
-        <h2 style="text-align: center; margin-bottom: 20px;">Portal Login</h2>
-        
-        <div class="login-tabs">
-            <button class="tab-btn active" onclick="switchTab('distributor')">Distributor</button>
-            <button class="tab-btn" onclick="switchTab('admin')">Admin</button>
+        <div class="modal-content">
+            <span class="close-icon" onclick="closeLoginModal()">&times;</span>
+            <h2 style="text-align: center; margin-bottom: 20px;">Portal Login</h2>
+            
+            <div class="login-tabs">
+                <button class="tab-btn active" onclick="switchTab('distributor')">Distributor</button>
+                <button class="tab-btn" onclick="switchTab('admin')">Admin</button>
+            </div>
+
+            <!-- DISTRIBUTOR FORM (AJAX) -->
+            <form id="distForm" class="login-form active">
+                <div class="form-group">
+                    <label>Distributor Email</label>
+                    <input type="email" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" name="password" required>
+                </div>
+                <button type="submit" class="btn-buy primary">Login as Distributor</button>
+            </form>
+
+            <!-- ADMIN FORM (POST) -->
+            <form id="adminForm" class="login-form" method="POST">
+                <div class="form-group">
+                    <label>Admin Username</label>
+                    <input type="text" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" name="password" required>
+                </div>
+                <button type="submit" class="btn-buy primary" style="background: #111827;">Login as Admin</button>
+            </form>
+
         </div>
-
-        <!-- DISTRIBUTOR FORM -->
-        <form id="distForm" class="login-form active">
-            <div class="form-group">
-                <label>Verified Email</label>
-                <input type="email" name="email" required> <!-- Changed to Email -->
-            </div>
-            <div class="form-group">
-                <label>Password</label>
-                <input type="password" name="password" required>
-            </div>
-            <div style="text-align: right; margin-bottom: 10px;">
-                <a onclick="showForgot()" style="color:var(--primary); font-size:0.85rem; cursor:pointer;">Forgot Password?</a>
-            </div>
-            <button type="submit" class="btn-buy primary">Login</button>
-        </form>
-
-        <!-- FORGOT PASSWORD FORM (Hidden by default) -->
-        <form id="forgotForm" class="login-form" style="display:none;">
-            <h3 style="margin-bottom:15px;">Reset Password</h3>
-            <p style="font-size:0.9rem; color:#666; margin-bottom:15px;">Enter your verified email. We will send you a reset link.</p>
-            <div class="form-group">
-                <label>Email Address</label>
-                <input type="email" id="forgotEmail" required>
-            </div>
-            <button type="button" onclick="sendResetLink()" class="btn-buy secondary">Send Reset Link</button>
-            <p style="text-align:center; margin-top:10px;">
-                <a onclick="hideForgot()" style="cursor:pointer; color:#666; font-size:0.9rem;">Back to Login</a>
-            </p>
-        </form>
-
-        <!-- ADMIN FORM -->
-        <form id="adminForm" class="login-form" method="POST">
-            <div class="form-group">
-                <label>Admin Username</label>
-                <input type="text" name="username" required>
-            </div>
-            <div class="form-group">
-                <label>Password</label>
-                <input type="password" name="password" required>
-            </div>
-            <button type="submit" class="btn-buy primary" style="background: #111827;">Login as Admin</button>
-        </form>
     </div>
-</div>
 
     <!-- JAVASCRIPT LOGIC -->
     <script>
@@ -432,43 +412,37 @@
         // 2. SETUP ADMIN FORM (Redirects to backend)
         document.getElementById('adminForm').action = `${BACKEND_URL}/admin/login`;
 
-        // 3. FETCH CONFIG (WITH LOADING SCREEN LOGIC)
-        async function fetchConfig() {
-            // Update Loading Message if it takes too long
-            const slowTimer = setTimeout(() => {
-                document.getElementById('loaderText').innerText = "Waking up Server...";
-                document.getElementById('loaderSubText').innerText = "This may take up to 60 seconds. Please don't close.";
+        // 3. LOADER LOGIC
+        function showLoader(text="Connecting to Server...") {
+            const loader = document.getElementById('actionLoader');
+            document.getElementById('loaderText').innerText = text;
+            loader.style.display = 'flex';
+            
+            // Slow connection warning
+            setTimeout(() => {
+                document.getElementById('loaderSubText').innerText = "Waking up server... please wait up to 60s.";
             }, 3000);
+        }
 
+        function hideLoader() {
+            document.getElementById('actionLoader').style.display = 'none';
+        }
+
+        // 4. FETCH CONFIG (Quietly)
+        async function fetchConfig() {
             try {
                 const res = await fetch(`${BACKEND_URL}/api/get-config`);
                 if (!res.ok) throw new Error("Backend not reachable");
                 const data = await res.json();
-                
-                // Success!
                 RAZORPAY_KEY_ID = data.key_id; 
                 console.log("System Ready.");
-                
-                // Hide Loader
-                clearTimeout(slowTimer);
-                document.getElementById('startupLoader').style.opacity = '0';
-                setTimeout(() => {
-                    document.getElementById('startupLoader').style.display = 'none';
-                }, 500);
-
             } catch (error) {
                 console.error("Backend offline:", error);
-                // If it fails, we hide the loader but warn the user
-                document.getElementById('loaderText').innerText = "Connection Failed";
-                document.getElementById('loaderSubText').innerText = "Please refresh the page.";
-                // We keep the loader visible if it fails so they know why buttons won't work
             }
         }
-        
-        // Start connection immediately
         fetchConfig();
 
-        // 4. UI FUNCTIONS (MODALS)
+        // 5. UI FUNCTIONS (MODALS)
         function closeLicenseModal() {
             document.getElementById('licenseModal').style.display = 'none';
             window.location.reload(); 
@@ -483,55 +457,38 @@
         }
 
         function switchTab(type) {
-    const distForm = document.getElementById('distForm');
-    const adminForm = document.getElementById('adminForm');
-    const forgotForm = document.getElementById('forgotForm'); // Get forgot form
-    const btns = document.querySelectorAll('.tab-btn');
-    
-    // ALWAYS hide the forgot password form when switching tabs
-    forgotForm.style.display = 'none';
+            const distForm = document.getElementById('distForm');
+            const adminForm = document.getElementById('adminForm');
+            const btns = document.querySelectorAll('.tab-btn');
+            
+            if(type === 'distributor') {
+                distForm.classList.add('active');
+                adminForm.classList.remove('active');
+                btns[0].classList.add('active');
+                btns[1].classList.remove('active');
+            } else {
+                distForm.classList.remove('active');
+                adminForm.classList.add('active');
+                btns[0].classList.remove('active');
+                btns[1].classList.add('active');
+            }
+        }
 
-    if(type === 'distributor') {
-        distForm.style.display = 'block'; // Force show distributor form
-        distForm.classList.add('active');
-        adminForm.classList.remove('active');
-        btns[0].classList.add('active');
-        btns[1].classList.remove('active');
-    } else {
-        distForm.style.display = 'none'; // Force hide distributor form
-        distForm.classList.remove('active');
-        adminForm.classList.add('active');
-        btns[0].classList.remove('active');
-        btns[1].classList.add('active');
-    }
-}
-
-        // Close modal on outside click
         window.onclick = function(event) {
-            const mod1 = document.getElementById('licenseModal');
-            const mod2 = document.getElementById('loginModal');
-            if (event.target == mod1) mod1.style.display = "none";
-            if (event.target == mod2) mod2.style.display = "none";
+            if (event.target == document.getElementById('licenseModal')) closeLicenseModal();
+            if (event.target == document.getElementById('loginModal')) closeLoginModal();
         }
 
-        function resetUI() {
-            document.body.style.cursor = 'default';
-            const btns = document.querySelectorAll('button');
-            btns.forEach(b => b.disabled = false);
-        }
-
-        // 5. DISTRIBUTOR CODE LOGIC
+        // 6. DISTRIBUTOR CODE LOGIC
         let ACTIVE_DISTRIBUTOR_CODE = null;
 
         async function applyCode() {
+            showLoader("Checking Code...");
             const codeInput = document.getElementById('distCode');
             const msg = document.getElementById('codeMsg');
             const code = codeInput.value.trim();
 
-            if(!code) return;
-
-            msg.textContent = "Checking...";
-            msg.style.color = "grey";
+            if(!code) { hideLoader(); return; }
 
             try {
                 const res = await fetch(`${BACKEND_URL}/api/check_distributor`, {
@@ -555,27 +512,25 @@
             } catch (e) {
                 console.error(e);
                 msg.textContent = "Error checking code";
+            } finally {
+                hideLoader();
             }
         }
 
-        // 6. BUY LOGIC
+        // 7. BUY LOGIC
         async function buyPlan(planType) {
+            showLoader("Starting Payment...");
+            
             if (!RAZORPAY_KEY_ID) {
-                // If ID is missing, try fetching one last time
-                alert("Finalizing connection... please wait 2 seconds.");
                 await fetchConfig();
                 if(!RAZORPAY_KEY_ID) {
                     alert("Unable to connect to payment server. Please refresh.");
+                    hideLoader();
                     return;
                 }
             }
 
-            document.body.style.cursor = 'wait';
-            const btns = document.querySelectorAll('button');
-            btns.forEach(b => b.disabled = true);
-
             try {
-                // Create Order
                 const res = await fetch(`${BACKEND_URL}/create_order`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
@@ -589,7 +544,8 @@
                 const orderData = await res.json();
                 if(orderData.error) throw new Error(orderData.error);
 
-                // Open Razorpay
+                hideLoader(); // Hide loader before showing Razorpay
+
                 const options = {
                     "key": RAZORPAY_KEY_ID,
                     "amount": orderData.amount,
@@ -599,6 +555,7 @@
                     "order_id": orderData.id,
                     "theme": { "color": "#2563EB" }, 
                     "handler": async function (response){
+                        showLoader("Verifying Payment...");
                         try {
                             const verifyRes = await fetch(`${BACKEND_URL}/verify_payment`, {
                                 method: 'POST',
@@ -613,34 +570,29 @@
                             const result = await verifyRes.json();
                             
                             if(result.success) {
-                                // Download File Logic
-                                const licenseKey = result.license_key;
-                                const blob = new Blob([licenseKey], { type: "text/plain" });
+                                const blob = new Blob([result.license_key], { type: "text/plain" });
                                 const url = window.URL.createObjectURL(blob);
-                                
                                 const keyArea = document.getElementById('licenseKeyArea');
                                 keyArea.innerHTML = ""; 
-                                
                                 const downloadBtn = document.createElement("a");
                                 downloadBtn.href = url;
                                 downloadBtn.download = "license.zarqeen"; 
                                 downloadBtn.className = "btn-buy primary";
-                                downloadBtn.style.display = "inline-block";
-                                downloadBtn.style.textDecoration = "none";
                                 downloadBtn.innerText = "⬇ Download License File";
-                                
+                                downloadBtn.style.textDecoration = "none";
+                                downloadBtn.style.display = "inline-block";
                                 keyArea.appendChild(downloadBtn);
                                 document.getElementById('licenseModal').style.display = 'block';
                             } else {
                                 alert('Verification failed. Contact support.');
                             }
                         } catch (e) {
-                            alert("Verification error. Check internet.");
+                            alert("Verification error.");
                         } finally {
-                            resetUI();
+                            hideLoader();
                         }
                     },
-                    "modal": { "ondismiss": function(){ resetUI(); } }
+                    "modal": { "ondismiss": function(){ hideLoader(); } }
                 };
                 
                 const rzp1 = new Razorpay(options);
@@ -648,23 +600,17 @@
 
             } catch(e) {
                 console.error(e);
-                alert("Connection Error: Check if backend is running. " + e.message);
-                resetUI();
+                alert("Connection Error. " + e.message);
+                hideLoader();
             }
         }
 
-        // 7. DISTRIBUTOR HEADLESS LOGIN (TOKEN BASED)
-        
-        // A. Handle Login Submit
+        // 8. LOGIN LOGIC
         document.getElementById('distForm').addEventListener('submit', async function(e) {
             e.preventDefault();
+            showLoader("Logging in...");
             const formData = new FormData(this);
             const data = Object.fromEntries(formData.entries());
-
-            const btn = this.querySelector('button');
-            const originalText = btn.innerText;
-            btn.innerText = "Logging in...";
-            btn.disabled = true;
 
             try {
                 const res = await fetch(`${BACKEND_URL}/api/distributor/login`, {
@@ -676,25 +622,21 @@
                 const result = await res.json();
                 
                 if (result.success) {
-                    // SAVE TOKEN TO BROWSER STORAGE
                     localStorage.setItem('dist_token', result.token);
-                    
                     closeLoginModal();
                     loadDashboard(); 
                 } else {
                     alert(result.message || "Login failed");
+                    hideLoader();
                 }
             } catch (error) {
                 console.error(error);
-                alert("Connection error: Ensure Backend is live and DB is reset.");
-            } finally {
-                btn.innerText = originalText;
-                btn.disabled = false;
+                alert("Connection error.");
+                hideLoader();
             }
         });
 
-        // B. Fetch Data & Show Dashboard
-        // B. Fetch Data & Show Dashboard
+        // 9. DASHBOARD LOGIC
         async function loadDashboard() {
             try {
                 const token = localStorage.getItem('dist_token');
@@ -711,12 +653,10 @@
 
                 const data = await res.json();
 
-                // Populate Stats
+                // Stats
                 document.getElementById('dashName').innerText = data.name;
                 document.getElementById('dashCode').innerText = data.code;
                 document.getElementById('dashTotal').innerText = data.total_sales;
-                
-                // NEW: Financial Stats
                 document.getElementById('dashComm').innerHTML = `
                     <span style="color:#2563EB">Earned: ₹${Number(data.commission_earned).toFixed(2)}</span><br>
                     <span style="color:#059669; font-size:0.8em">Paid: ₹${Number(data.commission_paid).toFixed(2)}</span><br>
@@ -724,7 +664,7 @@
                 `;
                 document.getElementById('dashDisc').innerText = data.discount;
 
-                // Populate Table with DOWNLOAD button
+                // Table
                 const tbody = document.getElementById('dashTableBody');
                 tbody.innerHTML = ""; 
 
@@ -733,7 +673,6 @@
                 } else {
                     data.sales_history.forEach(row => {
                         const statusClass = row.status === 'INSTALLED' ? 'status-installed' : 'status-pending';
-                        // Construct Download URL
                         const downUrl = `${data.backend_url}download/license/${row.key}`;
                         
                         const html = `
@@ -750,68 +689,35 @@
                     });
                 }
 
-                // SWAP VIEW
+                // Swap View
                 document.querySelector('header').style.display = 'none';
                 document.querySelector('.hero').style.display = 'none';
                 document.getElementById('features').style.display = 'none';
                 document.getElementById('pricing').style.display = 'none';
                 document.querySelector('footer').style.display = 'none';
                 document.getElementById('dashboardSection').style.display = 'block';
+                
+                hideLoader();
                 window.scrollTo(0, 0);
 
             } catch (e) {
                 console.error(e);
                 alert("Error loading dashboard");
+                hideLoader();
             }
         }
 
-        // D. Logout Logic
         function doLogout() {
-            localStorage.removeItem('dist_token'); // Delete Token
+            localStorage.removeItem('dist_token'); 
             window.location.reload(); 
         }
 
-        // E. Check for existing login on page load
         window.addEventListener('load', function() {
             if(localStorage.getItem('dist_token')) {
+                showLoader("Loading Dashboard...");
                 loadDashboard();
             }
-        })
-         function showForgot() {
-        document.getElementById('distForm').style.display = 'none';
-        document.getElementById('forgotForm').style.display = 'block';
-    }
-
-    function hideForgot() {
-        document.getElementById('distForm').style.display = 'block';
-        document.getElementById('forgotForm').style.display = 'none';
-    }
-
-    async function sendResetLink() {
-        const email = document.getElementById('forgotEmail').value;
-        const btn = document.querySelector('#forgotForm button');
-        
-        if(!email) { alert("Please enter email"); return; }
-        
-        btn.innerText = "Sending...";
-        btn.disabled = true;
-
-        try {
-            const res = await fetch(`${BACKEND_URL}/api/forgot-password`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: email })
-            });
-            const data = await res.json();
-            alert(data.message);
-            if(data.success) hideForgot();
-        } catch(e) {
-            alert("Error sending email");
-        } finally {
-            btn.innerText = "Send Reset Link";
-            btn.disabled = false;
-        }
-    }
+        });
     </script>
 </body>
 </html>
