@@ -63,7 +63,7 @@
                     <div><label>Password</label><input type="password" name="password" required></div>
                     <div><label>Discount %</label><input type="number" name="discount" value="10"></div>
                     
-                    <!-- NEW BANK FIELDS -->
+                    <!-- BANK FIELDS -->
                     <div><label>Bank Name</label><input type="text" name="bank_name" placeholder="HDFC"></div>
                     <div><label>Account Holder</label><input type="text" name="account_holder" placeholder="Name"></div>
                     <div><label>Account No</label><input type="text" name="account_number" placeholder="123xxx"></div>
@@ -82,7 +82,7 @@
                     {% for d in distributors %}
                     <tr>
                         <td>{{ d.obj.name }}<br><span style="font-size:0.75rem; color:gray">{{ d.obj.email }}</span></td>
-                        <td><strong>{{ d.obj.code }}</strong></td>
+                        <td><strong>{{ d.obj.code }}</strong><br><span style="font-size:0.75rem; color:#2563EB">Disc: {{d.obj.discount_percent}}%</span></td>
                         <td style="font-size:0.85rem">
                             Earned: ₹{{ "%.2f"|format(d.earned) }}<br>
                             Paid: ₹{{ "%.2f"|format(d.obj.commission_paid) }}<br>
@@ -99,7 +99,9 @@
                             {% endif %}
                         </td>
                         <td>
-                            <button class="btn btn-blue" onclick="openEdit('{{d.obj.id}}', '{{d.obj.name}}', '{{d.obj.email}}', '{{d.obj.phone}}', '{{d.obj.bank_name}}', '{{d.obj.account_holder}}', '{{d.obj.account_number}}', '{{d.obj.ifsc_code}}', '{{d.obj.upi_id}}', '{{d.obj.commission_paid}}')">Edit/Pay</button>
+                            <!-- PASSED DISCOUNT PARAM HERE -->
+                            <button class="btn btn-blue" onclick="openEdit('{{d.obj.id}}', '{{d.obj.name}}', '{{d.obj.email}}', '{{d.obj.phone}}', '{{d.obj.discount_percent}}', '{{d.obj.bank_name}}', '{{d.obj.account_holder}}', '{{d.obj.account_number}}', '{{d.obj.ifsc_code}}', '{{d.obj.upi_id}}', '{{d.obj.commission_paid}}')">Edit/Pay</button>
+                            
                             <form action="{{ url_for('delete_distributor', id=d.obj.id) }}" method="POST" style="display:inline" onsubmit="return confirm('Delete?');"><button class="btn btn-red">X</button></form>
                         </td>
                     </tr>
@@ -150,6 +152,11 @@
                     <div><label>Email</label><input type="email" name="email" id="e_email" required></div>
                     <div><label>Phone</label><input type="text" name="phone" id="e_phone"></div>
                     
+                    <!-- NEW DISCOUNT FIELD -->
+                    <div><label>Discount %</label><input type="number" name="discount" id="e_disc" required></div>
+                    
+                    <div><label>Password (Optional)</label><input type="password" name="password" placeholder="New password"></div>
+                    
                     <div><label>Bank Name</label><input type="text" name="bank_name" id="e_bank_name"></div>
                     <div><label>Holder Name</label><input type="text" name="account_holder" id="e_acct_holder"></div>
                     <div><label>Account No</label><input type="text" name="account_number" id="e_acct_no"></div>
@@ -171,11 +178,12 @@
     </div>
 
     <script>
-        function openEdit(id, name, email, phone, bName, bHolder, bNo, ifsc, upi, currentPaid) {
+        function openEdit(id, name, email, phone, disc, bName, bHolder, bNo, ifsc, upi, currentPaid) {
             document.getElementById('editForm').action = `/admin/edit_distributor/${id}`;
             document.getElementById('e_name').value = name;
             document.getElementById('e_email').value = email;
             document.getElementById('e_phone').value = phone;
+            document.getElementById('e_disc').value = disc; // Set Discount
             
             // Banking
             document.getElementById('e_bank_name').value = bName != 'None' ? bName : '';
