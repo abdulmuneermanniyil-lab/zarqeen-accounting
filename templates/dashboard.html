@@ -88,7 +88,7 @@
                         <td class="{{ 'balance-neg' if d.balance > 0 else 'balance-pos' }}">₹{{ "%.2f"|format(d.balance) }}</td>
                         <td style="font-size:0.8rem;">{{ d.obj.bank_details or '-' }}<br>{{ d.obj.upi_id or '' }}</td>
                         <td>
-                            <button class="btn btn-blue" onclick="openEdit('{{d.obj.id}}', '{{d.obj.name}}', '{{d.obj.email}}', '{{d.obj.phone}}', '{{d.obj.bank_details}}', '{{d.obj.upi_id}}')">Edit/Pay</button>
+                            <button class="btn btn-blue" onclick="openEdit('{{d.obj.id}}', '{{d.obj.name}}', '{{d.obj.email}}', '{{d.obj.phone}}', '{{d.obj.bank_details}}', '{{d.obj.upi_id}}', '{{d.obj.commission_paid}}')">Edit/Pay</button>
                             <form action="{{ url_for('delete_distributor', id=d.obj.id) }}" method="POST" style="display:inline" onsubmit="return confirm('Delete distributor?');"><button class="btn btn-red">Del</button></form>
                         </td>
                     </tr>
