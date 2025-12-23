@@ -34,16 +34,23 @@ if raw_db_url.startswith("postgres://"):
 app.config['SQLALCHEMY_DATABASE_URI'] = raw_db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+# ⚠️ FIX FOR SSL SYSCALL ERROR (Connection Keep-Alive)
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    "pool_pre_ping": True,  # Checks connection before using
+    "pool_recycle": 300,    # Refresh connection every 5 minutes
+    "pool_size": 10,
+    "max_overflow": 20
+}
+
 # Credentials
 RAZORPAY_KEY_ID = os.environ.get('RAZORPAY_KEY_ID')
 RAZORPAY_KEY_SECRET = os.environ.get('RAZORPAY_KEY_SECRET')
 ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', 'admin')
 ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'admin123')
 
-# --- MAIL CONFIGURATION (SAFE) ---
-# Defaults to Gmail if not specified. Change MAIL_SERVER env var for Brevo.
-app.config['MAIL_SERVER'] = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
-app.config['MAIL_PORT'] = int(os.environ.get('MAIL_PORT', 587))
+# Mail (Brevo/SMTP) - Prevents Crash if Env Vars missing
+app.config['MAIL_SERVER'] = 'smtp-relay.brevo.com'
+app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
 app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
@@ -55,7 +62,7 @@ mail = Mail(app)
 db = SQLAlchemy(app)
 razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
 
-# --- DATABASE MODELS ---
+# --- MODELS ---
 class Distributor(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     code = db.Column(db.String(20), unique=True, nullable=False)
@@ -176,8 +183,8 @@ def verify_payment():
             'razorpay_signature': data['razorpay_signature']
         })
         order_info = razorpay_client.order.fetch(data['razorpay_order_id'])
-        
         dist_id_val = order_info['notes'].get('distributor_id')
+        
         dist_obj = None
         if dist_id_val and dist_id_val != "None":
             try: dist_obj = Distributor.query.get(int(dist_id_val))
@@ -211,6 +218,7 @@ def validate_license():
         support_name = lic.distributor.name if lic.distributor else "Zarqeen Official"
         support_contact = lic.distributor.phone if lic.distributor else "zarqeensoftware@gmail.com"
         duration = 365 if lic.plan_type == 'basic' else 1095
+        
         return jsonify({'valid': True, 'plan': lic.plan_type, 'duration_days': duration, 'support_info': {'name': support_name, 'contact': support_contact}})
     return jsonify({'valid': False, 'message': 'Invalid License Key'})
 
@@ -375,17 +383,12 @@ def send_otp():
     dist.otp_expiry = datetime.utcnow() + timedelta(minutes=10)
     db.session.commit()
     
-    # 1. LOG OTP (Fallback)
     print(f"\n >>> DEBUG OTP for {email}: {dist.otp_code} <<<\n")
     
-    # 2. CHECK CREDENTIALS
+    # Check credentials before sending to avoid crash
     if not app.config['MAIL_USERNAME'] or not app.config['MAIL_PASSWORD']:
-        return jsonify({
-            'success': True, 
-            'message': 'OTP generated. Check server logs (Email config missing).'
-        })
+        return jsonify({'success': True, 'message': 'OTP generated. Check server logs (Email config missing).'})
 
-    # 3. ATTEMPT SENDING (Silent Fail if OOM)
     try:
         msg = Message("Zarqeen Verification Code", recipients=[email])
         msg.body = f"Your verification code is: {dist.otp_code}\n\nThis code expires in 10 minutes."
@@ -393,7 +396,6 @@ def send_otp():
         return jsonify({'success': True, 'message': 'OTP sent to email'})
     except Exception as e:
         print(f"Mail failed: {e}")
-        # Return success so user can use the Log OTP
         return jsonify({'success': True, 'message': 'OTP sent (Check logs if email not received)'})
 
 @app.route('/api/reset-with-otp', methods=['POST'])
@@ -427,7 +429,7 @@ def reset_db():
             d.set_password("demo123")
             db.session.add(d)
             db.session.commit()
-    return "DB Reset"
+    return "DB Reset. otp_expiry added."
 
 if __name__ == '__main__':
     app.run(debug=True)
