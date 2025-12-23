@@ -5,43 +5,21 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Zarqeen Alif - India's Best Value Invoicing Software</title>
-    
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
-    
     <!-- Razorpay SDK -->
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-    
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="static/header.png">
 
     <style>
-        :root {
-            --primary: #2563EB;
-            --primary-dark: #1E40AF;
-            --accent: #F59E0B;
-            --bg-light: #F3F4F6;
-            --text-main: #111827;
-            --text-muted: #6B7280;
-            --white: #ffffff;
-            --success: #10B981;
-        }
+        :root { --primary: #2563EB; --primary-dark: #1E40AF; --accent: #F59E0B; --bg-light: #F3F4F6; --text-main: #111827; --text-muted: #6B7280; --white: #ffffff; --success: #10B981; }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; scroll-behavior: smooth; }
         body { background-color: var(--bg-light); color: var(--text-main); line-height: 1.6; }
-        a { text-decoration: none; }
-        ul { list-style: none; }
+        a { text-decoration: none; } ul { list-style: none; }
         
-        /* LOADING OVERLAY (Hidden by default) */
-        #actionLoader {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255, 255, 255, 0.9); z-index: 999999;
-            flex-direction: column; align-items: center; justify-content: center;
-        }
-        .spinner {
-            width: 50px; height: 50px;
-            border: 5px solid #E5E7EB; border-top: 5px solid var(--primary);
-            border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px;
-        }
+        #actionLoader { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.9); z-index: 999999; flex-direction: column; align-items: center; justify-content: center; }
+        .spinner { width: 50px; height: 50px; border: 5px solid #E5E7EB; border-top: 5px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
         header { background: var(--white); box-shadow: 0 1px 3px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 1000; }
@@ -61,7 +39,6 @@
         .hero h1 span { color: var(--primary); }
         .hero p { font-size: 1.2rem; color: var(--text-muted); max-width: 700px; margin: 0 auto 2.5rem; }
         .cta-group { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; }
-        
         .btn-lg { padding: 1rem 2rem; font-size: 1.1rem; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; transition: transform 0.2s; }
         .btn-lg:hover { transform: translateY(-2px); }
         .btn-primary { background: var(--primary); color: var(--white); }
@@ -117,7 +94,6 @@
         .form-group label { display: block; font-size: 0.9rem; margin-bottom: 5px; font-weight: 600; }
         .form-group input { width: 100%; padding: 10px; border: 1px solid #D1D5DB; border-radius: 6px; }
 
-        /* DASHBOARD */
         #dashboardSection { display: none; padding: 2rem; background: #F3F4F6; min-height: 100vh; }
         .dash-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
@@ -129,26 +105,14 @@
         .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 700; }
         .status-installed { background: #D1FAE5; color: #065F46; }
         .status-pending { background: #FEE2E2; color: #991B1B; }
-
+        
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @media (max-width: 768px) {
-            .nav-links { display: none; }
-            .hero h1 { font-size: 2.25rem; }
-            .plan-card.popular { transform: none; }
-        }
+        @media (max-width: 768px) { .nav-links { display: none; } .hero h1 { font-size: 2.25rem; } }
     </style>
 </head>
-
 <body>
+    <div id="actionLoader"><div class="spinner"></div><div style="font-weight:600">Processing...</div></div>
 
-    <!-- LOADING SCREEN (Hidden initially) -->
-    <div id="actionLoader">
-        <div class="spinner"></div>
-        <div class="loader-text" id="loaderText">Connecting to Server...</div>
-        <div class="loader-sub" id="loaderSubText">Waking up backend service.</div>
-    </div>
-
-    <!-- NAVBAR -->
     <header>
         <div class="nav-container">
             <div class="logo-area">
@@ -164,585 +128,296 @@
         </div>
     </header>
 
-    <!-- HERO SECTION -->
     <section class="hero">
-        <div class="tagline">
-            <img src="https://flagcdn.com/w40/in.png" alt="India Flag" style="height: 14px; vertical-align: middle; margin-right: 5px;"> 
-            MADE FOR INDIA
-        </div>
-        <h1>
-            India's Best Value <br>
-            <span>Invoicing Software</span>
-        </h1>
-        <p>
-            The easiest offline billing software. Automatically calculates taxes. 
-            Designed specifically for Indian businesses who want simplicity and speed.
-        </p>
-        
+        <div class="tagline"><img src="https://flagcdn.com/w40/in.png" alt="India" style="height:14px; margin-right:5px;"> MADE FOR INDIA</div>
+        <h1>India's Best Value <br><span>Invoicing Software</span></h1>
+        <p>The easiest offline billing software. Automatically calculates taxes. Designed specifically for Indian businesses who want simplicity and speed.</p>
         <div class="cta-group">
-            <a href="https://drive.google.com/drive/folders/17O3vY4KYUzd7Rma4o8rp3j2iIrpqhJe9?usp=drive_link" target="_blank">
-                <button class="btn-lg btn-primary">Download Free Trial</button>
-            </a>
-            <a href="#pricing">
-                <button class="btn-lg btn-outline">See Best Prices</button>
-            </a>
+            <a href="https://drive.google.com/drive/folders/17O3vY4KYUzd7Rma4o8rp3j2iIrpqhJe9?usp=drive_link" target="_blank"><button class="btn-lg btn-primary">Download Free Trial</button></a>
+            <a href="#pricing"><button class="btn-lg btn-outline">See Best Prices</button></a>
         </div>
-        
-        <div class="specs">
-            v1.2.0 • Supports A4, A5, Thermal 2" & 3" • 200MB • No Internet Required
-        </div>
+        <div class="specs">v1.2.0 • Supports A4, A5, Thermal 2" & 3" • 200MB • No Internet Required</div>
     </section>
 
-    <!-- FEATURES SECTION -->
     <section id="features" class="features">
-        <div class="feature-card">
-            <div class="icon-box">⚡</div>
-            <h3>Lightning Fast & Offline</h3>
-            <p>Generates bills in seconds. Works 100% offline so your data stays safe on your own computer. No cloud fees.</p>
-        </div>
-        
-        <!-- NEW TEMPLATE FEATURE -->
-        <div class="feature-card">
-            <div class="icon-box">🖨️</div>
-            <h3>All Paper Sizes</h3>
-            <p>Supports A4, A5, and Thermal Printers (2-inch & 3-inch). Print perfectly on any device.</p>
-        </div>
-
-        <div class="feature-card">
-            <div class="icon-box">
-                <img src="https://flagcdn.com/w80/in.png" alt="India Flag" style="width: 35px; height: auto;">
-            </div>
-            <h3>Exclusively for India</h3>
-            <p>Built specifically for the Indian market. Pre-loaded with Indian State codes and currency formats.</p>
-        </div>
+        <div class="feature-card"><div class="icon-box">⚡</div><h3>Lightning Fast & Offline</h3><p>Generates bills in seconds. Works 100% offline so your data stays safe on your own computer. No cloud fees.</p></div>
+        <div class="feature-card"><div class="icon-box">🖨️</div><h3>All Paper Sizes</h3><p>Supports A4, A5, and Thermal Printers (2-inch & 3-inch). Print perfectly on any device.</p></div>
+        <div class="feature-card"><div class="icon-box"><img src="https://flagcdn.com/w80/in.png" style="width:35px;"></div><h3>Exclusively for India</h3><p>Built specifically for the Indian market. Pre-loaded with Indian State codes and currency formats.</p></div>
     </section>
 
-    <!-- PRICING SECTION -->
     <section id="pricing" class="pricing-section">
         <h2 class="section-title">Unbeatable Pricing</h2>
-        <p class="section-subtitle">The cheapest and most reliable software in India.</p>
-
-        <!-- DISTRIBUTOR CODE INPUT -->
         <div class="dist-input-container">
-            <p style="margin-bottom: 10px; font-weight: 600;">Have a Distributor Code?</p>
+            <p style="margin-bottom:10px; font-weight:600;">Have a Distributor Code?</p>
             <div class="dist-input-box">
                 <input type="text" id="distCode" class="dist-input" placeholder="Enter Code (e.g. ZARQEEN10)">
-                <button onclick="applyCode()" class="nav-btn" style="cursor: pointer;">Apply</button>
+                <button onclick="applyCode()" class="nav-btn" style="cursor:pointer;">Apply</button>
             </div>
-            <p id="codeMsg" style="font-size: 0.9rem; margin-top: 5px; min-height: 20px;"></p>
+            <p id="codeMsg" style="font-size:0.9rem; margin-top:5px; min-height:20px;"></p>
         </div>
-
         <div class="pricing-grid">
-            
-            <!-- Free Plan -->
-            <div class="plan-card">
-                <div class="plan-header">
-                    <div class="plan-name">Trial</div>
-                    <div class="price">Free</div>
-                    <p class="plan-desc">7 Days unlimited access</p>
-                </div>
-                <ul class="features-list">
-                    <li>1000 Invoices</li>
-                    <li>Single user only</li>
-                    <li>All other premium features</li>
-                    <li>No Credit Card required</li>
-                </ul>
-                <a href="https://drive.google.com/drive/folders/17O3vY4KYUzd7Rma4o8rp3j2iIrpqhJe9?usp=drive_link" target="_blank" style="margin-top: auto;">
-                    <button class="btn-buy secondary">Download Now</button>
-                </a>
-            </div>
-
-            <!-- Basic Plan -->
-            <div class="plan-card">
-                <div class="plan-header">
-                    <div class="plan-name">Basic</div>
-                    <div class="price">₹299<span>/year</span></div>
-                    <p class="plan-desc">Ideal for new customers</p>
-                </div>
-                <ul class="features-list">
-                    <li>Valid for 1 Year</li>
-                    <li>2 Staff Accounts</li>
-                    <li>Automatic Tax Calc</li>
-                    <li>Email Support</li>
-                </ul>
-                <button class="btn-buy primary" onclick="buyPlan('basic')">Buy Basic License</button>
-            </div>
-
-            <!-- Premium Plan -->
-            <div class="plan-card popular">
-                <div class="badge">BEST VALUE</div>
-                <div class="plan-header">
-                    <div class="plan-name">Premium</div>
-                    <div class="price">₹599<span>/3 years</span></div>
-                    <p class="plan-desc">For smart business owners</p>
-                </div>
-                <ul class="features-list">
-                    <li><strong>Valid for 3 Years</strong></li>
-                    <li>Unlimited Staff</li>
-                    <li>Priority Support</li>
-                    <li>Free Updates</li>
-                    <li>Automatic Tax Calc</li>
-                </ul>
-                <button class="btn-buy primary" onclick="buyPlan('premium')">Buy Premium License</button>
-            </div>
-
+            <div class="plan-card"><div class="plan-name">Trial</div><div class="price">Free</div><p class="plan-desc">7 Days unlimited access</p><a href="https://drive.google.com/drive/folders/17O3vY4KYUzd7Rma4o8rp3j2iIrpqhJe9?usp=drive_link" target="_blank" style="margin-top:auto;"><button class="btn-buy secondary">Download Now</button></a></div>
+            <div class="plan-card"><div class="plan-name">Basic</div><div class="price">₹299<span>/year</span></div><p class="plan-desc">Ideal for new customers</p><button class="btn-buy primary" onclick="buyPlan('basic')">Buy Basic License</button></div>
+            <div class="plan-card popular"><div class="badge">BEST VALUE</div><div class="plan-name">Premium</div><div class="price">₹599<span>/3 years</span></div><p class="plan-desc">For smart business owners</p><button class="btn-buy primary" onclick="buyPlan('premium')">Buy Premium License</button></div>
         </div>
     </section>
 
-    <!-- FOOTER -->
     <footer>
         <p>&copy; <span id="year"></span> Zarqeen Accounting Solutions.</p>
-        <p style="margin-top:10px; font-size: 0.9rem;">
-            Support: <a href="mailto:zarqeensoftware@gmail.com" style="color:var(--primary); font-weight:600;">zarqeensoftware@gmail.com</a>
-        </p>
-        <div class="footer-admin">
-            <a onclick="openLoginModal()" style="cursor: pointer;">Admin / Distributor Login</a>
-        </div>
+        <div class="footer-admin"><a onclick="openLoginModal()" style="cursor:pointer;">Admin / Distributor Login</a></div>
     </footer>
 
-    <!-- DISTRIBUTOR DASHBOARD (Hidden by Default) -->
-   <!-- DISTRIBUTOR DASHBOARD (Hidden by Default) -->
+    <!-- DISTRIBUTOR DASHBOARD -->
     <div id="dashboardSection">
-        <div style="max-width: 1200px; margin: 0 auto;">
-            
-            <!-- Header -->
+        <div style="max-width:1200px; margin:0 auto;">
             <div class="dash-header">
-                <div>
-                    <h2 id="dashName">Distributor Name</h2>
-                    <p style="color: #6B7280;">Code: <strong id="dashCode">CODE</strong></p>
-                </div>
-                <button onclick="doLogout()" class="btn-buy secondary" style="width: auto; margin:0; background: #EF4444; color: white;">Logout</button>
+                <div><h2 id="dashName">Distributor</h2><p style="color:#6B7280;">Code: <strong id="dashCode"></strong></p></div>
+                <button onclick="doLogout()" class="btn-buy secondary" style="width:auto; margin:0; background:#EF4444; color:white;">Logout</button>
             </div>
-
             <div class="dash-grid">
-                <!-- Stats -->
-                <div class="dash-card">
-                    <div class="dash-val" id="dashTotal">0</div>
-                    <div style="color: #6B7280;">Total Licenses Sold</div>
-                </div>
-                <div class="dash-card">
-                    <div class="dash-val">₹<span id="dashComm">0</span></div>
-                    <div style="color: #6B7280;">Your Commission (Est.)</div>
-                </div>
-                <div class="dash-card">
-                    <div class="dash-val"><span id="dashDisc">0</span>%</div>
-                    <div style="color: #6B7280;">Current Discount</div>
+                <div class="dash-card"><div class="dash-val" id="dashTotal">0</div><div>Total Licenses Sold</div></div>
+                <div class="dash-card"><div class="dash-val">₹<span id="dashComm">0.00</span></div><div>Your Commission (Est.)</div></div>
+                <div class="dash-card"><div class="dash-val"><span id="dashDisc">0</span>%</div><div>Current Discount</div></div>
+            </div>
+            <div class="dash-header" style="margin-top:-10px;">
+                <h3>My Banking Details</h3>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; font-size:0.95rem;">
+                    <div><p>Bank: <strong id="d_bank"></strong></p><p>Holder: <strong id="d_holder"></strong></p></div>
+                    <div><p>Acct: <strong id="d_acct"></strong></p><p>IFSC: <strong id="d_ifsc"></strong></p><p>UPI: <strong id="d_upi"></strong></p></div>
                 </div>
             </div>
-
-            <!-- NEW: PROFILE & BANK DETAILS CARD -->
-            <div class="dash-header" style="display:block; margin-top:-10px;">
-                <h3 style="margin-bottom:10px;">My Banking Details</h3>
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; font-size:0.95rem;">
-                    <div>
-                        <p style="color:#6B7280;">Bank Name: <strong id="d_bank" style="color:#111"></strong></p>
-                        <p style="color:#6B7280;">Account Holder: <strong id="d_holder" style="color:#111"></strong></p>
-                    </div>
-                    <div>
-                        <p style="color:#6B7280;">Account No: <strong id="d_acct" style="color:#111"></strong></p>
-                        <p style="color:#6B7280;">IFSC Code: <strong id="d_ifsc" style="color:#111"></strong></p>
-                        <p style="color:#6B7280;">UPI ID: <strong id="d_upi" style="color:#111"></strong></p>
-                    </div>
-                </div>
-                <p style="font-size:0.8rem; color:#EF4444; margin-top:10px;">* To change these details, please contact Admin.</p>
-            </div>
-
-            <!-- Table -->
-            <h3 style="margin-bottom: 15px;">Sales History</h3>
+            <h3 style="margin-bottom:15px; display:flex; justify-content:space-between;">Sales History <span id="pageInfo" style="font-size:0.9rem; color:gray"></span></h3>
             <table class="dash-table">
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Plan</th>
-                        <th>Amount</th>
-                        <th>Status</th>
-                        <th>License Key</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody id="dashTableBody">
-                    <!-- Rows injected by JS -->
-                </tbody>
+                <thead><tr><th>Date</th><th>Plan</th><th>Amount</th><th>Status</th><th>Key</th><th>Action</th></tr></thead>
+                <tbody id="dashTableBody"></tbody>
             </table>
+            <div style="display:flex; justify-content:center; gap:10px; margin-top:20px;">
+                <button id="prevBtn" onclick="changePage(-1)" class="nav-btn" style="background:gray; display:none;">Previous</button>
+                <button id="nextBtn" onclick="changePage(1)" class="nav-btn" style="background:#2563EB; display:none;">Next</button>
+            </div>
         </div>
     </div>
 
-    <!-- 1. PAYMENT SUCCESS MODAL -->
-    <div id="licenseModal" class="modal">
-        <div class="modal-content" style="text-align: center;">
-            <div style="font-size: 3.5rem; margin-bottom: 10px;">🎉</div>
-            <h2 style="color: #059669; font-weight: 800;">Payment Successful!</h2>
-            <p style="color: var(--text-muted); margin-top: 10px;">Here is your license file. Download and upload it inside the software.</p>
-            <div id="licenseKeyArea" class="key-box">Generating...</div>
-            <button class="btn-buy secondary" onclick="closeLicenseModal()">Close</button>
-        </div>
-    </div>
+    <!-- LICENSE MODAL -->
+    <div id="licenseModal" class="modal"><div class="modal-content" style="text-align:center;"><div style="font-size:3.5rem;">🎉</div><h2 style="color:#059669;">Payment Successful!</h2><p>Download your license below.</p><div id="licenseKeyArea" class="key-box"></div><button class="btn-buy secondary" onclick="closeLicenseModal()">Close</button></div></div>
 
-    <!-- 2. LOGIN MODAL -->
+    <!-- LOGIN MODAL -->
     <div id="loginModal" class="modal">
         <div class="modal-content">
             <span class="close-icon" onclick="closeLoginModal()">&times;</span>
-            <h2 style="text-align: center; margin-bottom: 20px;">Portal Login</h2>
-            
+            <h2 style="text-align:center; margin-bottom:20px;">Portal Login</h2>
             <div class="login-tabs">
                 <button class="tab-btn active" onclick="switchTab('distributor')">Distributor</button>
                 <button class="tab-btn" onclick="switchTab('admin')">Admin</button>
             </div>
-
-            <!-- DISTRIBUTOR FORM (AJAX) -->
+            
+            <!-- DISTRIBUTOR LOGIN -->
             <form id="distForm" class="login-form active">
-                <div class="form-group">
-                    <label>Distributor Email</label>
-                    <input type="email" name="email" required>
-                </div>
-                <div class="form-group">
-                    <label>Password</label>
-                    <input type="password" name="password" required>
-                </div>
-                <button type="submit" class="btn-buy primary">Login as Distributor</button>
+                <div class="form-group"><label>Email</label><input type="email" name="email" required></div>
+                <div class="form-group"><label>Password</label><input type="password" name="password" required></div>
+                <div style="text-align:right;"><a onclick="showForgot()" style="color:blue; cursor:pointer; font-size:0.8rem;">Forgot Password?</a></div>
+                <button type="submit" class="btn-buy primary">Login</button>
             </form>
 
-            <!-- ADMIN FORM (POST) -->
+            <!-- FORGOT PASSWORD (OTP FLOW) -->
+            <div id="forgotFlow" style="display:none;">
+                <!-- Step 1: Email -->
+                <div id="step1">
+                    <h3>Reset Password</h3>
+                    <div class="form-group"><label>Enter Email</label><input type="email" id="resetEmail"></div>
+                    <button onclick="sendOtp()" class="btn-buy primary">Send OTP</button>
+                </div>
+                <!-- Step 2: OTP & New Pass -->
+                <div id="step2" style="display:none;">
+                    <h3>Verify OTP</h3>
+                    <div class="form-group"><label>Enter 6-digit Code</label><input type="text" id="otpCode"></div>
+                    <div class="form-group"><label>New Password</label><input type="password" id="newPass"></div>
+                    <button onclick="resetWithOtp()" class="btn-buy primary">Change Password</button>
+                </div>
+                <p style="text-align:center; margin-top:10px;"><a onclick="hideForgot()" style="cursor:pointer; color:gray;">Back</a></p>
+            </div>
+
+            <!-- ADMIN LOGIN -->
             <form id="adminForm" class="login-form" method="POST">
-                <div class="form-group">
-                    <label>Admin Username</label>
-                    <input type="text" name="username" required>
-                </div>
-                <div class="form-group">
-                    <label>Password</label>
-                    <input type="password" name="password" required>
-                </div>
-                <button type="submit" class="btn-buy primary" style="background: #111827;">Login as Admin</button>
+                <div class="form-group"><label>Username</label><input type="text" name="username" required></div>
+                <div class="form-group"><label>Password</label><input type="password" name="password" required></div>
+                <button type="submit" class="btn-buy primary" style="background:#111827;">Login Admin</button>
             </form>
-
         </div>
     </div>
 
-    <!-- JAVASCRIPT LOGIC -->
     <script>
-        // 1. CONFIGURATION
         document.getElementById('year').textContent = new Date().getFullYear();
-        let RAZORPAY_KEY_ID = null; 
-        
-        // ⚠️ BACKEND URL (Ensure this matches your Render URL)
-        const BACKEND_URL = "https://zarqeen-backend.onrender.com"; 
-
-        // 2. SETUP ADMIN FORM (Redirects to backend)
+        let RAZORPAY_KEY_ID = null;
+        const BACKEND_URL = "https://zarqeen-backend.onrender.com";
         document.getElementById('adminForm').action = `${BACKEND_URL}/admin/login`;
 
-        // 3. LOADER LOGIC
-        function showLoader(text="Connecting to Server...") {
-            const loader = document.getElementById('actionLoader');
-            document.getElementById('loaderText').innerText = text;
-            loader.style.display = 'flex';
-            
-            // Slow connection warning
-            setTimeout(() => {
-                document.getElementById('loaderSubText').innerText = "Waking up server... please wait up to 60s.";
-            }, 3000);
-        }
+        // LOADING
+        function showLoader(txt) { document.getElementById('actionLoader').style.display='flex'; }
+        function hideLoader() { document.getElementById('actionLoader').style.display='none'; }
 
-        function hideLoader() {
-            document.getElementById('actionLoader').style.display = 'none';
-        }
-
-        // 4. FETCH CONFIG (Quietly)
+        // CONFIG
         async function fetchConfig() {
             try {
                 const res = await fetch(`${BACKEND_URL}/api/get-config`);
-                if (!res.ok) throw new Error("Backend not reachable");
                 const data = await res.json();
-                RAZORPAY_KEY_ID = data.key_id; 
-                console.log("System Ready.");
-            } catch (error) {
-                console.error("Backend offline:", error);
-            }
+                RAZORPAY_KEY_ID = data.key_id;
+            } catch(e) { console.error(e); }
         }
         fetchConfig();
 
-        // 5. UI FUNCTIONS (MODALS)
-        function closeLicenseModal() {
-            document.getElementById('licenseModal').style.display = 'none';
-            window.location.reload(); 
-        }
-
-        function openLoginModal() {
-            document.getElementById('loginModal').style.display = 'block';
-        }
-
-        function closeLoginModal() {
-            document.getElementById('loginModal').style.display = 'none';
-        }
-
+        // TABS & MODALS
+        function closeLicenseModal() { document.getElementById('licenseModal').style.display = 'none'; location.reload(); }
+        function openLoginModal() { document.getElementById('loginModal').style.display = 'block'; }
+        function closeLoginModal() { document.getElementById('loginModal').style.display = 'none'; }
+        
         function switchTab(type) {
-            const distForm = document.getElementById('distForm');
-            const adminForm = document.getElementById('adminForm');
-            const btns = document.querySelectorAll('.tab-btn');
-            
+            document.getElementById('forgotFlow').style.display = 'none'; // Hide forgot
             if(type === 'distributor') {
-                distForm.classList.add('active');
-                adminForm.classList.remove('active');
-                btns[0].classList.add('active');
-                btns[1].classList.remove('active');
+                document.getElementById('distForm').style.display = 'block';
+                document.getElementById('distForm').classList.add('active');
+                document.getElementById('adminForm').classList.remove('active');
             } else {
-                distForm.classList.remove('active');
-                adminForm.classList.add('active');
-                btns[0].classList.remove('active');
-                btns[1].classList.add('active');
+                document.getElementById('distForm').style.display = 'none';
+                document.getElementById('distForm').classList.remove('active');
+                document.getElementById('adminForm').classList.add('active');
             }
         }
 
-        window.onclick = function(event) {
-            if (event.target == document.getElementById('licenseModal')) closeLicenseModal();
-            if (event.target == document.getElementById('loginModal')) closeLoginModal();
+        // FORGOT PASSWORD FLOW
+        function showForgot() {
+            document.getElementById('distForm').style.display = 'none';
+            document.getElementById('forgotFlow').style.display = 'block';
+            document.getElementById('step1').style.display = 'block';
+            document.getElementById('step2').style.display = 'none';
+        }
+        function hideForgot() {
+            document.getElementById('forgotFlow').style.display = 'none';
+            document.getElementById('distForm').style.display = 'block';
         }
 
-        // 6. DISTRIBUTOR CODE LOGIC
-        let ACTIVE_DISTRIBUTOR_CODE = null;
-
-        async function applyCode() {
-            showLoader("Checking Code...");
-            const codeInput = document.getElementById('distCode');
-            const msg = document.getElementById('codeMsg');
-            const code = codeInput.value.trim();
-
-            if(!code) { hideLoader(); return; }
-
+        async function sendOtp() {
+            const email = document.getElementById('resetEmail').value;
+            if(!email) return alert("Enter email");
+            showLoader();
             try {
-                const res = await fetch(`${BACKEND_URL}/api/check_distributor`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ code: code })
+                const res = await fetch(`${BACKEND_URL}/api/send-otp`, {
+                    method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({email})
                 });
-                const data = await res.json();
-
-                if (data.valid) {
-                    ACTIVE_DISTRIBUTOR_CODE = code;
-                    msg.textContent = `✅ Success! ${data.name} discount applied (${data.discount}% OFF)`;
-                    msg.style.color = "green";
-                    codeInput.style.borderColor = "green";
-                } else {
-                    ACTIVE_DISTRIBUTOR_CODE = null;
-                    msg.textContent = "❌ Invalid Code";
-                    msg.style.color = "red";
-                    codeInput.style.borderColor = "red";
-                }
-            } catch (e) {
-                console.error(e);
-                msg.textContent = "Error checking code";
-            } finally {
+                const d = await res.json();
                 hideLoader();
-            }
+                if(d.success) {
+                    alert(d.message);
+                    document.getElementById('step1').style.display = 'none';
+                    document.getElementById('step2').style.display = 'block';
+                } else alert(d.message);
+            } catch(e) { hideLoader(); alert("Error sending OTP"); }
         }
 
-        // 7. BUY LOGIC
-        async function buyPlan(planType) {
-            showLoader("Starting Payment...");
+        async function resetWithOtp() {
+            const email = document.getElementById('resetEmail').value;
+            const otp = document.getElementById('otpCode').value;
+            const pw = document.getElementById('newPass').value;
+            if(!otp || !pw) return alert("Fill all fields");
             
-            if (!RAZORPAY_KEY_ID) {
-                await fetchConfig();
-                if(!RAZORPAY_KEY_ID) {
-                    alert("Unable to connect to payment server. Please refresh.");
-                    hideLoader();
-                    return;
-                }
-            }
-
+            showLoader();
             try {
-                const res = await fetch(`${BACKEND_URL}/create_order`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ 
-                        plan: planType,
-                        distributor_code: ACTIVE_DISTRIBUTOR_CODE
-                    })
+                const res = await fetch(`${BACKEND_URL}/api/reset-with-otp`, {
+                    method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({email, otp, new_password:pw})
                 });
-                
-                if (!res.ok) throw new Error(`Server error: ${res.status}`);
-                const orderData = await res.json();
-                if(orderData.error) throw new Error(orderData.error);
-
-                hideLoader(); // Hide loader before showing Razorpay
-
-                const options = {
-                    "key": RAZORPAY_KEY_ID,
-                    "amount": orderData.amount,
-                    "currency": "INR",
-                    "name": "Zarqeen Alif",
-                    "description": `License: ${planType.toUpperCase()}`,
-                    "order_id": orderData.id,
-                    "theme": { "color": "#2563EB" }, 
-                    "handler": async function (response){
-                        showLoader("Verifying Payment...");
-                        try {
-                            const verifyRes = await fetch(`${BACKEND_URL}/verify_payment`, {
-                                method: 'POST',
-                                headers: {'Content-Type': 'application/json'},
-                                body: JSON.stringify({
-                                    razorpay_payment_id: response.razorpay_payment_id,
-                                    razorpay_order_id: response.razorpay_order_id,
-                                    razorpay_signature: response.razorpay_signature,
-                                    plan_type: planType
-                                })
-                            });
-                            const result = await verifyRes.json();
-                            
-                            if(result.success) {
-                                const blob = new Blob([result.license_key], { type: "text/plain" });
-                                const url = window.URL.createObjectURL(blob);
-                                const keyArea = document.getElementById('licenseKeyArea');
-                                keyArea.innerHTML = ""; 
-                                const downloadBtn = document.createElement("a");
-                                downloadBtn.href = url;
-                                downloadBtn.download = "license.zarqeen"; 
-                                downloadBtn.className = "btn-buy primary";
-                                downloadBtn.innerText = "⬇ Download License File";
-                                downloadBtn.style.textDecoration = "none";
-                                downloadBtn.style.display = "inline-block";
-                                keyArea.appendChild(downloadBtn);
-                                document.getElementById('licenseModal').style.display = 'block';
-                            } else {
-                                alert('Verification failed. Contact support.');
-                            }
-                        } catch (e) {
-                            alert("Verification error.");
-                        } finally {
-                            hideLoader();
-                        }
-                    },
-                    "modal": { "ondismiss": function(){ hideLoader(); } }
-                };
-                
-                const rzp1 = new Razorpay(options);
-                rzp1.open();
-
-            } catch(e) {
-                console.error(e);
-                alert("Connection Error. " + e.message);
+                const d = await res.json();
                 hideLoader();
-            }
+                if(d.success) {
+                    alert(d.message);
+                    hideForgot();
+                } else alert(d.message);
+            } catch(e) { hideLoader(); alert("Error resetting"); }
         }
 
-        // 8. LOGIN LOGIC
+        // DISTRIBUTOR LOGIN
         document.getElementById('distForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            showLoader("Logging in...");
-            const formData = new FormData(this);
-            const data = Object.fromEntries(formData.entries());
-
+            e.preventDefault(); showLoader();
+            const data = Object.fromEntries(new FormData(this));
             try {
                 const res = await fetch(`${BACKEND_URL}/api/distributor/login`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
+                    method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data)
                 });
-                
-                const result = await res.json();
-                
-                if (result.success) {
-                    localStorage.setItem('dist_token', result.token);
-                    closeLoginModal();
-                    loadDashboard(); 
-                } else {
-                    alert(result.message || "Login failed");
-                    hideLoader();
-                }
-            } catch (error) {
-                console.error(error);
-                alert("Connection error.");
+                const r = await res.json();
                 hideLoader();
-            }
+                if(r.success) {
+                    localStorage.setItem('dist_token', r.token);
+                    closeLoginModal();
+                    loadDashboard(1);
+                } else alert(r.message || "Failed");
+            } catch(e) { hideLoader(); alert("Error connecting"); }
         });
 
-        // 9. DASHBOARD LOGIC
-        async function loadDashboard() {
+        // DASHBOARD & PAGINATION
+        let CURRENT_PAGE = 1;
+        async function loadDashboard(page) {
+            CURRENT_PAGE = page;
+            const token = localStorage.getItem('dist_token');
+            if(!token) return;
+            
+            showLoader();
             try {
-                const token = localStorage.getItem('dist_token');
-                if (!token) return; 
-
-                const res = await fetch(`${BACKEND_URL}/api/distributor/data`, {
-                    method: 'GET',
-                    headers: { 'Authorization': `Bearer ${token}` }
+                const res = await fetch(`${BACKEND_URL}/api/distributor/data?page=${page}`, {
+                    method: 'GET', headers: {'Authorization': `Bearer ${token}`}
                 });
-
-                if (res.status === 401) {
-                    alert("Session expired."); doLogout(); return;
-                }
-
+                if(res.status === 401) { doLogout(); return; }
                 const data = await res.json();
-
-                // Stats
+                
+                // Fill Data
                 document.getElementById('dashName').innerText = data.name;
                 document.getElementById('dashCode').innerText = data.code;
                 document.getElementById('dashTotal').innerText = data.total_sales;
                 document.getElementById('dashComm').innerHTML = `
                     <span style="color:#2563EB">Earned: ₹${Number(data.commission_earned).toFixed(2)}</span><br>
                     <span style="color:#059669; font-size:0.8em">Paid: ₹${Number(data.commission_paid).toFixed(2)}</span><br>
-                    <span style="color:#DC2626; font-size:0.9em; font-weight:800">Balance: ₹${Number(data.balance_due).toFixed(2)}</span>
-                `;
+                    <span style="color:#DC2626; font-size:0.9em; font-weight:800">Balance: ₹${Number(data.balance_due).toFixed(2)}</span>`;
                 document.getElementById('dashDisc').innerText = data.discount;
-
-                // POPULATE BANK INFO
-                document.getElementById('d_bank').innerText = data.bank_info.bank_name || '-';
-                document.getElementById('d_holder').innerText = data.bank_info.account_holder || '-';
-                document.getElementById('d_acct').innerText = data.bank_info.account_number || '-';
-                document.getElementById('d_ifsc').innerText = data.bank_info.ifsc || '-';
-                document.getElementById('d_upi').innerText = data.bank_info.upi || '-';
+                
+                // Bank
+                const b = data.bank_info;
+                document.getElementById('d_bank').innerText = b.bank_name || '-';
+                document.getElementById('d_holder').innerText = b.account_holder || '-';
+                document.getElementById('d_acct').innerText = b.account_number || '-';
+                document.getElementById('d_ifsc').innerText = b.ifsc || '-';
+                document.getElementById('d_upi').innerText = b.upi || '-';
 
                 // Table
                 const tbody = document.getElementById('dashTableBody');
-                tbody.innerHTML = ""; 
+                tbody.innerHTML = "";
+                data.sales_history.forEach(row => {
+                    const statusClass = row.status === 'INSTALLED' ? 'status-installed' : 'status-pending';
+                    const downUrl = `${data.backend_url}download/license/${row.key}`;
+                    tbody.innerHTML += `<tr><td>${row.date}</td><td>${row.plan}</td><td>₹${row.amount}</td><td><span class="status-badge ${statusClass}">${row.status}</span></td><td style="font-family:monospace">${row.key}</td><td><a href="${downUrl}" class="nav-btn" style="padding:4px 8px;font-size:0.8rem;">⬇</a></td></tr>`;
+                });
 
-                if (data.sales_history.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:gray;">No sales found.</td></tr>`;
-                } else {
-                    data.sales_history.forEach(row => {
-                        const statusClass = row.status === 'INSTALLED' ? 'status-installed' : 'status-pending';
-                        const downUrl = `${data.backend_url}download/license/${row.key}`;
-                        
-                        const html = `
-                            <tr>
-                                <td>${row.date}</td>
-                                <td>${row.plan}</td>
-                                <td>₹${row.amount}</td>
-                                <td><span class="status-badge ${statusClass}">${row.status}</span></td>
-                                <td style="font-family:monospace">${row.key}</td>
-                                <td><a href="${downUrl}" target="_blank" class="nav-btn" style="padding:4px 8px; font-size:0.8rem;">⬇</a></td>
-                            </tr>
-                        `;
-                        tbody.insertAdjacentHTML('beforeend', html);
-                    });
-                }
-
-                // Swap View
-                document.querySelector('header').style.display = 'none';
-                document.querySelector('.hero').style.display = 'none';
-                document.getElementById('features').style.display = 'none';
-                document.getElementById('pricing').style.display = 'none';
-                document.querySelector('footer').style.display = 'none';
-                document.getElementById('dashboardSection').style.display = 'block';
+                // Pagination Buttons
+                const pageInfo = document.getElementById('pageInfo');
+                const prev = document.getElementById('prevBtn');
+                const next = document.getElementById('nextBtn');
                 
-                hideLoader();
-                window.scrollTo(0, 0);
+                pageInfo.innerText = `Page ${page} of ${data.pagination.total_pages}`;
+                prev.style.display = data.pagination.has_prev ? 'inline-block' : 'none';
+                next.style.display = data.pagination.has_next ? 'inline-block' : 'none';
 
-            } catch (e) {
-                console.error(e);
-                alert("Error loading dashboard");
-                hideLoader();
-            }
+                // Show View
+                document.querySelector('header').style.display='none';
+                document.querySelector('.hero').style.display='none';
+                document.getElementById('features').style.display='none';
+                document.getElementById('pricing').style.display='none';
+                document.querySelector('footer').style.display='none';
+                document.getElementById('dashboardSection').style.display='block';
+                hideLoader(); window.scrollTo(0,0);
+                
+            } catch(e) { hideLoader(); console.error(e); }
         }
 
-        function doLogout() {
-            localStorage.removeItem('dist_token'); 
-            window.location.reload(); 
-        }
-
-        window.addEventListener('load', function() {
-            if(localStorage.getItem('dist_token')) {
-                showLoader("Loading Dashboard...");
-                loadDashboard();
-            }
-        });
+        function changePage(dir) { loadDashboard(CURRENT_PAGE + dir); }
+        function doLogout() { localStorage.removeItem('dist_token'); location.reload(); }
+        window.addEventListener('load', function() { if(localStorage.getItem('dist_token')) loadDashboard(1); });
     </script>
 </body>
 </html>
