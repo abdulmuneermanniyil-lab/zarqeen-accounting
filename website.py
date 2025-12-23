@@ -98,19 +98,76 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+# 1. NEW KEY GENERATION LOGIC (ZQ[PR/BA]-[CODE/ALIF]-[XXXX]-[XXXX])
 def generate_unique_key(plan_type, dist_code=None):
-    plan_str = "BAS" if plan_type == 'basic' else "PRE"
-    d_part = dist_code.upper()[:4] if dist_code else "ZARQ"
-    d_part = d_part.ljust(4, 'X') 
+    # Plan Indicator: BA for Basic, PR for Premium
+    plan_str = "BA" if plan_type == 'basic' else "PR"
+    
+    # Distributor Code: Use Code if exists, else ALIF. Ensure 4 chars.
+    d_part = dist_code.upper().strip()[:4] if dist_code else "ALIF"
+    if len(d_part) < 4:
+        d_part = d_part.ljust(4, 'X') # Pad with X if short
+        
+    # Random Parts
     part1 = ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
     part2 = ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
-    full_key = f"ZQ-{d_part}-{plan_str}-{part1}{part2}"
-    if License.query.filter_by(license_key=full_key).first(): return generate_unique_key(plan_type, dist_code)
+    
+    # Format: ZQPR-ABCD-1A2B-3C4D
+    full_key = f"ZQ{plan_str}-{d_part}-{part1}-{part2}"
+    
+    # Recursion if key exists
+    if License.query.filter_by(license_key=full_key).first():
+        return generate_unique_key(plan_type, dist_code)
+        
     return full_key
 
-def safe_float(val):
-    try: return float(val) if val else 0.0
-    except: return 0.0
+# 2. UPDATED DOWNLOAD ROUTE (Fixed Filename)
+@app.route('/download/license/<key>')
+def download_license_file(key):
+    return send_file(
+        io.BytesIO(key.encode()),
+        mimetype='text/plain',
+        as_attachment=True,
+        download_name='license.zarqeen'  # <--- CHANGED THIS
+    )
+
+# 3. UPDATED EDIT DISTRIBUTOR ROUTE (Added Discount Logic)
+@app.route('/admin/edit_distributor/<int:id>', methods=['POST'])
+@login_required
+def edit_distributor(id):
+    dist = Distributor.query.get_or_404(id)
+    try:
+        # Profile
+        dist.name = request.form.get('name')
+        dist.email = request.form.get('email')
+        dist.phone = request.form.get('phone')
+        
+        # Discount (Added this)
+        disc_val = request.form.get('discount')
+        if disc_val:
+            dist.discount_percent = int(disc_val)
+
+        # Banking
+        dist.bank_name = request.form.get('bank_name')
+        dist.account_holder = request.form.get('account_holder')
+        dist.account_number = request.form.get('account_number')
+        dist.ifsc_code = request.form.get('ifsc_code')
+        dist.upi_id = request.form.get('upi_id')
+        
+        # Payments
+        add_pay = request.form.get('add_payment')
+        manual_pay = request.form.get('manual_paid_total')
+        
+        if add_pay and safe_float(add_pay) > 0:
+            dist.commission_paid = safe_float(dist.commission_paid) + safe_float(add_pay)
+        elif manual_pay and manual_pay.strip():
+            dist.commission_paid = safe_float(manual_pay)
+            
+        if request.form.get('password'): dist.set_password(request.form.get('password'))
+        db.session.commit()
+        flash('Distributor updated', 'success')
+    except Exception as e: flash(str(e), 'danger')
+    return redirect(url_for('dashboard'))
 
 # --- ROUTES ---
 @app.route('/')
@@ -256,34 +313,7 @@ def add_distributor():
         flash(f'Error: {str(e)}', 'danger')
     return redirect(url_for('dashboard'))
 
-@app.route('/admin/edit_distributor/<int:id>', methods=['POST'])
-@login_required
-def edit_distributor(id):
-    dist = Distributor.query.get_or_404(id)
-    try:
-        dist.name = request.form.get('name')
-        dist.email = request.form.get('email')
-        dist.phone = request.form.get('phone')
-        
-        # Update Banking
-        dist.bank_name = request.form.get('bank_name')
-        dist.account_holder = request.form.get('account_holder')
-        dist.account_number = request.form.get('account_number')
-        dist.ifsc_code = request.form.get('ifsc_code')
-        dist.upi_id = request.form.get('upi_id')
-        
-        add_pay = request.form.get('add_payment')
-        manual_pay = request.form.get('manual_paid_total')
-        
-        if add_pay and safe_float(add_pay) > 0:
-            dist.commission_paid = safe_float(dist.commission_paid) + safe_float(add_pay)
-        elif manual_pay and manual_pay.strip():
-            dist.commission_paid = safe_float(manual_pay)
-            
-        if request.form.get('password'): dist.set_password(request.form.get('password'))
-        db.session.commit()
-    except Exception as e: flash(str(e), 'danger')
-    return redirect(url_for('dashboard'))
+
 
 @app.route('/admin/delete_distributor/<int:id>', methods=['POST'])
 @login_required
