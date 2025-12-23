@@ -19,6 +19,7 @@ app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'CHANGE_THIS_SECRET')
 FRONTEND_URL = "https://zarqeen.in"
 
+# Cross-Domain Cookie Settings
 app.config.update(
     SESSION_COOKIE_SAMESITE='None',
     SESSION_COOKIE_SECURE=True,
@@ -26,6 +27,7 @@ app.config.update(
     SESSION_COOKIE_DOMAIN=None 
 )
 
+# Database
 raw_db_url = os.environ.get('DATABASE_URL', 'sqlite:///site.db')
 if raw_db_url.startswith("postgres://"):
     raw_db_url = raw_db_url.replace("postgres://", "postgresql://", 1)
@@ -33,11 +35,13 @@ if raw_db_url.startswith("postgres://"):
 app.config['SQLALCHEMY_DATABASE_URI'] = raw_db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+# Credentials
 RAZORPAY_KEY_ID = os.environ.get('RAZORPAY_KEY_ID')
 RAZORPAY_KEY_SECRET = os.environ.get('RAZORPAY_KEY_SECRET')
 ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', 'admin')
 ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'admin123')
 
+# Mail
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
@@ -45,6 +49,7 @@ app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
 app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
 app.config['MAIL_DEFAULT_SENDER'] = ('Zarqeen Support', os.environ.get('MAIL_USERNAME'))
 
+# CORS (Specific Origin Required for Credentials)
 CORS(app, resources={r"/*": {"origins": ["https://zarqeen.in", "https://www.zarqeen.in"]}}, supports_credentials=True)
 
 mail = Mail(app)
@@ -61,7 +66,7 @@ class Distributor(db.Model):
     password_hash = db.Column(db.String(256), nullable=False)
     discount_percent = db.Column(db.Integer, default=10)
     
-    # NEW STRUCTURED BANKING
+    # Bank Details
     bank_name = db.Column(db.String(100), nullable=True)
     account_holder = db.Column(db.String(100), nullable=True)
     account_number = db.Column(db.String(50), nullable=True)
@@ -90,7 +95,7 @@ class License(db.Model):
 with app.app_context():
     db.create_all()
 
-# --- HELPERS ---
+# --- HELPER FUNCTIONS ---
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -98,78 +103,29 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-# 1. NEW KEY GENERATION LOGIC (ZQ[PR/BA]-[CODE/ALIF]-[XXXX]-[XXXX])
 def generate_unique_key(plan_type, dist_code=None):
-    # Plan Indicator: BA for Basic, PR for Premium
+    # Format: ZQ[BA/PR]-[CODE/ALIF]-[XXXX]-[XXXX]
     plan_str = "BA" if plan_type == 'basic' else "PR"
     
-    # Distributor Code: Use Code if exists, else ALIF. Ensure 4 chars.
     d_part = dist_code.upper().strip()[:4] if dist_code else "ALIF"
     if len(d_part) < 4:
-        d_part = d_part.ljust(4, 'X') # Pad with X if short
+        d_part = d_part.ljust(4, 'X') 
         
-    # Random Parts
     part1 = ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
     part2 = ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
     
-    # Format: ZQPR-ABCD-1A2B-3C4D
     full_key = f"ZQ{plan_str}-{d_part}-{part1}-{part2}"
     
-    # Recursion if key exists
-    if License.query.filter_by(license_key=full_key).first():
+    if License.query.filter_by(license_key=full_key).first(): 
         return generate_unique_key(plan_type, dist_code)
-        
     return full_key
 
-# 2. UPDATED DOWNLOAD ROUTE (Fixed Filename)
-@app.route('/download/license/<key>')
-def download_license_file(key):
-    return send_file(
-        io.BytesIO(key.encode()),
-        mimetype='text/plain',
-        as_attachment=True,
-        download_name='license.zarqeen'  # <--- CHANGED THIS
-    )
-
-# 3. UPDATED EDIT DISTRIBUTOR ROUTE (Added Discount Logic)
-@app.route('/admin/edit_distributor/<int:id>', methods=['POST'])
-@login_required
-def edit_distributor(id):
-    dist = Distributor.query.get_or_404(id)
-    try:
-        # Profile
-        dist.name = request.form.get('name')
-        dist.email = request.form.get('email')
-        dist.phone = request.form.get('phone')
-        
-        # Discount (Added this)
-        disc_val = request.form.get('discount')
-        if disc_val:
-            dist.discount_percent = int(disc_val)
-
-        # Banking
-        dist.bank_name = request.form.get('bank_name')
-        dist.account_holder = request.form.get('account_holder')
-        dist.account_number = request.form.get('account_number')
-        dist.ifsc_code = request.form.get('ifsc_code')
-        dist.upi_id = request.form.get('upi_id')
-        
-        # Payments
-        add_pay = request.form.get('add_payment')
-        manual_pay = request.form.get('manual_paid_total')
-        
-        if add_pay and safe_float(add_pay) > 0:
-            dist.commission_paid = safe_float(dist.commission_paid) + safe_float(add_pay)
-        elif manual_pay and manual_pay.strip():
-            dist.commission_paid = safe_float(manual_pay)
-            
-        if request.form.get('password'): dist.set_password(request.form.get('password'))
-        db.session.commit()
-        flash('Distributor updated', 'success')
-    except Exception as e: flash(str(e), 'danger')
-    return redirect(url_for('dashboard'))
+def safe_float(val):
+    try: return float(val) if val else 0.0
+    except: return 0.0
 
 # --- ROUTES ---
+
 @app.route('/')
 def home(): return redirect(FRONTEND_URL)
 
@@ -190,21 +146,28 @@ def create_order():
         data = request.json
         plan = data.get('plan')
         code = data.get('distributor_code', '').strip().upper() if data.get('distributor_code') else ""
+        
         base_amount = 29900 if plan == 'basic' else 59900
         dist = Distributor.query.filter_by(code=code).first() if code else None
         
         final_amount = base_amount
         dist_id_str = "None"
+        
         if dist:
-            final_amount = int(base_amount - ((base_amount * dist.discount_percent) / 100))
-            dist_id_str = str(dist.id)
+            discount_amount = (base_amount * dist.discount_percent) / 100
+            final_amount = int(base_amount - discount_amount)
+            dist_id_str = str(dist.id) # Razorpay needs string
         
         order = razorpay_client.order.create({
-            'amount': final_amount, 'currency': 'INR', 'payment_capture': '1',
+            'amount': final_amount, 
+            'currency': 'INR', 
+            'payment_capture': '1',
             'notes': {'plan': str(plan), 'distributor_id': dist_id_str}
         })
         return jsonify(order)
-    except Exception as e: return jsonify({'error': str(e)}), 500
+    except Exception as e: 
+        print(f"Order Error: {e}")
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/verify_payment', methods=['POST'])
 def verify_payment():
@@ -217,15 +180,20 @@ def verify_payment():
         })
         order_info = razorpay_client.order.fetch(data['razorpay_order_id'])
         dist_id_val = order_info['notes'].get('distributor_id')
+        
         dist_obj = None
         if dist_id_val and dist_id_val != "None":
             try: dist_obj = Distributor.query.get(int(dist_id_val))
             except: pass
         
         new_key = generate_unique_key(data.get('plan_type'), dist_obj.code if dist_obj else None)
+        
         new_license = License(
-            license_key=new_key, plan_type=data.get('plan_type'), payment_id=data['razorpay_payment_id'],
-            amount_paid=order_info['amount'] / 100, distributor_id=dist_obj.id if dist_obj else None
+            license_key=new_key, 
+            plan_type=data.get('plan_type'), 
+            payment_id=data['razorpay_payment_id'],
+            amount_paid=order_info['amount'] / 100, 
+            distributor_id=dist_obj.id if dist_obj else None
         )
         db.session.add(new_license)
         db.session.commit()
@@ -234,30 +202,37 @@ def verify_payment():
 
 @app.route('/download/license/<key>')
 def download_license_file(key):
-    return send_file(io.BytesIO(key.encode()), mimetype='text/plain', as_attachment=True, download_name=f'license_{key}.zarqeen')
+    # Generates license file named "license.zarqeen"
+    return send_file(
+        io.BytesIO(key.encode()),
+        mimetype='text/plain',
+        as_attachment=True,
+        download_name='license.zarqeen'
+    )
 
-# --- EXPORT (Updated for detailed bank info) ---
-@app.route('/admin/export/<type>')
-@login_required
-def export_data(type):
-    si = io.StringIO()
-    cw = csv.writer(si)
-    if type == 'licenses':
-        cw.writerow(['Date', 'Key', 'Plan', 'Amount', 'Distributor', 'Status'])
-        for r in License.query.all():
-            d_name = r.distributor.name if r.distributor else 'Direct'
-            cw.writerow([r.created_at, r.license_key, r.plan_type, r.amount_paid, d_name, r.is_used])
-    elif type == 'distributors':
-        # Added Bank Details columns
-        cw.writerow(['Name', 'Code', 'Email', 'Phone', 'Bank Name', 'Account Holder', 'Account No', 'IFSC', 'UPI', 'Total Earned', 'Paid', 'Balance'])
-        for r in Distributor.query.all():
-            total_earned = sum(safe_float(l.amount_paid) for l in r.licenses) * 0.20
-            balance = total_earned - safe_float(r.commission_paid)
-            cw.writerow([r.name, r.code, r.email, r.phone, r.bank_name, r.account_holder, r.account_number, r.ifsc_code, r.upi_id, total_earned, r.commission_paid, balance])
-    output = make_response(si.getvalue())
-    output.headers["Content-Disposition"] = f"attachment; filename=export_{type}.csv"
-    output.headers["Content-type"] = "text/csv"
-    return output
+@app.route('/api/validate_license', methods=['POST'])
+def validate_license():
+    data = request.json
+    key_input = data.get('license_key', '').strip()
+    lic = License.query.filter_by(license_key=key_input).first()
+    
+    if lic:
+        if lic.is_used: return jsonify({'valid': False, 'message': 'License already used.'})
+        lic.is_used = True
+        lic.used_at = datetime.utcnow()
+        db.session.commit()
+        duration = 365 if lic.plan_type == 'basic' else 1095
+        
+        support_name = "Zarqeen Official"
+        support_contact = "zarqeensoftware@gmail.com"
+        if lic.distributor:
+            support_name = lic.distributor.name
+            support_contact = lic.distributor.phone
+
+        return jsonify({'valid': True, 'plan': lic.plan_type, 'duration_days': duration, 'support_info': {'name': support_name, 'contact': support_contact}})
+    return jsonify({'valid': False, 'message': 'Invalid License Key'})
+
+# --- ADMIN PANEL ---
 
 @app.route('/admin/dashboard')
 @login_required
@@ -272,7 +247,6 @@ def dashboard():
         dist_data.append({'obj': d, 'earned': earned, 'balance': balance})
     return render_template('dashboard.html', licenses=licenses, distributors=dist_data)
 
-# --- ADD DISTRIBUTOR (Updated Bank Fields) ---
 @app.route('/admin/add_distributor', methods=['POST'])
 @login_required
 def add_distributor():
@@ -281,7 +255,7 @@ def add_distributor():
         email = request.form.get('email', '').strip()
         
         if not code or not email:
-            flash('Required fields missing', 'danger')
+            flash('Fields missing', 'danger')
             return redirect(url_for('dashboard'))
             
         if Distributor.query.filter((Distributor.code==code) | (Distributor.email==email)).first():
@@ -297,7 +271,6 @@ def add_distributor():
             phone=request.form.get('phone', '').strip(),
             email=email, 
             discount_percent=discount,
-            # NEW FIELDS
             bank_name=request.form.get('bank_name', '').strip(),
             account_holder=request.form.get('account_holder', '').strip(),
             account_number=request.form.get('account_number', '').strip(),
@@ -307,13 +280,43 @@ def add_distributor():
         new_dist.set_password(request.form.get('password', '123456'))
         db.session.add(new_dist)
         db.session.commit()
-        flash('Distributor added successfully', 'success')
-    except Exception as e: 
-        print(f"ADD DIST ERROR: {e}")
-        flash(f'Error: {str(e)}', 'danger')
+        flash('Added', 'success')
+    except Exception as e: flash(f'Error: {str(e)}', 'danger')
     return redirect(url_for('dashboard'))
 
-
+@app.route('/admin/edit_distributor/<int:id>', methods=['POST'])
+@login_required
+def edit_distributor(id):
+    dist = Distributor.query.get_or_404(id)
+    try:
+        dist.name = request.form.get('name')
+        dist.email = request.form.get('email')
+        dist.phone = request.form.get('phone')
+        
+        # Edit Discount
+        disc_val = request.form.get('discount')
+        if disc_val: dist.discount_percent = int(disc_val)
+        
+        # Bank Details
+        dist.bank_name = request.form.get('bank_name')
+        dist.account_holder = request.form.get('account_holder')
+        dist.account_number = request.form.get('account_number')
+        dist.ifsc_code = request.form.get('ifsc_code')
+        dist.upi_id = request.form.get('upi_id')
+        
+        # Payments
+        add_pay = request.form.get('add_payment')
+        manual_pay = request.form.get('manual_paid_total')
+        
+        if add_pay and safe_float(add_pay) > 0:
+            dist.commission_paid = safe_float(dist.commission_paid) + safe_float(add_pay)
+        elif manual_pay and manual_pay.strip():
+            dist.commission_paid = safe_float(manual_pay)
+            
+        if request.form.get('password'): dist.set_password(request.form.get('password'))
+        db.session.commit()
+    except Exception as e: flash(str(e), 'danger')
+    return redirect(url_for('dashboard'))
 
 @app.route('/admin/delete_distributor/<int:id>', methods=['POST'])
 @login_required
@@ -339,6 +342,27 @@ def edit_license(id):
     db.session.commit()
     return redirect(url_for('dashboard'))
 
+@app.route('/admin/export/<type>')
+@login_required
+def export_data(type):
+    si = io.StringIO()
+    cw = csv.writer(si)
+    if type == 'licenses':
+        cw.writerow(['Date', 'Key', 'Plan', 'Amount', 'Distributor', 'Status'])
+        for r in License.query.all():
+            d_name = r.distributor.name if r.distributor else 'Direct'
+            cw.writerow([r.created_at, r.license_key, r.plan_type, r.amount_paid, d_name, r.is_used])
+    elif type == 'distributors':
+        cw.writerow(['Name', 'Code', 'Email', 'Phone', 'Bank', 'Acct No', 'IFSC', 'UPI', 'Total Earned', 'Paid', 'Balance'])
+        for r in Distributor.query.all():
+            total_earned = sum(safe_float(l.amount_paid) for l in r.licenses) * 0.20
+            balance = total_earned - safe_float(r.commission_paid)
+            cw.writerow([r.name, r.code, r.email, r.phone, r.bank_name, r.account_number, r.ifsc_code, r.upi_id, total_earned, r.commission_paid, balance])
+    output = make_response(si.getvalue())
+    output.headers["Content-Disposition"] = f"attachment; filename=export_{type}.csv"
+    output.headers["Content-type"] = "text/csv"
+    return output
+
 @app.route('/admin/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -351,6 +375,8 @@ def login():
 def logout():
     session.pop('admin_logged_in', None)
     return redirect(FRONTEND_URL)
+
+# --- DISTRIBUTOR API ---
 
 @app.route('/api/distributor/login', methods=['POST'])
 def api_distributor_login():
@@ -385,7 +411,6 @@ def api_get_distributor_data():
         'balance_due': total_earned - safe_float(dist.commission_paid),
         'sales_history': sales_data, 
         'backend_url': request.host_url,
-        # SEND BANK DETAILS
         'bank_info': {
             'bank_name': dist.bank_name,
             'account_holder': dist.account_holder,
@@ -401,7 +426,6 @@ def forgot_password():
     if not dist: return jsonify({'success': False, 'message': 'Email not found'})
     dist.reset_token = secrets.token_urlsafe(32)
     db.session.commit()
-    # Replace with real email logic in production
     print(f"RESET LINK: {url_for('reset_password_page', token=dist.reset_token, _external=True)}")
     return jsonify({'success': True, 'message': 'Reset link sent'})
 
