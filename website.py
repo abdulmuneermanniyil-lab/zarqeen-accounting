@@ -216,31 +216,95 @@ def dashboard():
         
     return render_template('dashboard.html', licenses=licenses, distributors=dist_data)
 
+# --- UPDATE THIS ROUTE ---
 @app.route('/admin/add_distributor', methods=['POST'])
 @login_required
 def add_distributor():
     try:
-        code = request.form.get('code').strip().upper()
-        if Distributor.query.filter((Distributor.code==code) | (Distributor.email==request.form.get('email'))).first():
-            flash('Error: Code or Email already exists', 'danger')
+        # 1. Clean Inputs
+        code = request.form.get('code', '').strip().upper()
+        email = request.form.get('email', '').strip().lower()
+        name = request.form.get('name', '').strip()
+        phone = request.form.get('phone', '').strip()
+        password = request.form.get('password', '').strip()
+        
+        # Handle Discount (Default to 10 if empty)
+        disc_raw = request.form.get('discount')
+        discount = int(disc_raw) if disc_raw and disc_raw.isnumeric() else 10
+
+        # 2. Validation
+        if not code or not email or not password:
+            flash('Error: Name, Code, Email, and Password are required.', 'danger')
+            return redirect(url_for('dashboard'))
+
+        if len(code) != 4:
+            flash('Error: Code must be exactly 4 letters.', 'danger')
+            return redirect(url_for('dashboard'))
+
+        # 3. Check Duplicates
+        if Distributor.query.filter((Distributor.code==code) | (Distributor.email==email)).first():
+            flash('Error: Distributor Code or Email already exists.', 'danger')
             return redirect(url_for('dashboard'))
         
+        # 4. Create Record
         new_dist = Distributor(
             code=code, 
-            name=request.form.get('name'), 
-            phone=request.form.get('phone'),
-            email=request.form.get('email'), 
-            discount_percent=int(request.form.get('discount')),
+            name=name, 
+            phone=phone,
+            email=email, 
+            discount_percent=discount,
             bank_details=request.form.get('bank_details'), 
             upi_id=request.form.get('upi_id')
         )
-        new_dist.set_password(request.form.get('password'))
+        new_dist.set_password(password)
+        
         db.session.add(new_dist)
         db.session.commit()
-        flash('Distributor added successfully', 'success')
+        flash('Distributor added successfully!', 'success')
+        
     except Exception as e: 
-        print(e)
-        flash(f'Error: {str(e)}', 'danger')
+        print(f"ADD DIST ERROR: {e}") # Check Render Logs
+        flash(f'Database Error: {str(e)}', 'danger')
+        
+    return redirect(url_for('dashboard'))
+
+# --- UPDATE THIS ROUTE ---
+@app.route('/admin/edit_distributor/<int:id>', methods=['POST'])
+@login_required
+def edit_distributor(id):
+    dist = Distributor.query.get_or_404(id)
+    
+    try:
+        # Basic Info
+        dist.name = request.form.get('name')
+        dist.email = request.form.get('email')
+        dist.phone = request.form.get('phone')
+        dist.bank_details = request.form.get('bank_details')
+        dist.upi_id = request.form.get('upi_id')
+        
+        # Update Password only if provided
+        new_pass = request.form.get('password')
+        if new_pass and new_pass.strip():
+            dist.set_password(new_pass.strip())
+
+        # --- PAYMENT LOGIC ---
+        
+        # Option A: Add to existing (Normal Flow)
+        payment_add = request.form.get('add_payment')
+        if payment_add and payment_add.strip():
+            dist.commission_paid += float(payment_add)
+            
+        # Option B: Manual Correction (Edit the total directly)
+        manual_total = request.form.get('manual_paid_total')
+        if manual_total and manual_total.strip():
+            dist.commission_paid = float(manual_total)
+
+        db.session.commit()
+        flash('Distributor updated successfully', 'success')
+        
+    except Exception as e:
+        flash(f'Error updating: {str(e)}', 'danger')
+        
     return redirect(url_for('dashboard'))
 
 @app.route('/admin/edit_distributor/<int:id>', methods=['POST'])
