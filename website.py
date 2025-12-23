@@ -60,8 +60,14 @@ class Distributor(db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
     discount_percent = db.Column(db.Integer, default=10)
-    bank_details = db.Column(db.String(500), nullable=True) 
-    upi_id = db.Column(db.String(100), nullable=True)       
+    
+    # NEW STRUCTURED BANKING
+    bank_name = db.Column(db.String(100), nullable=True)
+    account_holder = db.Column(db.String(100), nullable=True)
+    account_number = db.Column(db.String(50), nullable=True)
+    ifsc_code = db.Column(db.String(20), nullable=True)
+    upi_id = db.Column(db.String(100), nullable=True)
+    
     commission_paid = db.Column(db.Float, default=0.0)      
     api_token = db.Column(db.String(100), nullable=True)
     reset_token = db.Column(db.String(100), nullable=True)
@@ -84,7 +90,7 @@ class License(db.Model):
 with app.app_context():
     db.create_all()
 
-# --- HELPER FUNCTIONS ---
+# --- HELPERS ---
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -105,10 +111,6 @@ def generate_unique_key(plan_type, dist_code=None):
 def safe_float(val):
     try: return float(val) if val else 0.0
     except: return 0.0
-
-def safe_int(val):
-    try: return int(val) if val else 0
-    except: return 0
 
 # --- ROUTES ---
 @app.route('/')
@@ -177,6 +179,7 @@ def verify_payment():
 def download_license_file(key):
     return send_file(io.BytesIO(key.encode()), mimetype='text/plain', as_attachment=True, download_name=f'license_{key}.zarqeen')
 
+# --- EXPORT (Updated for detailed bank info) ---
 @app.route('/admin/export/<type>')
 @login_required
 def export_data(type):
@@ -188,11 +191,12 @@ def export_data(type):
             d_name = r.distributor.name if r.distributor else 'Direct'
             cw.writerow([r.created_at, r.license_key, r.plan_type, r.amount_paid, d_name, r.is_used])
     elif type == 'distributors':
-        cw.writerow(['Name', 'Code', 'Email', 'Phone', 'Total Earned', 'Paid', 'Balance'])
+        # Added Bank Details columns
+        cw.writerow(['Name', 'Code', 'Email', 'Phone', 'Bank Name', 'Account Holder', 'Account No', 'IFSC', 'UPI', 'Total Earned', 'Paid', 'Balance'])
         for r in Distributor.query.all():
             total_earned = sum(safe_float(l.amount_paid) for l in r.licenses) * 0.20
             balance = total_earned - safe_float(r.commission_paid)
-            cw.writerow([r.name, r.code, r.email, r.phone, total_earned, r.commission_paid, balance])
+            cw.writerow([r.name, r.code, r.email, r.phone, r.bank_name, r.account_holder, r.account_number, r.ifsc_code, r.upi_id, total_earned, r.commission_paid, balance])
     output = make_response(si.getvalue())
     output.headers["Content-Disposition"] = f"attachment; filename=export_{type}.csv"
     output.headers["Content-type"] = "text/csv"
@@ -205,42 +209,43 @@ def dashboard():
     distributors = Distributor.query.all()
     dist_data = []
     for d in distributors:
-        # Safe math to prevent NoneType errors
         paid = safe_float(d.commission_paid)
         earned = sum(safe_float(l.amount_paid) for l in d.licenses) * 0.20
         balance = earned - paid
         dist_data.append({'obj': d, 'earned': earned, 'balance': balance})
     return render_template('dashboard.html', licenses=licenses, distributors=dist_data)
 
-# --- SAFE ADD DISTRIBUTOR ---
+# --- ADD DISTRIBUTOR (Updated Bank Fields) ---
 @app.route('/admin/add_distributor', methods=['POST'])
 @login_required
 def add_distributor():
     try:
         code = request.form.get('code', '').strip().upper()
         email = request.form.get('email', '').strip()
-        name = request.form.get('name', '').strip()
         
-        # Validation
-        if not code or not email or not name:
-            flash('Missing required fields', 'danger')
+        if not code or not email:
+            flash('Required fields missing', 'danger')
             return redirect(url_for('dashboard'))
             
         if Distributor.query.filter((Distributor.code==code) | (Distributor.email==email)).first():
-            flash('Code or Email already exists', 'danger')
+            flash('Code or Email exists', 'danger')
             return redirect(url_for('dashboard'))
         
-        # Safe Discount Conversion
         disc_val = request.form.get('discount')
         discount = int(disc_val) if disc_val and disc_val.isdigit() else 10
         
         new_dist = Distributor(
-            code=code, name=name, 
-            phone=request.form.get('phone', ''),
+            code=code, 
+            name=request.form.get('name', '').strip(), 
+            phone=request.form.get('phone', '').strip(),
             email=email, 
             discount_percent=discount,
-            bank_details=request.form.get('bank_details', ''), 
-            upi_id=request.form.get('upi_id', '')
+            # NEW FIELDS
+            bank_name=request.form.get('bank_name', '').strip(),
+            account_holder=request.form.get('account_holder', '').strip(),
+            account_number=request.form.get('account_number', '').strip(),
+            ifsc_code=request.form.get('ifsc_code', '').strip(),
+            upi_id=request.form.get('upi_id', '').strip()
         )
         new_dist.set_password(request.form.get('password', '123456'))
         db.session.add(new_dist)
@@ -259,10 +264,14 @@ def edit_distributor(id):
         dist.name = request.form.get('name')
         dist.email = request.form.get('email')
         dist.phone = request.form.get('phone')
-        dist.bank_details = request.form.get('bank_details')
+        
+        # Update Banking
+        dist.bank_name = request.form.get('bank_name')
+        dist.account_holder = request.form.get('account_holder')
+        dist.account_number = request.form.get('account_number')
+        dist.ifsc_code = request.form.get('ifsc_code')
         dist.upi_id = request.form.get('upi_id')
         
-        # Manual Payment Logic
         add_pay = request.form.get('add_payment')
         manual_pay = request.form.get('manual_paid_total')
         
@@ -280,9 +289,7 @@ def edit_distributor(id):
 @login_required
 def delete_distributor(id):
     dist = Distributor.query.get_or_404(id)
-    # Detach licenses first
-    for l in License.query.filter_by(distributor_id=id).all():
-        l.distributor_id = None
+    for l in License.query.filter_by(distributor_id=id).all(): l.distributor_id = None
     db.session.delete(dist)
     db.session.commit()
     return redirect(url_for('dashboard'))
@@ -330,11 +337,9 @@ def api_get_distributor_data():
     token = request.headers.get('Authorization').split(" ")[1] if request.headers.get('Authorization') else None
     dist = Distributor.query.filter_by(api_token=token).first()
     if not dist: return jsonify({'error': 'Invalid Token'}), 401
-    
     sales = License.query.filter_by(distributor_id=dist.id).order_by(License.created_at.desc()).all()
     total_earned = sum(safe_float(l.amount_paid) for l in sales) * 0.20
     sales_data = [{'date': s.created_at.strftime('%Y-%m-%d'), 'plan': s.plan_type, 'amount': s.amount_paid, 'status': 'INSTALLED' if s.is_used else 'PENDING', 'key': s.license_key} for s in sales]
-    
     return jsonify({
         'name': dist.name, 'code': dist.code, 'discount': dist.discount_percent,
         'total_sales': len(sales), 'commission_earned': total_earned,
@@ -349,6 +354,7 @@ def forgot_password():
     if not dist: return jsonify({'success': False, 'message': 'Email not found'})
     dist.reset_token = secrets.token_urlsafe(32)
     db.session.commit()
+    # Replace with real email logic in production
     print(f"RESET LINK: {url_for('reset_password_page', token=dist.reset_token, _external=True)}")
     return jsonify({'success': True, 'message': 'Reset link sent'})
 
