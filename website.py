@@ -307,23 +307,7 @@ def edit_distributor(id):
         
     return redirect(url_for('dashboard'))
 
-@app.route('/admin/edit_distributor/<int:id>', methods=['POST'])
-@login_required
-def edit_distributor(id):
-    dist = Distributor.query.get_or_404(id)
-    dist.name = request.form.get('name')
-    dist.email = request.form.get('email')
-    dist.phone = request.form.get('phone')
-    dist.bank_details = request.form.get('bank_details')
-    dist.upi_id = request.form.get('upi_id')
-    
-    payment_add = request.form.get('add_payment')
-    if payment_add and float(payment_add) > 0:
-        dist.commission_paid += float(payment_add)
-        
-    if request.form.get('password'): dist.set_password(request.form.get('password'))
-    db.session.commit()
-    return redirect(url_for('dashboard'))
+
 
 @app.route('/admin/delete_distributor/<int:id>', methods=['POST'])
 @login_required
