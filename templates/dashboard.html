@@ -13,14 +13,18 @@
         table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9rem; }
         th, td { text-align: left; padding: 12px; border-bottom: 1px solid #E5E7EB; }
         th { background: #F9FAFB; }
+        
         .btn { padding: 6px 12px; border-radius: 5px; border: none; cursor: pointer; color: white; margin-right: 5px; text-decoration: none; display: inline-block; font-size: 0.85rem;}
         .btn-red { background: #EF4444; }
         .btn-green { background: #10B981; }
         .btn-blue { background: #2563EB; }
         .btn-gray { background: #6B7280; }
+        
         input { padding: 8px; border: 1px solid #D1D5DB; border-radius: 5px; width: 100%; box-sizing: border-box; margin-bottom: 10px; }
         label { font-size: 0.8rem; font-weight: 600; color: #4B5563; }
         .grid-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        
+        /* Modal */
         .modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); backdrop-filter: blur(2px); }
         .modal-content { background-color: white; margin: 5vh auto; padding: 2rem; border-radius: 12px; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; }
         .balance-pos { color: #059669; font-weight: bold; }
@@ -30,7 +34,7 @@
 </head>
 <body>
     <div class="container">
-        <!-- FLASH MESSAGES -->
+        <!-- MESSAGES -->
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
@@ -53,6 +57,7 @@
                 <a href="/admin/export/distributors" class="btn btn-gray">⬇ CSV</a>
             </h2>
             
+            <!-- ADD FORM -->
             <details style="margin-bottom: 20px; border: 1px solid #eee; padding: 10px; border-radius: 8px;">
                 <summary style="cursor:pointer; font-weight:600; color:#2563EB;">+ Add New Distributor</summary>
                 <form action="/admin/add_distributor" method="POST" class="grid-form" style="margin-top:15px;">
@@ -62,18 +67,16 @@
                     <div><label>Code (4 Char)</label><input type="text" name="code" maxlength="4" style="text-transform:uppercase" required></div>
                     <div><label>Password</label><input type="password" name="password" required></div>
                     <div><label>Discount %</label><input type="number" name="discount" value="10"></div>
-                    
-                    <!-- BANK FIELDS -->
                     <div><label>Bank Name</label><input type="text" name="bank_name" placeholder="HDFC"></div>
                     <div><label>Account Holder</label><input type="text" name="account_holder" placeholder="Name"></div>
                     <div><label>Account No</label><input type="text" name="account_number" placeholder="123xxx"></div>
                     <div><label>IFSC Code</label><input type="text" name="ifsc_code" placeholder="HDFC0001" style="text-transform:uppercase"></div>
                     <div><label>UPI ID</label><input type="text" name="upi_id" placeholder="user@upi"></div>
-                    
                     <div style="display:flex; align-items:end;"><button type="submit" class="btn btn-green" style="width:100%">Add Distributor</button></div>
                 </form>
             </details>
 
+            <!-- TABLE -->
             <table>
                 <thead>
                     <tr><th>Name</th><th>Code</th><th>Financials</th><th>Bank Details</th><th>Action</th></tr>
@@ -99,7 +102,7 @@
                             {% endif %}
                         </td>
                         <td>
-                            <!-- PASSED DISCOUNT PARAM HERE -->
+                            <!-- BUTTON WITH DISCOUNT PARAMETER -->
                             <button class="btn btn-blue" onclick="openEdit('{{d.obj.id}}', '{{d.obj.name}}', '{{d.obj.email}}', '{{d.obj.phone}}', '{{d.obj.discount_percent}}', '{{d.obj.bank_name}}', '{{d.obj.account_holder}}', '{{d.obj.account_number}}', '{{d.obj.ifsc_code}}', '{{d.obj.upi_id}}', '{{d.obj.commission_paid}}')">Edit/Pay</button>
                             
                             <form action="{{ url_for('delete_distributor', id=d.obj.id) }}" method="POST" style="display:inline" onsubmit="return confirm('Delete?');"><button class="btn btn-red">X</button></form>
@@ -152,7 +155,7 @@
                     <div><label>Email</label><input type="email" name="email" id="e_email" required></div>
                     <div><label>Phone</label><input type="text" name="phone" id="e_phone"></div>
                     
-                    <!-- NEW DISCOUNT FIELD -->
+                    <!-- DISCOUNT FIELD -->
                     <div><label>Discount %</label><input type="number" name="discount" id="e_disc" required></div>
                     
                     <div><label>Password (Optional)</label><input type="password" name="password" placeholder="New password"></div>
@@ -183,7 +186,7 @@
             document.getElementById('e_name').value = name;
             document.getElementById('e_email').value = email;
             document.getElementById('e_phone').value = phone;
-            document.getElementById('e_disc').value = disc; // Set Discount
+            document.getElementById('e_disc').value = disc; // SET DISCOUNT VALUE
             
             // Banking
             document.getElementById('e_bank_name').value = bName != 'None' ? bName : '';
