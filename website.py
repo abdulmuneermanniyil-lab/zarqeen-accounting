@@ -34,12 +34,12 @@ if raw_db_url.startswith("postgres://"):
 app.config['SQLALCHEMY_DATABASE_URI'] = raw_db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# ⚠️ MEMORY & CONNECTION OPTIMIZATION (Fixes SIGKILL & SSL Errors)
+# Memory Optimization
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
     "pool_pre_ping": True,
     "pool_recycle": 300,
-    "pool_size": 2,       # Reduced to save memory
-    "max_overflow": 1     # Reduced to save memory
+    "pool_size": 2,
+    "max_overflow": 1
 }
 
 # Credentials
@@ -48,13 +48,14 @@ RAZORPAY_KEY_SECRET = os.environ.get('RAZORPAY_KEY_SECRET')
 ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', 'admin')
 ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'admin123')
 
-# Mail (Safe Config)
-app.config['MAIL_SERVER'] = os.environ.get('MAIL_SERVER', 'smtp-relay.brevo.com')
-app.config['MAIL_PORT'] = int(os.environ.get('MAIL_PORT', 587))
+# --- BREVO MAIL CONFIGURATION (FROM YOUR CODE) ---
+app.config['MAIL_SERVER'] = 'smtp-relay.brevo.com'
+app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
-app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
-app.config['MAIL_DEFAULT_SENDER'] = ('Zarqeen Support', os.environ.get('MAIL_USERNAME'))
+app.config['MAIL_USE_SSL'] = False
+app.config['MAIL_USERNAME'] = '9cd21d001@smtp-brevo.com'
+app.config['MAIL_PASSWORD'] = 'bskrnT85t4SOLS4' # Provided Key
+app.config['MAIL_DEFAULT_SENDER'] = ('Zarqeen Support', 'zarqeensoftware@gmail.com')
 
 CORS(app, resources={r"/*": {"origins": ["https://zarqeen.in", "https://www.zarqeen.in"]}}, supports_credentials=True)
 
@@ -101,10 +102,10 @@ class License(db.Model):
     used_at = db.Column(db.DateTime, nullable=True)
     distributor_id = db.Column(db.Integer, db.ForeignKey('distributor.id'), nullable=True)
 
-# ⚠️ REMOVED db.create_all() FROM STARTUP TO PREVENT OOM CRASHES
-# Use the /reset-db-now route to initialize DB instead.
+# Note: We do NOT run db.create_all() here to avoid memory crashes on boot.
+# Use /reset-db-now to initialize.
 
-# --- HELPER FUNCTIONS ---
+# --- HELPERS ---
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -182,7 +183,6 @@ def verify_payment():
             'razorpay_signature': data['razorpay_signature']
         })
         order_info = razorpay_client.order.fetch(data['razorpay_order_id'])
-        
         dist_id_val = order_info['notes'].get('distributor_id')
         dist_obj = None
         if dist_id_val and dist_id_val != "None":
@@ -213,11 +213,9 @@ def validate_license():
         lic.is_used = True
         lic.used_at = datetime.utcnow()
         db.session.commit()
-        
+        duration = 365 if lic.plan_type == 'basic' else 1095
         support_name = lic.distributor.name if lic.distributor else "Zarqeen Official"
         support_contact = lic.distributor.phone if lic.distributor else "zarqeensoftware@gmail.com"
-        duration = 365 if lic.plan_type == 'basic' else 1095
-        
         return jsonify({'valid': True, 'plan': lic.plan_type, 'duration_days': duration, 'support_info': {'name': support_name, 'contact': support_contact}})
     return jsonify({'valid': False, 'message': 'Invalid License Key'})
 
@@ -371,7 +369,7 @@ def api_get_distributor_data():
         'pagination': {'total_pages': pagination.pages, 'has_next': pagination.has_next, 'has_prev': pagination.has_prev}
     })
 
-# --- OTP FLOW (CRASH PROOF) ---
+# --- OTP FLOW (BREVO ADAPTED) ---
 @app.route('/api/send-otp', methods=['POST'])
 def send_otp():
     email = request.json.get('email')
@@ -384,10 +382,6 @@ def send_otp():
     
     print(f"\n >>> DEBUG OTP for {email}: {dist.otp_code} <<<\n")
     
-    # Check credentials before sending to avoid crash
-    if not app.config['MAIL_USERNAME'] or not app.config['MAIL_PASSWORD']:
-        return jsonify({'success': True, 'message': 'OTP generated. Check server logs (Email config missing).'})
-
     try:
         msg = Message("Zarqeen Verification Code", recipients=[email])
         msg.body = f"Your verification code is: {dist.otp_code}\n\nThis code expires in 10 minutes."
@@ -395,7 +389,8 @@ def send_otp():
         return jsonify({'success': True, 'message': 'OTP sent to email'})
     except Exception as e:
         print(f"Mail failed: {e}")
-        return jsonify({'success': True, 'message': 'OTP sent (Check logs if email not received)'})
+        # Return success with debug message so you can at least use the Console OTP
+        return jsonify({'success': True, 'message': 'OTP sent (Check server logs if email fails)'})
 
 @app.route('/api/reset-with-otp', methods=['POST'])
 def reset_with_otp():
@@ -403,11 +398,8 @@ def reset_with_otp():
     dist = Distributor.query.filter_by(email=data.get('email')).first()
     if not dist: return jsonify({'success': False, 'message': 'User not found'})
     
-    if not dist.otp_code or not dist.otp_expiry:
-        return jsonify({'success': False, 'message': 'No OTP request found'})
-        
-    if datetime.utcnow() > dist.otp_expiry:
-        return jsonify({'success': False, 'message': 'OTP expired'})
+    if not dist.otp_code or not dist.otp_expiry: return jsonify({'success': False, 'message': 'No OTP found'})
+    if datetime.utcnow() > dist.otp_expiry: return jsonify({'success': False, 'message': 'OTP expired'})
         
     if str(dist.otp_code) == str(data.get('otp')):
         dist.set_password(data.get('new_password'))
@@ -428,7 +420,7 @@ def reset_db():
             d.set_password("demo123")
             db.session.add(d)
             db.session.commit()
-    return "DB Reset"
+    return "DB Reset. Mail Configured."
 
 if __name__ == '__main__':
     app.run(debug=True)
