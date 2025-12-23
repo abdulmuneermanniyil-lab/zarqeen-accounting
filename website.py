@@ -61,10 +61,10 @@ class Distributor(db.Model):
     password_hash = db.Column(db.String(256), nullable=False)
     discount_percent = db.Column(db.Integer, default=10)
     
-    # NEW BANKING & COMMISSION FIELDS
-    bank_details = db.Column(db.String(500), nullable=True) # Account No, IFSC, etc.
-    upi_id = db.Column(db.String(100), nullable=True)       # GPay/PhonePe
-    commission_paid = db.Column(db.Float, default=0.0)      # Total amount paid to them
+    # Banking & Commission
+    bank_details = db.Column(db.String(500), nullable=True) 
+    upi_id = db.Column(db.String(100), nullable=True)       
+    commission_paid = db.Column(db.Float, default=0.0)      
     
     api_token = db.Column(db.String(100), nullable=True)
     reset_token = db.Column(db.String(100), nullable=True)
@@ -168,7 +168,6 @@ def verify_payment():
 # --- NEW DOWNLOAD ROUTES ---
 @app.route('/download/license/<key>')
 def download_license_file(key):
-    # Generates a text file on the fly
     return send_file(
         io.BytesIO(key.encode()),
         mimetype='text/plain',
@@ -209,7 +208,6 @@ def dashboard():
     licenses = License.query.order_by(License.created_at.desc()).all()
     distributors = Distributor.query.all()
     
-    # Calculate totals for view
     dist_data = []
     for d in distributors:
         earned = sum(l.amount_paid for l in d.licenses) * 0.20
@@ -222,21 +220,27 @@ def dashboard():
 @login_required
 def add_distributor():
     try:
-        code = request.form.get('code')
+        code = request.form.get('code').strip().upper()
         if Distributor.query.filter((Distributor.code==code) | (Distributor.email==request.form.get('email'))).first():
-            flash('Exists already', 'danger')
+            flash('Error: Code or Email already exists', 'danger')
             return redirect(url_for('dashboard'))
         
         new_dist = Distributor(
-            code=code, name=request.form.get('name'), phone=request.form.get('phone'),
-            email=request.form.get('email'), discount_percent=int(request.form.get('discount')),
-            bank_details=request.form.get('bank_details'), upi_id=request.form.get('upi_id')
+            code=code, 
+            name=request.form.get('name'), 
+            phone=request.form.get('phone'),
+            email=request.form.get('email'), 
+            discount_percent=int(request.form.get('discount')),
+            bank_details=request.form.get('bank_details'), 
+            upi_id=request.form.get('upi_id')
         )
         new_dist.set_password(request.form.get('password'))
         db.session.add(new_dist)
         db.session.commit()
-        flash('Added', 'success')
-    except Exception as e: flash(str(e), 'danger')
+        flash('Distributor added successfully', 'success')
+    except Exception as e: 
+        print(e)
+        flash(f'Error: {str(e)}', 'danger')
     return redirect(url_for('dashboard'))
 
 @app.route('/admin/edit_distributor/<int:id>', methods=['POST'])
@@ -249,7 +253,6 @@ def edit_distributor(id):
     dist.bank_details = request.form.get('bank_details')
     dist.upi_id = request.form.get('upi_id')
     
-    # Handle Payment Update
     payment_add = request.form.get('add_payment')
     if payment_add and float(payment_add) > 0:
         dist.commission_paid += float(payment_add)
@@ -264,6 +267,7 @@ def delete_distributor(id):
     dist = Distributor.query.get_or_404(id)
     db.session.delete(dist)
     db.session.commit()
+    flash('Distributor deleted', 'success')
     return redirect(url_for('dashboard'))
 
 @app.route('/admin/delete_license/<int:id>', methods=['POST'])
@@ -323,7 +327,7 @@ def api_get_distributor_data():
         'commission_paid': dist.commission_paid,
         'balance_due': total_earned - dist.commission_paid,
         'sales_history': sales_data,
-        'backend_url': request.host_url # To construct download links
+        'backend_url': request.host_url
     })
 
 @app.route('/api/forgot-password', methods=['POST'])
@@ -332,7 +336,6 @@ def forgot_password():
     if not dist: return jsonify({'success': False, 'message': 'Email not found'})
     dist.reset_token = secrets.token_urlsafe(32)
     db.session.commit()
-    # In real world, send email here. For now, print to logs for testing if email fails
     print(f"RESET LINK: {url_for('reset_password_page', token=dist.reset_token, _external=True)}")
     return jsonify({'success': True, 'message': 'Reset link sent/generated'})
 
@@ -352,6 +355,12 @@ def reset_db():
     with app.app_context():
         db.drop_all()
         db.create_all()
+        # Create Demo Distributor to verify functionality
+        if not Distributor.query.first():
+            demo = Distributor(code="DEMO", name="Demo User", phone="999", email="demo@gmail.com", discount_percent=10)
+            demo.set_password("demo123")
+            db.session.add(demo)
+            db.session.commit()
     return "DB Reset. New columns added."
 
 if __name__ == '__main__':
