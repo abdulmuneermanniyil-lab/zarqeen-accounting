@@ -5,7 +5,7 @@ import secrets
 import csv
 import io
 import razorpay
-from datetime import datetime
+from datetime import datetime, timedelta  # <--- Added timedelta
 from functools import wraps
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for, flash, make_response, send_file
 from flask_sqlalchemy import SQLAlchemy
@@ -26,7 +26,6 @@ app.config.update(
     SESSION_COOKIE_DOMAIN=None 
 )
 
-# Database
 raw_db_url = os.environ.get('DATABASE_URL', 'sqlite:///site.db')
 if raw_db_url.startswith("postgres://"):
     raw_db_url = raw_db_url.replace("postgres://", "postgresql://", 1)
@@ -34,15 +33,14 @@ if raw_db_url.startswith("postgres://"):
 app.config['SQLALCHEMY_DATABASE_URI'] = raw_db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# Credentials
 RAZORPAY_KEY_ID = os.environ.get('RAZORPAY_KEY_ID')
 RAZORPAY_KEY_SECRET = os.environ.get('RAZORPAY_KEY_SECRET')
 ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', 'admin')
 ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'admin123')
 
-# Mail (Brevo/SMTP)
-app.config['MAIL_SERVER'] = 'smtp-relay.brevo.com'
-app.config['MAIL_PORT'] = 587
+# Mail Config (Using your Brevo/SMTP settings)
+app.config['MAIL_SERVER'] = os.environ.get('MAIL_SERVER', 'smtp-relay.brevo.com')
+app.config['MAIL_PORT'] = int(os.environ.get('MAIL_PORT', 587))
 app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
 app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
@@ -54,7 +52,7 @@ mail = Mail(app)
 db = SQLAlchemy(app)
 razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
 
-# --- MODELS ---
+# --- DATABASE MODELS ---
 class Distributor(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     code = db.Column(db.String(20), unique=True, nullable=False)
@@ -63,15 +61,20 @@ class Distributor(db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
     discount_percent = db.Column(db.Integer, default=10)
+    
     bank_name = db.Column(db.String(100), nullable=True)
     account_holder = db.Column(db.String(100), nullable=True)
     account_number = db.Column(db.String(50), nullable=True)
     ifsc_code = db.Column(db.String(20), nullable=True)
     upi_id = db.Column(db.String(100), nullable=True)
+    
     commission_paid = db.Column(db.Float, default=0.0)      
     api_token = db.Column(db.String(100), nullable=True)
-    otp_code = db.Column(db.String(10), nullable=True)
-    reset_token = db.Column(db.String(100), nullable=True)
+    
+    # OTP Fields
+    otp_code = db.Column(db.String(6), nullable=True)
+    otp_expiry = db.Column(db.DateTime, nullable=True) # <--- ADDED THIS FOR EXPIRY LOGIC
+    
     licenses = db.relationship('License', backref='distributor', lazy=True)
 
     def set_password(self, password): self.password_hash = generate_password_hash(password)
@@ -91,7 +94,7 @@ class License(db.Model):
 with app.app_context():
     db.create_all()
 
-# --- HELPERS ---
+# --- HELPER FUNCTIONS ---
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -128,8 +131,7 @@ def check_distributor():
         dist = Distributor.query.filter_by(code=code).first()
         if dist: return jsonify({'valid': True, 'discount': dist.discount_percent, 'name': dist.name})
         return jsonify({'valid': False})
-    except Exception as e:
-        return jsonify({'valid': False, 'error': str(e)}), 500
+    except Exception as e: return jsonify({'valid': False, 'error': str(e)}), 500
 
 @app.route('/create_order', methods=['POST'])
 def create_order():
@@ -142,17 +144,12 @@ def create_order():
         final_amount = base_amount
         dist_id_str = "None"
         
-        # Safe Distributor Lookup
         if code:
-            try:
-                dist = Distributor.query.filter_by(code=code).first()
-                if dist:
-                    discount_amount = (base_amount * dist.discount_percent) / 100
-                    final_amount = int(base_amount - discount_amount)
-                    dist_id_str = str(dist.id)
-            except Exception as e:
-                print(f"Dist Lookup Failed: {e}")
-                
+            dist = Distributor.query.filter_by(code=code).first()
+            if dist:
+                final_amount = int(base_amount - ((base_amount * dist.discount_percent) / 100))
+                dist_id_str = str(dist.id)
+        
         order = razorpay_client.order.create({
             'amount': final_amount, 'currency': 'INR', 'payment_capture': '1',
             'notes': {'plan': str(plan), 'distributor_id': dist_id_str}
@@ -172,8 +169,8 @@ def verify_payment():
             'razorpay_signature': data['razorpay_signature']
         })
         order_info = razorpay_client.order.fetch(data['razorpay_order_id'])
-        
         dist_id_val = order_info['notes'].get('distributor_id')
+        
         dist_obj = None
         if dist_id_val and dist_id_val != "None":
             try: dist_obj = Distributor.query.get(int(dist_id_val))
@@ -203,15 +200,14 @@ def validate_license():
         lic.is_used = True
         lic.used_at = datetime.utcnow()
         db.session.commit()
+        duration = 365 if lic.plan_type == 'basic' else 1095
         
         support_name = lic.distributor.name if lic.distributor else "Zarqeen Official"
         support_contact = lic.distributor.phone if lic.distributor else "zarqeensoftware@gmail.com"
-        duration = 365 if lic.plan_type == 'basic' else 1095
-        
         return jsonify({'valid': True, 'plan': lic.plan_type, 'duration_days': duration, 'support_info': {'name': support_name, 'contact': support_contact}})
     return jsonify({'valid': False, 'message': 'Invalid License Key'})
 
-# --- ADMIN ---
+# --- ADMIN PANEL ---
 @app.route('/admin/dashboard')
 @login_required
 def dashboard():
@@ -232,22 +228,15 @@ def add_distributor():
         code = request.form.get('code', '').strip().upper()
         email = request.form.get('email', '').strip()
         if not code or not email:
-            flash('Required fields missing', 'danger')
-            return redirect(url_for('dashboard'))
+            flash('Required fields missing', 'danger'); return redirect(url_for('dashboard'))
         if Distributor.query.filter((Distributor.code==code) | (Distributor.email==email)).first():
-            flash('Code or Email exists', 'danger')
-            return redirect(url_for('dashboard'))
-        
-        disc_val = request.form.get('discount')
-        discount = int(disc_val) if disc_val and disc_val.isdigit() else 10
+            flash('Code/Email exists', 'danger'); return redirect(url_for('dashboard'))
         
         new_dist = Distributor(
             code=code, name=request.form.get('name', '').strip(), phone=request.form.get('phone', '').strip(),
-            email=email, discount_percent=discount, 
-            bank_name=request.form.get('bank_name', '').strip(),
-            account_holder=request.form.get('account_holder', '').strip(), 
-            account_number=request.form.get('account_number', '').strip(),
-            ifsc_code=request.form.get('ifsc_code', '').strip(), 
+            email=email, discount_percent=int(request.form.get('discount', 10)),
+            bank_name=request.form.get('bank_name', '').strip(), account_holder=request.form.get('account_holder', '').strip(),
+            account_number=request.form.get('account_number', '').strip(), ifsc_code=request.form.get('ifsc_code', '').strip(),
             upi_id=request.form.get('upi_id', '').strip()
         )
         new_dist.set_password(request.form.get('password', '123456'))
@@ -262,20 +251,12 @@ def add_distributor():
 def edit_distributor(id):
     dist = Distributor.query.get_or_404(id)
     try:
-        dist.name = request.form.get('name')
-        dist.email = request.form.get('email')
-        dist.phone = request.form.get('phone')
-        disc_val = request.form.get('discount')
-        if disc_val: dist.discount_percent = int(disc_val)
+        dist.name = request.form.get('name'); dist.email = request.form.get('email'); dist.phone = request.form.get('phone')
+        if request.form.get('discount'): dist.discount_percent = int(request.form.get('discount'))
+        dist.bank_name = request.form.get('bank_name'); dist.account_holder = request.form.get('account_holder')
+        dist.account_number = request.form.get('account_number'); dist.ifsc_code = request.form.get('ifsc_code'); dist.upi_id = request.form.get('upi_id')
         
-        dist.bank_name = request.form.get('bank_name')
-        dist.account_holder = request.form.get('account_holder')
-        dist.account_number = request.form.get('account_number')
-        dist.ifsc_code = request.form.get('ifsc_code')
-        dist.upi_id = request.form.get('upi_id')
-        
-        add_pay = request.form.get('add_payment')
-        manual_pay = request.form.get('manual_paid_total')
+        add_pay = request.form.get('add_payment'); manual_pay = request.form.get('manual_paid_total')
         if add_pay and safe_float(add_pay) > 0: dist.commission_paid = safe_float(dist.commission_paid) + safe_float(add_pay)
         elif manual_pay and manual_pay.strip(): dist.commission_paid = safe_float(manual_pay)
             
@@ -314,8 +295,7 @@ def edit_license(id):
 @app.route('/admin/export/<type>')
 @login_required
 def export_data(type):
-    si = io.StringIO()
-    cw = csv.writer(si)
+    si = io.StringIO(); cw = csv.writer(si)
     if type == 'licenses':
         cw.writerow(['Date', 'Key', 'Plan', 'Amount', 'Distributor', 'Status'])
         for r in License.query.all():
@@ -361,7 +341,6 @@ def api_get_distributor_data():
     dist = Distributor.query.filter_by(api_token=token).first()
     if not dist: return jsonify({'error': 'Invalid Token'}), 401
     
-    # Pagination
     page = request.args.get('page', 1, type=int)
     query = License.query.filter_by(distributor_id=dist.id).order_by(License.created_at.desc())
     pagination = query.paginate(page=page, per_page=10, error_out=False)
@@ -378,30 +357,58 @@ def api_get_distributor_data():
         'pagination': {'total_pages': pagination.pages, 'has_next': pagination.has_next, 'has_prev': pagination.has_prev}
     })
 
+# --- OTP FLOW (ADAPTED) ---
 @app.route('/api/send-otp', methods=['POST'])
 def send_otp():
     email = request.json.get('email')
     dist = Distributor.query.filter_by(email=email).first()
     if not dist: return jsonify({'success': False, 'message': 'Email not registered'})
-    dist.otp_code = str(random.randint(100000, 999999))
+    
+    # Generate 6-digit OTP
+    otp = str(random.randint(100000, 999999))
+    dist.otp_code = otp
+    # Set expiration to 10 minutes from now
+    dist.otp_expiry = datetime.utcnow() + timedelta(minutes=10)
     db.session.commit()
+    
+    print(f"\n >>> DEBUG OTP for {email}: {otp} <<<\n")
+    
     try:
-        msg = Message('Verification Code - Zarqeen', recipients=[email])
-        msg.body = f"Your Code: {dist.otp_code}"
+        msg = Message("Zarqeen Verification Code", recipients=[email])
+        msg.body = f"Your verification code is: {otp}\n\nThis code expires in 10 minutes."
         mail.send(msg)
-        return jsonify({'success': True, 'message': 'OTP sent'})
-    except Exception as e: return jsonify({'success': False, 'message': 'Email failed'})
+        return jsonify({'success': True, 'message': 'OTP sent to email'})
+    except Exception as e:
+        print(f"Mail failed: {e}")
+        return jsonify({'success': False, 'message': 'Failed to send email. Check backend logs.'})
 
 @app.route('/api/reset-with-otp', methods=['POST'])
 def reset_with_otp():
     data = request.json
     dist = Distributor.query.filter_by(email=data.get('email')).first()
     if not dist: return jsonify({'success': False, 'message': 'User not found'})
-    if str(dist.otp_code) == str(data.get('otp')):
+    
+    entered_otp = str(data.get('otp'))
+    
+    # 1. Check if OTP exists
+    if not dist.otp_code or not dist.otp_expiry:
+        return jsonify({'success': False, 'message': 'No OTP request found'})
+        
+    # 2. Check Expiry
+    if datetime.utcnow() > dist.otp_expiry:
+        dist.otp_code = None
+        dist.otp_expiry = None
+        db.session.commit()
+        return jsonify({'success': False, 'message': 'OTP expired'})
+        
+    # 3. Check Match
+    if dist.otp_code == entered_otp:
         dist.set_password(data.get('new_password'))
         dist.otp_code = None
+        dist.otp_expiry = None
         db.session.commit()
-        return jsonify({'success': True, 'message': 'Password changed'})
+        return jsonify({'success': True, 'message': 'Password changed successfully'})
+    
     return jsonify({'success': False, 'message': 'Invalid OTP'})
 
 @app.route('/reset-db-now')
@@ -414,7 +421,7 @@ def reset_db():
             d.set_password("demo123")
             db.session.add(d)
             db.session.commit()
-    return "DB Reset"
+    return "DB Reset. New columns otp_expiry added."
 
 if __name__ == '__main__':
     app.run(debug=True)
