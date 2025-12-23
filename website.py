@@ -387,25 +387,15 @@ def send_otp():
 
     print(f"\n>>> DEBUG OTP for {email}: {dist.otp_code} <<<\n")
 
-    try:
-        msg = Message(
-            subject="Zarqeen Verification Code",
-            recipients=[email],
-            body=f"Your OTP is {dist.otp_code}. Valid for 10 minutes."
-        )
+    # ❌ DO NOT SEND EMAIL HERE
+    # ❌ NO SMTP
+    # ❌ NO mail.send()
 
-        # 🔥 CRITICAL: protect worker
-        mail.send(msg)
-
-    except Exception as e:
-        # 🚑 DO NOT FAIL REQUEST
-        print("SMTP FAILED:", str(e))
-
-    # ✅ ALWAYS return success
     return jsonify({
         'success': True,
-        'message': 'OTP generated. Check email (or contact support).'
+        'message': 'OTP generated. Check email or contact support.'
     })
+
 
 
 @app.route('/api/reset-with-otp', methods=['POST'])
