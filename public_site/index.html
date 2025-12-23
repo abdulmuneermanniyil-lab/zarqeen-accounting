@@ -9,10 +9,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
     <!-- Razorpay SDK -->
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-    <!-- Favicon -->
     <link rel="icon" type="image/png" href="static/header.png">
-
     <style>
+        /* ... (Same CSS as previous) ... */
         :root { --primary: #2563EB; --primary-dark: #1E40AF; --accent: #F59E0B; --bg-light: #F3F4F6; --text-main: #111827; --text-muted: #6B7280; --white: #ffffff; --success: #10B981; }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; scroll-behavior: smooth; }
         body { background-color: var(--bg-light); color: var(--text-main); line-height: 1.6; }
@@ -39,6 +38,7 @@
         .hero h1 span { color: var(--primary); }
         .hero p { font-size: 1.2rem; color: var(--text-muted); max-width: 700px; margin: 0 auto 2.5rem; }
         .cta-group { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; }
+        
         .btn-lg { padding: 1rem 2rem; font-size: 1.1rem; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; transition: transform 0.2s; }
         .btn-lg:hover { transform: translateY(-2px); }
         .btn-primary { background: var(--primary); color: var(--white); }
@@ -94,6 +94,7 @@
         .form-group label { display: block; font-size: 0.9rem; margin-bottom: 5px; font-weight: 600; }
         .form-group input { width: 100%; padding: 10px; border: 1px solid #D1D5DB; border-radius: 6px; }
 
+        /* DASHBOARD */
         #dashboardSection { display: none; padding: 2rem; background: #F3F4F6; min-height: 100vh; }
         .dash-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
@@ -105,13 +106,13 @@
         .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 700; }
         .status-installed { background: #D1FAE5; color: #065F46; }
         .status-pending { background: #FEE2E2; color: #991B1B; }
-        
+
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @media (max-width: 768px) { .nav-links { display: none; } .hero h1 { font-size: 2.25rem; } }
     </style>
 </head>
 <body>
-    <div id="actionLoader"><div class="spinner"></div><div style="font-weight:600">Processing...</div></div>
+    <div id="actionLoader"><div class="spinner"></div><div id="loaderText" style="font-weight:600; margin-bottom:5px;">Processing...</div><div id="loaderSubText" style="font-size:0.9rem; color:gray"></div></div>
 
     <header>
         <div class="nav-container">
@@ -221,13 +222,11 @@
 
             <!-- FORGOT PASSWORD (OTP FLOW) -->
             <div id="forgotFlow" style="display:none;">
-                <!-- Step 1: Email -->
                 <div id="step1">
                     <h3>Reset Password</h3>
                     <div class="form-group"><label>Enter Email</label><input type="email" id="resetEmail"></div>
                     <button onclick="sendOtp()" class="btn-buy primary">Send OTP</button>
                 </div>
-                <!-- Step 2: OTP & New Pass -->
                 <div id="step2" style="display:none;">
                     <h3>Verify OTP</h3>
                     <div class="form-group"><label>Enter 6-digit Code</label><input type="text" id="otpCode"></div>
@@ -253,8 +252,17 @@
         document.getElementById('adminForm').action = `${BACKEND_URL}/admin/login`;
 
         // LOADING
-        function showLoader(txt) { document.getElementById('actionLoader').style.display='flex'; }
-        function hideLoader() { document.getElementById('actionLoader').style.display='none'; }
+        function showLoader(txt) { 
+            const loader = document.getElementById('actionLoader');
+            document.getElementById('loaderText').innerText = txt || "Loading...";
+            loader.style.display = 'flex';
+            
+            // Timeout warning for slow cold starts
+            setTimeout(() => {
+                document.getElementById('loaderSubText').innerText = "Waking up server... please wait.";
+            }, 3000);
+        }
+        function hideLoader() { document.getElementById('actionLoader').style.display = 'none'; }
 
         // CONFIG
         async function fetchConfig() {
@@ -299,7 +307,7 @@
         async function sendOtp() {
             const email = document.getElementById('resetEmail').value;
             if(!email) return alert("Enter email");
-            showLoader();
+            showLoader("Sending OTP...");
             try {
                 const res = await fetch(`${BACKEND_URL}/api/send-otp`, {
                     method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({email})
@@ -320,7 +328,7 @@
             const pw = document.getElementById('newPass').value;
             if(!otp || !pw) return alert("Fill all fields");
             
-            showLoader();
+            showLoader("Resetting...");
             try {
                 const res = await fetch(`${BACKEND_URL}/api/reset-with-otp`, {
                     method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({email, otp, new_password:pw})
@@ -334,9 +342,121 @@
             } catch(e) { hideLoader(); alert("Error resetting"); }
         }
 
+        // DISTRIBUTOR CODE
+        let ACTIVE_DISTRIBUTOR_CODE = null;
+        async function applyCode() {
+            const codeInput = document.getElementById('distCode');
+            const msg = document.getElementById('codeMsg');
+            const code = codeInput.value.trim();
+            if(!code) return;
+
+            showLoader("Checking Code...");
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/check_distributor`, {
+                    method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ code: code })
+                });
+                const data = await res.json();
+                hideLoader();
+
+                if (data.valid) {
+                    ACTIVE_DISTRIBUTOR_CODE = code;
+                    msg.textContent = `✅ Success! ${data.name} discount applied (${data.discount}% OFF)`;
+                    msg.style.color = "green";
+                    codeInput.style.borderColor = "green";
+                } else {
+                    ACTIVE_DISTRIBUTOR_CODE = null;
+                    msg.textContent = "❌ Invalid Code";
+                    msg.style.color = "red";
+                    codeInput.style.borderColor = "red";
+                }
+            } catch (e) {
+                console.error(e);
+                hideLoader();
+                msg.textContent = "Error checking code. Backend might be sleeping.";
+            }
+        }
+
+        // BUY PLAN
+        async function buyPlan(planType) {
+            showLoader("Starting Payment...");
+            
+            if (!RAZORPAY_KEY_ID) {
+                await fetchConfig();
+                if(!RAZORPAY_KEY_ID) {
+                    alert("Unable to connect to payment server. Please refresh.");
+                    hideLoader();
+                    return;
+                }
+            }
+
+            try {
+                const res = await fetch(`${BACKEND_URL}/create_order`, {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ plan: planType, distributor_code: ACTIVE_DISTRIBUTOR_CODE })
+                });
+                
+                if (!res.ok) throw new Error(`Server error: ${res.status}`);
+                const orderData = await res.json();
+                if(orderData.error) throw new Error(orderData.error);
+
+                hideLoader(); // Hide to show RZP modal
+
+                const options = {
+                    "key": RAZORPAY_KEY_ID,
+                    "amount": orderData.amount,
+                    "currency": "INR",
+                    "name": "Zarqeen Alif",
+                    "description": `License: ${planType.toUpperCase()}`,
+                    "order_id": orderData.id,
+                    "theme": { "color": "#2563EB" }, 
+                    "handler": async function (response){
+                        showLoader("Verifying...");
+                        try {
+                            const verifyRes = await fetch(`${BACKEND_URL}/verify_payment`, {
+                                method: 'POST', headers: {'Content-Type': 'application/json'},
+                                body: JSON.stringify({
+                                    razorpay_payment_id: response.razorpay_payment_id,
+                                    razorpay_order_id: response.razorpay_order_id,
+                                    razorpay_signature: response.razorpay_signature,
+                                    plan_type: planType
+                                })
+                            });
+                            const result = await verifyRes.json();
+                            hideLoader();
+                            if(result.success) {
+                                const blob = new Blob([result.license_key], { type: "text/plain" });
+                                const url = window.URL.createObjectURL(blob);
+                                const keyArea = document.getElementById('licenseKeyArea');
+                                keyArea.innerHTML = ""; 
+                                const downloadBtn = document.createElement("a");
+                                downloadBtn.href = url;
+                                downloadBtn.download = "license.zarqeen"; 
+                                downloadBtn.className = "btn-buy primary";
+                                downloadBtn.innerText = "⬇ Download License File";
+                                downloadBtn.style.textDecoration = "none";
+                                downloadBtn.style.display = "inline-block";
+                                keyArea.appendChild(downloadBtn);
+                                document.getElementById('licenseModal').style.display = 'block';
+                            } else {
+                                alert('Verification failed. Contact support.');
+                            }
+                        } catch (e) { hideLoader(); alert("Verification error."); }
+                    },
+                    "modal": { "ondismiss": function(){ hideLoader(); } }
+                };
+                const rzp1 = new Razorpay(options);
+                rzp1.open();
+
+            } catch(e) {
+                console.error(e);
+                hideLoader();
+                alert("Connection Error. " + e.message);
+            }
+        }
+
         // DISTRIBUTOR LOGIN
         document.getElementById('distForm').addEventListener('submit', async function(e) {
-            e.preventDefault(); showLoader();
+            e.preventDefault(); showLoader("Logging in...");
             const data = Object.fromEntries(new FormData(this));
             try {
                 const res = await fetch(`${BACKEND_URL}/api/distributor/login`, {
@@ -359,7 +479,7 @@
             const token = localStorage.getItem('dist_token');
             if(!token) return;
             
-            showLoader();
+            showLoader("Loading Dashboard...");
             try {
                 const res = await fetch(`${BACKEND_URL}/api/distributor/data?page=${page}`, {
                     method: 'GET', headers: {'Authorization': `Bearer ${token}`}
