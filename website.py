@@ -374,23 +374,35 @@ def api_get_distributor_data():
 def send_otp():
     email = request.json.get('email')
     dist = Distributor.query.filter_by(email=email).first()
-    if not dist: return jsonify({'success': False, 'message': 'Email not registered'})
-    
+    if not dist:
+        return jsonify({'success': False, 'message': 'Email not registered'})
+
     dist.otp_code = str(random.randint(100000, 999999))
     dist.otp_expiry = datetime.utcnow() + timedelta(minutes=10)
     db.session.commit()
-    
-    print(f"\n >>> DEBUG OTP for {email}: {dist.otp_code} <<<\n")
-    
+
+    print(f"\n>>> DEBUG OTP for {email}: {dist.otp_code} <<<\n")
+
     try:
-        msg = Message("Zarqeen Verification Code", recipients=[email])
-        msg.body = f"Your verification code is: {dist.otp_code}\n\nThis code expires in 10 minutes."
+        msg = Message(
+            subject="Zarqeen Verification Code",
+            recipients=[email],
+            body=f"Your OTP is {dist.otp_code}. Valid for 10 minutes."
+        )
+
+        # 🔥 CRITICAL: protect worker
         mail.send(msg)
-        return jsonify({'success': True, 'message': 'OTP sent to email'})
+
     except Exception as e:
-        print(f"Mail failed: {e}")
-        # Return success with debug message so you can at least use the Console OTP
-        return jsonify({'success': True, 'message': 'OTP sent (Check server logs if email fails)'})
+        # 🚑 DO NOT FAIL REQUEST
+        print("SMTP FAILED:", str(e))
+
+    # ✅ ALWAYS return success
+    return jsonify({
+        'success': True,
+        'message': 'OTP generated. Check email (or contact support).'
+    })
+
 
 @app.route('/api/reset-with-otp', methods=['POST'])
 def reset_with_otp():
