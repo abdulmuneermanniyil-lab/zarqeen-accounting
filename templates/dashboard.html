@@ -121,6 +121,7 @@
                 <!-- Only showing the specific table change needed -->
 <!-- In the Licenses Table part of dashboard.html -->
 
+<!-- Only showing the License Table part - replace just the table in dashboard.html -->
 <table id="licTable">
     <thead>
         <tr>
@@ -130,8 +131,9 @@
             <th>Distributor</th>
             <th>Amt</th>
             <th>Status</th>
-            <th>Version</th>  <!-- New -->
-            <th>Last Active</th> <!-- New -->
+            <th>Version</th>
+            <th>Last Active</th>
+            <th>Expiry</th> <!-- NEW COLUMN -->
             <th>Actions</th>
         </tr>
     </thead>
@@ -140,19 +142,29 @@
         <tr>
             <td>{{ lic.created_at.strftime('%Y-%m-%d') }}</td>
             <td style="font-family:monospace; font-weight:bold;">{{ lic.license_key }}</td>
-            <td>{{ lic.plan_type }}</td>
+            <td>{{ lic.plan_type|upper }}</td>
             <td>{{ lic.distributor.name if lic.distributor else 'Direct' }}</td>
             <td>₹{{ lic.amount_paid }}</td>
             <td>
-                <span style="padding:2px 6px; border-radius:4px; font-size:0.8rem; background:{{ '#D1FAE5' if lic.is_used else '#F3F4F6' }}; color:{{ '#065F46' if lic.is_used else '#666' }}">
+                <span class="badge {{ 'bg-green-light' if lic.is_used else 'bg-gray-light' }}">
                     {{ 'USED' if lic.is_used else 'ACTIVE' }}
                 </span>
             </td>
-            <td>{{ lic.software_version or '-' }}</td> <!-- New -->
-            <td style="font-size:0.8rem">{{ lic.last_login_date.strftime('%Y-%m-%d %H:%M') if lic.last_login_date else '-' }}</td> <!-- New -->
+            <td>{{ lic.software_version or '-' }}</td>
+            <td style="font-size:0.8rem">{{ lic.last_login_date.strftime('%Y-%m-%d') if lic.last_login_date else '-' }}</td>
+            
+            <!-- EXPIRY DATE LOGIC -->
+            <td style="font-size:0.8rem; font-weight:600; color:#4B5563;">
+                {{ lic.expiry_date.strftime('%Y-%m-%d') if lic.expiry_date else '-' }}
+            </td>
+
             <td>
-                <a href="/download/license/{{ lic.license_key }}" class="btn btn-green btn-sm" title="Download">⬇</a>
-                <!-- ... other buttons ... -->
+                <a href="/download/license/{{ lic.license_key }}" class="btn btn-green btn-sm">⬇</a>
+                <form action="{{ url_for('edit_license', id=lic.id) }}" method="POST" style="display:inline;">
+                    <input type="hidden" name="status" value="{{ 'active' if lic.is_used else 'used' }}">
+                    <button class="btn btn-blue btn-sm">Toggle</button>
+                </form>
+                <form action="{{ url_for('delete_license', id=lic.id) }}" method="POST" style="display:inline" onsubmit="return confirm('Delete?');"><button class="btn btn-red btn-sm">X</button></form>
             </td>
         </tr>
         {% endfor %}
