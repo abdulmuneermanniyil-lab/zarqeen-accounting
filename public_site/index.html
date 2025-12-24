@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Zarqeen Alif - India's Best Value Invoicing Software</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <link rel="icon" type="image/png" href="static/header.png">
     
@@ -29,6 +29,17 @@
         .nav-links a:hover { color: var(--primary); }
         .nav-btn { background: var(--primary); color: var(--white) !important; padding: 0.6rem 1.2rem; border-radius: 8px; transition: background 0.2s; }
         .nav-btn:hover { background: var(--primary-dark); }
+        
+        /* MOBILE NAV */
+        .mobile-menu-btn { display: none; background: none; border: none; font-size: 1.8rem; cursor: pointer; color: var(--text-main); }
+        .mobile-nav { display: none; position: absolute; top: 100%; left: 0; width: 100%; background: white; border-bottom: 1px solid #eee; padding: 1rem; flex-direction: column; gap: 1rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); z-index: 999; }
+        .mobile-nav a { display: block; padding: 10px 0; border-bottom: 1px solid #f3f4f6; color: var(--text-main); font-weight: 600; }
+
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+            .mobile-menu-btn { display: block; }
+            .mobile-nav.active { display: flex; }
+        }
         
         .hero { text-align: center; padding: 5rem 1rem 4rem; background: linear-gradient(180deg, #FFFFFF 0%, #EFF6FF 100%); border-bottom: 1px solid #DBEAFE; }
         .tagline { display: inline-block; background: #DBEAFE; color: var(--primary-dark); padding: 6px 16px; border-radius: 50px; font-size: 0.85rem; font-weight: 700; margin-bottom: 1.5rem; border: 1px solid #BFDBFE; }
@@ -73,39 +84,13 @@
         .btn-buy.primary:hover { background: var(--primary-dark); box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3); }
         .btn-buy.secondary { background: #E5E7EB; color: #374151; }
         .btn-buy.secondary:hover { background: #D1D5DB; }
+        .btn-disabled { background: #E5E7EB !important; color: #9CA3AF !important; cursor: not-allowed; box-shadow: none !important; }
         
         footer { margin-top: 4rem; padding: 3rem 1rem; background: var(--white); border-top: 1px solid #E5E7EB; text-align: center; }
 
         /* MODALS */
-        /* FIXED MODAL SCROLLING & POSITIONING */
-.modal { 
-    display: none; 
-    position: fixed; 
-    z-index: 9999; 
-    left: 0; 
-    top: 0; 
-    width: 100%; 
-    height: 100%; 
-    background-color: rgba(0,0,0,0.6); 
-    backdrop-filter: blur(4px); 
-    overflow-y: auto; /* Allows scrolling the whole page if modal is tall */
-    padding: 10px;    /* Prevents edge touching on small screens */
-    align-items: flex-start; /* Aligns to top so we can scroll down */
-}
-
-.modal-content { 
-    background-color: var(--white); 
-    margin: 5vh auto; /* Top margin */
-    padding: 2rem; 
-    border-radius: 12px; 
-    width: 100%; 
-    max-width: 450px; 
-    position: relative; 
-    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); 
-    /* Internal scrolling for very small phones */
-    max-height: 85vh; 
-    overflow-y: auto; 
-}
+        .modal { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); backdrop-filter: blur(4px); overflow-y: auto; padding: 10px; align-items: flex-start; }
+        .modal-content { background-color: var(--white); margin: 5vh auto; padding: 2rem; border-radius: 12px; width: 100%; max-width: 450px; position: relative; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); max-height: 85vh; overflow-y: auto; }
         .close-icon { position: absolute; right: 20px; top: 20px; font-size: 24px; cursor: pointer; color: #aaa; }
         .key-box { background: #F3F4F6; padding: 1rem; border: 2px dashed #D1D5DB; border-radius: 8px; margin: 1.5rem 0; font-family: monospace; font-size: 1.1rem; color: var(--primary-dark); word-break: break-all; }
         
@@ -118,10 +103,13 @@
         .form-group label { display: block; font-size: 0.9rem; margin-bottom: 5px; font-weight: 600; }
         .form-group input { width: 100%; padding: 10px; border: 1px solid #D1D5DB; border-radius: 6px; }
 
+        /* DASHBOARD */
         #dashboardSection { display: none; padding: 2rem; background: #F3F4F6; min-height: 100vh; }
-        .dash-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        /* Responsive Dashboard Header */
+        .dash-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); flex-wrap: wrap; gap: 15px; }
+        
         .dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
-        .dash-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .dash-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); position: relative; overflow: hidden; }
         .dash-val { font-size: 2rem; font-weight: 700; color: var(--primary); }
         .dash-table { width: 100%; background: white; border-radius: 12px; border-collapse: collapse; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .dash-table th, .dash-table td { padding: 15px; text-align: left; border-bottom: 1px solid #E5E7EB; }
@@ -141,16 +129,25 @@
     <header>
         <div class="nav-container">
             <div class="logo-area">
-                <img src="static/logo.png" alt="Zarqeen" class="logo-img">
-                <span class="brand-name">Zarqeen Alif</span>
+                <img src="static/logo.png" style="height:45px;">
+                <span class="brand-name" style="margin-left:10px;font-size:1.3rem;font-weight:800;color:#1E40AF;">Zarqeen Alif</span>
             </div>
+            
             <nav class="nav-links">
-                <a href="#features">Features</a>
-                <a href="#pricing">Pricing</a>
-                <a onclick="openRegisterModal()" style="color:var(--primary); cursor: pointer;">Join as Distributor</a>
-                <a onclick="openLoginModal()" style="color:var(--primary); cursor: pointer;">Login</a>
-                <a href="https://drive.google.com/drive/folders/17O3vY4KYUzd7Rma4o8rp3j2iIrpqhJe9?usp=drive_link" target="_blank" class="nav-btn">Download for Windows</a>
+                <a onclick="openRegisterModal()" style="color:var(--primary); cursor:pointer;">Join as Distributor</a>
+                <a onclick="openLoginModal()" style="color:var(--primary); cursor:pointer;">Login</a>
+                <a href="https://drive.google.com/drive/folders/17O3vY4KYUzd7Rma4o8rp3j2iIrpqhJe9?usp=drive_link" target="_blank" class="nav-btn" onclick="checkDownload(event)">Download</a>
             </nav>
+
+            <!-- MOBILE NAV TOGGLE -->
+            <button class="mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
+        </div>
+        
+        <!-- MOBILE MENU ITEMS -->
+        <div class="mobile-nav" id="mobileNav">
+            <a onclick="toggleMobileMenu(); openRegisterModal()">Join as Distributor</a>
+            <a onclick="toggleMobileMenu(); openLoginModal()">Login</a>
+            <a href="https://drive.google.com/drive/folders/17O3vY4KYUzd7Rma4o8rp3j2iIrpqhJe9?usp=drive_link" target="_blank" onclick="checkDownload(event)">Download Software</a>
         </div>
     </header>
 
@@ -160,8 +157,7 @@
         <p>The easiest offline billing software. Automatically calculates taxes. 
         <strong>Specially designed for Retail Indian Businesses</strong> who want simplicity and speed.</p>
         <div class="cta-group">
-            <a href="https://drive.google.com/drive/folders/17O3vY4KYUzd7Rma4o8rp3j2iIrpqhJe9?usp=drive_link" target="_blank"><button class="btn-lg btn-primary">Download Free Trial</button></a>
-            <a href="#pricing"><button class="btn-lg btn-outline">See Best Prices</button></a>
+            <a href="https://drive.google.com/drive/folders/17O3vY4KYUzd7Rma4o8rp3j2iIrpqhJe9?usp=drive_link" target="_blank" onclick="checkDownload(event)"><button class="btn-lg btn-primary">Download Free Trial</button></a>
         </div>
         <div class="specs">v1.2.0 • Supports A4, A5, Thermal 2" & 3" • 200MB • No Internet Required</div>
     </section>
@@ -197,6 +193,7 @@
     <!-- DISTRIBUTOR DASHBOARD -->
     <div id="dashboardSection">
         <div style="max-width:1200px; margin:0 auto;">
+            <!-- Header (Responsive Fix) -->
             <div class="dash-header">
                 <div>
                     <h2 id="dashName">Distributor</h2>
@@ -207,6 +204,7 @@
                 </div>
                 <button onclick="doLogout()" class="btn-buy secondary" style="width:auto; margin:0; background:#EF4444; color:white;">Logout</button>
             </div>
+            
             <div class="dash-grid">
                 <div class="dash-card"><div class="dash-val" id="dashTotal">0</div><div style="font-size:0.9rem" id="dashTargetMsg">Total Sales</div></div>
                 <div class="dash-card"><div class="dash-val">₹<span id="dashComm">0.00</span></div><div>Financials</div></div>
@@ -232,10 +230,12 @@
                 </div>
             </div>
             <h3 style="margin-bottom:15px; display:flex; justify-content:space-between;">Sales History <span id="pageInfo" style="font-size:0.9rem; color:gray"></span></h3>
-            <table class="dash-table">
-                <thead><tr><th>Date</th><th>Plan</th><th>Amount</th><th>Status</th><th>Key</th><th>Ver</th><th>Last Active</th><th>Expiry</th><th>Action</th></tr></thead>
-                <tbody id="dashTableBody"></tbody>
-            </table>
+            <div style="overflow-x:auto;">
+                <table class="dash-table">
+                    <thead><tr><th>Date</th><th>Plan</th><th>Amount</th><th>Status</th><th>Key</th><th>Ver</th><th>Last Active</th><th>Expiry</th><th>Action</th></tr></thead>
+                    <tbody id="dashTableBody"></tbody>
+                </table>
+            </div>
             <div style="display:flex; justify-content:center; gap:10px; margin-top:20px;">
                 <button id="prevBtn" onclick="changePage(-1)" class="nav-btn" style="background:gray; display:none;">Previous</button>
                 <button id="nextBtn" onclick="changePage(1)" class="nav-btn" style="background:#2563EB; display:none;">Next</button>
@@ -263,46 +263,35 @@
     </div>
 
     <!-- REGISTER MODAL -->
-    <!-- REGISTER MODAL (FIXED) -->
-<div id="registerModal" class="modal">
-    <div class="modal-content">
-        <span class="close-icon" onclick="document.getElementById('registerModal').style.display='none'">&times;</span>
-        <h2 style="text-align:center; margin-bottom:15px;">Join as Partner</h2>
-        
-        <form id="regForm" onsubmit="return false;"> <!-- Prevent default submit -->
-            <div class="form-group">
-                <label>Full Name</label>
-                <input type="text" name="name" required>
-            </div>
-            <div class="form-group">
-                <label>Phone Number</label>
-                <input type="text" name="phone" required>
-            </div>
-            <div class="form-group">
-                <label>Email Address</label>
-                <input type="email" name="email" id="regEmailInput" required>
-            </div>
-            <div class="form-group">
-                <label>Password</label>
-                <input type="password" name="password" required>
-            </div>
-
-            <!-- BUTTONS AREA -->
-            <div id="otpRequestArea">
-                <button type="button" onclick="sendRegOtp()" class="btn-buy secondary" style="width:100%; background:#2563EB; color:white;">Get OTP Verification Code</button>
-            </div>
-
-            <!-- OTP INPUT AREA (Hidden initially) -->
-            <div id="otpInputSection" style="display:none; margin-top:15px; padding-top:15px; border-top:1px dashed #ccc;">
-                <label style="font-weight:bold; color:green;">Enter OTP sent to email:</label>
-                <div style="display:flex; gap:10px;">
-                    <input type="text" id="regOtp" placeholder="123456" style="text-align:center; letter-spacing:5px; font-weight:bold; font-size:1.2rem;" autocomplete="off">
+    <div id="registerModal" class="modal">
+        <div class="modal-content">
+            <span class="close-icon" onclick="document.getElementById('registerModal').style.display='none'">&times;</span>
+            <h2 style="text-align:center; margin-bottom:20px;">Join as Partner</h2>
+            <form id="regForm" onsubmit="return false;">
+                <div class="form-group"><label>Full Name</label><input type="text" name="name" required></div>
+                <div class="form-group"><label>Phone Number</label><input type="text" name="phone" required></div>
+                <div class="form-group"><label>Password</label><input type="password" name="password" required></div>
+                
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <div style="display:flex; gap:10px;">
+                        <input type="email" name="email" id="regEmail" required style="flex:1; margin-bottom:0;">
+                        <button type="button" onclick="sendRegOtp()" class="nav-btn" style="font-size:0.8rem; height:45px; margin-top:5px;">Get OTP</button>
+                    </div>
                 </div>
-                <button type="button" onclick="verifyRegOtp()" class="btn-buy primary" style="width:100%;">Verify & Complete</button>
-            </div>
-        </form>
+
+                <div id="otpInputSection" style="display:none; background:#F3F4F6; padding:15px; border-radius:8px; margin-bottom:15px;">
+                    <label>Enter Verification Code</label>
+                    <div style="display:flex; gap:10px;">
+                        <input type="text" id="regOtp" placeholder="6-Digit OTP" style="flex:1; margin-bottom:0; letter-spacing:3px; text-align:center;">
+                        <button type="button" onclick="verifyRegOtp()" class="nav-btn" style="background:#059669; border-color:#059669; height:45px; margin-top:5px;">Verify</button>
+                    </div>
+                </div>
+
+                <button type="submit" id="finalRegBtn" class="btn-buy primary btn-disabled" disabled>Complete Registration</button>
+            </form>
+        </div>
     </div>
-</div>
 
     <!-- LOGIN MODAL -->
     <div id="loginModal" class="modal">
@@ -350,6 +339,21 @@
         const BACKEND_URL = "https://zarqeen-backend.onrender.com";
         document.getElementById('adminForm').action = `${BACKEND_URL}/admin/login`;
 
+        // MOBILE NAV
+        function toggleMobileMenu() {
+            const nav = document.getElementById('mobileNav');
+            nav.classList.toggle('active');
+        }
+        
+        function checkDownload(e) {
+            if (/Android|iPhone|iPad/i.test(navigator.userAgent)) {
+                if(!confirm("⚠️ Warning: This software is for Windows PC only.\n\nIt will NOT work on mobile. Do you still want to download file to transfer to PC?")) {
+                    e.preventDefault();
+                }
+            }
+        }
+
+        // LOADER
         function showLoader(txt) { 
             const loader = document.getElementById('actionLoader');
             document.getElementById('loaderText').innerText = txt || "Loading...";
@@ -410,111 +414,78 @@
         }
 
         // --- NEW REGISTRATION LOGIC ---
-        // --- REGISTRATION LOGIC (FIXED) ---
-let regDataTemp = {}; 
+        let regDataTemp = {}; 
 
-async function sendRegOtp() {
-    const form = document.getElementById('regForm');
-    // Get data manually to ensure fields are captured
-    const data = {
-        name: form.querySelector('[name="name"]').value,
-        phone: form.querySelector('[name="phone"]').value,
-        email: form.querySelector('[name="email"]').value,
-        password: form.querySelector('[name="password"]').value
-    };
-    regDataTemp = data; 
+        async function sendRegOtp() {
+            const form = document.getElementById('regForm');
+            const data = {
+                name: form.querySelector('[name="name"]').value,
+                phone: form.querySelector('[name="phone"]').value,
+                email: form.querySelector('[name="email"]').value,
+                password: form.querySelector('[name="password"]').value
+            };
+            regDataTemp = data; 
 
-    if(!data.name || !data.email || !data.password) {
-        alert("Please fill all fields first.");
-        return;
-    }
-    
-    showLoader("Sending OTP...");
-    
-    try {
-        const res = await fetch(`${BACKEND_URL}/api/distributor/register`, { 
-            method: 'POST', 
-            headers: {'Content-Type': 'application/json'}, 
-            body: JSON.stringify(data) 
-        });
-        const r = await res.json(); 
-        hideLoader(); // CRITICAL: Hides loader so you can type
-        
-        if(r.success) {
-            alert(r.message);
-            // Hide the "Get OTP" button and show OTP Input
-            document.getElementById('otpRequestArea').style.display = 'none';
-            document.getElementById('otpInputSection').style.display = 'block';
+            if(!data.name || !data.email || !data.password) return alert("Please fill all fields first.");
             
-            // Focus on OTP field for better UX
-            setTimeout(() => document.getElementById('regOtp').focus(), 500);
-        } else {
-            alert(r.message);
-        }
-    } catch(e) { 
-        hideLoader(); 
-        alert("Error contacting server. Check internet."); 
-    }
-}
-
-async function verifyRegOtp() {
-    const otp = document.getElementById('regOtp').value.trim();
-    if(!otp) return alert("Please Enter Code");
-    
-    showLoader("Verifying...");
-    try {
-        const res = await fetch(`${BACKEND_URL}/api/distributor/verify-registration`, {
-            method: 'POST', 
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ email: regDataTemp.email, otp: otp })
-        });
-        const r = await res.json(); 
-        
-        if(r.success) {
-            // Auto Login logic after verification
-            const loginRes = await fetch(`${BACKEND_URL}/api/distributor/login`, {
-                method: 'POST', headers: {'Content-Type': 'application/json'}, 
-                body: JSON.stringify({ email: regDataTemp.email, password: regDataTemp.password })
-            });
-            const loginJson = await loginRes.json();
-            
-            hideLoader();
-            
-            if(loginJson.success) {
-                localStorage.setItem('dist_token', loginJson.token);
-                document.getElementById('registerModal').style.display = 'none';
-                alert(`Welcome! Your Distributor Code is: ${r.code}`);
-                loadDashboard(1);
-            } else {
-                alert("Verification successful, but auto-login failed. Please login manually.");
-                document.getElementById('registerModal').style.display = 'none';
-                openLoginModal();
-            }
-        } else {
-            hideLoader();
-            alert(r.message);
-        }
-    } catch(e) { 
-        hideLoader(); 
-        alert("Verification Failed"); 
-    }
-}
-        
-        document.getElementById('regForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            showLoader("Logging in...");
+            showLoader("Sending Code...");
             try {
-                const res = await fetch(`${BACKEND_URL}/api/distributor/login`, {
-                    method: 'POST', headers: {'Content-Type': 'application/json'}, 
-                    body: JSON.stringify({ email: regDataTemp.email, password: regDataTemp.password })
-                });
+                const res = await fetch(`${BACKEND_URL}/api/distributor/register`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) });
                 const r = await res.json(); hideLoader();
+                
                 if(r.success) {
-                    localStorage.setItem('dist_token', r.token);
-                    document.getElementById('registerModal').style.display = 'none';
-                    loadDashboard(1);
-                } else alert("Login failed. Try manual login.");
-            } catch(e) { hideLoader(); alert("Login Error"); }
+                    alert(r.message);
+                    document.getElementById('otpInputSection').style.display = 'block';
+                } else {
+                    alert(r.message);
+                }
+            } catch(e) { hideLoader(); alert("Error contacting server"); }
+        }
+
+        async function verifyRegOtp() {
+            const otp = document.getElementById('regOtp').value;
+            if(!otp) return alert("Enter Code");
+            
+            showLoader("Verifying...");
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/distributor/verify-registration`, {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ email: regDataTemp.email, otp: otp })
+                });
+                const r = await res.json(); 
+                
+                if(r.success) {
+                    // Auto Login
+                    const loginRes = await fetch(`${BACKEND_URL}/api/distributor/login`, {
+                        method: 'POST', headers: {'Content-Type': 'application/json'}, 
+                        body: JSON.stringify({ email: regDataTemp.email, password: regDataTemp.password })
+                    });
+                    const loginJson = await loginRes.json();
+                    hideLoader();
+                    
+                    if(loginJson.success) {
+                        localStorage.setItem('dist_token', loginJson.token);
+                        document.getElementById('registerModal').style.display = 'none';
+                        alert(`Welcome! Your Distributor Code is: ${r.code}`);
+                        loadDashboard(1);
+                    } else {
+                        alert("Verification successful. Please login manually.");
+                        document.getElementById('registerModal').style.display = 'none';
+                        openLoginModal();
+                    }
+                } else {
+                    hideLoader();
+                    alert(r.message);
+                }
+            } catch(e) { hideLoader(); alert("Verification Failed"); }
+        }
+        
+        // Final Button (Should not be clicked normally, handled by verify)
+        document.getElementById('finalRegBtn').addEventListener('click', function(e) {
+            e.preventDefault();
+            // Just trigger login modal as fallback
+            document.getElementById('registerModal').style.display = 'none';
+            openLoginModal();
         });
 
         // BANK UPDATE
