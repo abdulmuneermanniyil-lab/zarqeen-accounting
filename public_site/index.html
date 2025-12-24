@@ -77,8 +77,35 @@
         footer { margin-top: 4rem; padding: 3rem 1rem; background: var(--white); border-top: 1px solid #E5E7EB; text-align: center; }
 
         /* MODALS */
-        .modal { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); backdrop-filter: blur(4px); animation: fadeIn 0.2s; }
-        .modal-content { background-color: var(--white); margin: 10vh auto; padding: 2rem; border-radius: 12px; width: 90%; max-width: 450px; position: relative; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); }
+        /* FIXED MODAL SCROLLING & POSITIONING */
+.modal { 
+    display: none; 
+    position: fixed; 
+    z-index: 9999; 
+    left: 0; 
+    top: 0; 
+    width: 100%; 
+    height: 100%; 
+    background-color: rgba(0,0,0,0.6); 
+    backdrop-filter: blur(4px); 
+    overflow-y: auto; /* Allows scrolling the whole page if modal is tall */
+    padding: 10px;    /* Prevents edge touching on small screens */
+    align-items: flex-start; /* Aligns to top so we can scroll down */
+}
+
+.modal-content { 
+    background-color: var(--white); 
+    margin: 5vh auto; /* Top margin */
+    padding: 2rem; 
+    border-radius: 12px; 
+    width: 100%; 
+    max-width: 450px; 
+    position: relative; 
+    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); 
+    /* Internal scrolling for very small phones */
+    max-height: 85vh; 
+    overflow-y: auto; 
+}
         .close-icon { position: absolute; right: 20px; top: 20px; font-size: 24px; cursor: pointer; color: #aaa; }
         .key-box { background: #F3F4F6; padding: 1rem; border: 2px dashed #D1D5DB; border-radius: 8px; margin: 1.5rem 0; font-family: monospace; font-size: 1.1rem; color: var(--primary-dark); word-break: break-all; }
         
