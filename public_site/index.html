@@ -263,36 +263,46 @@
     </div>
 
     <!-- REGISTER MODAL -->
-    <div id="registerModal" class="modal">
-        <div class="modal-content">
-            <span class="close-icon" onclick="document.getElementById('registerModal').style.display='none'">&times;</span>
-            <h2 style="text-align:center; margin-bottom:20px;">Join as Partner</h2>
-            <form id="regForm">
-                <div class="form-group"><label>Full Name</label><input type="text" name="name" required></div>
-                <div class="form-group"><label>Email Address</label><input type="email" name="email" required></div>
-                <div class="form-group"><label>Phone Number</label><input type="text" name="phone" required></div>
-                <div class="form-group"><label>Password</label><input type="password" name="password" required></div>
-                
-                <!-- NEW OTP SECTION -->
-                <div class="form-group">
-                    <label>Verify Email</label>
-                    <div style="display:flex; gap:10px;">
-                        <button type="button" onclick="sendRegOtp()" class="nav-btn" style="font-size:0.8rem; height:45px; margin-top:5px;">Get OTP Code</button>
-                    </div>
-                </div>
+    <!-- REGISTER MODAL (FIXED) -->
+<div id="registerModal" class="modal">
+    <div class="modal-content">
+        <span class="close-icon" onclick="document.getElementById('registerModal').style.display='none'">&times;</span>
+        <h2 style="text-align:center; margin-bottom:15px;">Join as Partner</h2>
+        
+        <form id="regForm" onsubmit="return false;"> <!-- Prevent default submit -->
+            <div class="form-group">
+                <label>Full Name</label>
+                <input type="text" name="name" required>
+            </div>
+            <div class="form-group">
+                <label>Phone Number</label>
+                <input type="text" name="phone" required>
+            </div>
+            <div class="form-group">
+                <label>Email Address</label>
+                <input type="email" name="email" id="regEmailInput" required>
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" name="password" required>
+            </div>
 
-                <div id="otpInputSection" style="display:none; background:#F3F4F6; padding:15px; border-radius:8px; margin-bottom:15px;">
-                    <label>Enter Verification Code</label>
-                    <div style="display:flex; gap:10px;">
-                        <input type="text" id="regOtp" placeholder="6-Digit OTP" style="flex:1; margin-bottom:0; letter-spacing:3px; text-align:center;">
-                        <button type="button" onclick="verifyRegOtp()" class="nav-btn" style="background:#059669; border-color:#059669; height:45px; margin-top:5px;">Verify</button>
-                    </div>
-                </div>
+            <!-- BUTTONS AREA -->
+            <div id="otpRequestArea">
+                <button type="button" onclick="sendRegOtp()" class="btn-buy secondary" style="width:100%; background:#2563EB; color:white;">Get OTP Verification Code</button>
+            </div>
 
-                <button type="submit" id="finalRegBtn" class="btn-buy primary btn-disabled" disabled style="opacity:0.5; cursor:not-allowed;">Complete Registration</button>
-            </form>
-        </div>
+            <!-- OTP INPUT AREA (Hidden initially) -->
+            <div id="otpInputSection" style="display:none; margin-top:15px; padding-top:15px; border-top:1px dashed #ccc;">
+                <label style="font-weight:bold; color:green;">Enter OTP sent to email:</label>
+                <div style="display:flex; gap:10px;">
+                    <input type="text" id="regOtp" placeholder="123456" style="text-align:center; letter-spacing:5px; font-weight:bold; font-size:1.2rem;" autocomplete="off">
+                </div>
+                <button type="button" onclick="verifyRegOtp()" class="btn-buy primary" style="width:100%;">Verify & Complete</button>
+            </div>
+        </form>
     </div>
+</div>
 
     <!-- LOGIN MODAL -->
     <div id="loginModal" class="modal">
