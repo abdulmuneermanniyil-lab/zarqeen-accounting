@@ -164,15 +164,18 @@
                 <div class="dash-card"><div class="dash-val"><span id="dashDisc">0</span>%</div><div>Current Discount</div></div>
             </div>
             <div class="dash-header" style="margin-top:-10px;">
-                <h3>My Banking Details</h3>
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; font-size:0.95rem;">
+                <div style="display:flex; justify-content:space-between; width:100%;">
+                    <h3>My Banking Details</h3>
+                    <button onclick="openBankModal()" class="nav-btn" style="padding:5px 10px; font-size:0.8rem;">Edit Details</button>
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; font-size:0.95rem; margin-top:10px;">
                     <div><p>Bank: <strong id="d_bank"></strong></p><p>Holder: <strong id="d_holder"></strong></p></div>
                     <div><p>Acct: <strong id="d_acct"></strong></p><p>IFSC: <strong id="d_ifsc"></strong></p><p>UPI: <strong id="d_upi"></strong></p></div>
                 </div>
             </div>
             <h3 style="margin-bottom:15px; display:flex; justify-content:space-between;">Sales History <span id="pageInfo" style="font-size:0.9rem; color:gray"></span></h3>
             <table class="dash-table">
-                <thead><tr><th>Date</th><th>Plan</th><th>Amount</th><th>Status</th><th>Key</th><th>Ver</th><th>Last Active</th><th>Expiry</th><th>Action</th></tr></thead>
+                <thead><tr><th>Date</th><th>Plan</th><th>Amount</th><th>Status</th><th>Key</th><th>Action</th></tr></thead>
                 <tbody id="dashTableBody"></tbody>
             </table>
             <div style="display:flex; justify-content:center; gap:10px; margin-top:20px;">
@@ -185,6 +188,47 @@
     <!-- LICENSE MODAL -->
     <div id="licenseModal" class="modal"><div class="modal-content" style="text-align:center;"><div style="font-size:3.5rem;">🎉</div><h2 style="color:#059669;">Payment Successful!</h2><p>Download your license below.</p><div id="licenseKeyArea" class="key-box"></div><button class="btn-buy secondary" onclick="closeLicenseModal()">Close</button></div></div>
 
+    <!-- BANK EDIT MODAL -->
+    <div id="bankModal" class="modal">
+        <div class="modal-content">
+            <span class="close-icon" onclick="document.getElementById('bankModal').style.display='none'">&times;</span>
+            <h2 style="text-align:center; margin-bottom:20px;">Update Banking Details</h2>
+            <form id="bankForm" class="login-form active" style="display:block;">
+                <div class="form-group"><label>Bank Name</label><input type="text" name="bank_name" id="in_bank"></div>
+                <div class="form-group"><label>Account Holder Name</label><input type="text" name="account_holder" id="in_holder"></div>
+                <div class="form-group"><label>Account Number</label><input type="text" name="account_number" id="in_acct"></div>
+                <div class="form-group"><label>IFSC Code</label><input type="text" name="ifsc_code" id="in_ifsc"></div>
+                <div class="form-group"><label>UPI ID</label><input type="text" name="upi_id" id="in_upi"></div>
+                <button type="submit" class="btn-buy primary">Save Details</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- REGISTER MODAL -->
+    <div id="registerModal" class="modal">
+        <div class="modal-content">
+            <span class="close-icon" onclick="document.getElementById('registerModal').style.display='none'">&times;</span>
+            <h2 style="text-align:center;">Join as Partner</h2>
+            
+            <div id="regStep1">
+                <form id="regForm" class="login-form active" style="display:block;">
+                    <div class="form-group"><label>Full Name</label><input type="text" name="name" required></div>
+                    <div class="form-group"><label>Email Address</label><input type="email" name="email" required></div>
+                    <div class="form-group"><label>Phone Number</label><input type="text" name="phone" required></div>
+                    <div class="form-group"><label>Password</label><input type="password" name="password" required></div>
+                    <button type="submit" class="btn-buy primary">Continue (Send OTP)</button>
+                </form>
+            </div>
+
+            <div id="regStep2" style="display:none;">
+                <h3 style="text-align:center;">Verify Email</h3>
+                <p style="text-align:center; color:gray;">Enter code sent to your email</p>
+                <div class="form-group"><input type="text" id="regOtp" placeholder="6-digit Code" style="text-align:center; font-size:1.2rem; letter-spacing:5px;"></div>
+                <button onclick="verifyRegistration()" class="btn-buy primary">Verify & Create Account</button>
+            </div>
+        </div>
+    </div>
+
     <!-- LOGIN MODAL -->
     <div id="loginModal" class="modal">
         <div class="modal-content">
@@ -195,7 +239,6 @@
                 <button class="tab-btn" onclick="switchTab('admin')">Admin</button>
             </div>
             
-            <!-- DISTRIBUTOR LOGIN -->
             <form id="distForm" class="login-form active">
                 <div class="form-group"><label>Email</label><input type="email" name="email" required></div>
                 <div class="form-group"><label>Password</label><input type="password" name="password" required></div>
@@ -203,7 +246,6 @@
                 <button type="submit" class="btn-buy primary">Login</button>
             </form>
 
-            <!-- FORGOT PASSWORD (OTP FLOW) -->
             <div id="forgotFlow" style="display:none;">
                 <div id="step1">
                     <h3>Reset Password</h3>
@@ -219,26 +261,10 @@
                 <p style="text-align:center; margin-top:10px;"><a onclick="hideForgot()" style="cursor:pointer; color:gray;">Back</a></p>
             </div>
 
-            <!-- ADMIN LOGIN -->
             <form id="adminForm" class="login-form" method="POST">
                 <div class="form-group"><label>Username</label><input type="text" name="username" required></div>
                 <div class="form-group"><label>Password</label><input type="password" name="password" required></div>
                 <button type="submit" class="btn-buy primary" style="background:#111827;">Login Admin</button>
-            </form>
-        </div>
-    </div>
-
-    <!-- REGISTER MODAL -->
-    <div id="registerModal" class="modal">
-        <div class="modal-content">
-            <span class="close-icon" onclick="document.getElementById('registerModal').style.display='none'">&times;</span>
-            <h2 style="text-align:center; margin-bottom:20px;">Register as Distributor</h2>
-            <form id="registerForm">
-                <div class="form-group"><label>Full Name</label><input type="text" name="name" required></div>
-                <div class="form-group"><label>Email</label><input type="email" name="email" required></div>
-                <div class="form-group"><label>Phone</label><input type="text" name="phone" required></div>
-                <div class="form-group"><label>Password</label><input type="password" name="password" required></div>
-                <button type="submit" class="btn-buy primary">Register</button>
             </form>
         </div>
     </div>
@@ -249,7 +275,6 @@
         const BACKEND_URL = "https://zarqeen-backend.onrender.com";
         document.getElementById('adminForm').action = `${BACKEND_URL}/admin/login`;
 
-        // LOADING
         function showLoader(txt) { 
             const loader = document.getElementById('actionLoader');
             document.getElementById('loaderText').innerText = txt || "Loading...";
@@ -258,24 +283,19 @@
         }
         function hideLoader() { document.getElementById('actionLoader').style.display = 'none'; }
 
-        // CONFIG
         async function fetchConfig() {
-            try {
-                const res = await fetch(`${BACKEND_URL}/api/get-config`);
-                const data = await res.json();
-                RAZORPAY_KEY_ID = data.key_id;
-            } catch(e) { console.error(e); }
+            try { const res = await fetch(`${BACKEND_URL}/api/get-config`); const data = await res.json(); RAZORPAY_KEY_ID = data.key_id; } catch(e) { console.error(e); }
         }
         fetchConfig();
 
-        // TABS & MODALS
         function closeLicenseModal() { document.getElementById('licenseModal').style.display = 'none'; location.reload(); }
         function openLoginModal() { document.getElementById('loginModal').style.display = 'block'; }
-        function closeLoginModal() { document.getElementById('loginModal').style.display = 'none'; }
         function openRegisterModal() { document.getElementById('registerModal').style.display = 'block'; }
+        function closeLoginModal() { document.getElementById('loginModal').style.display = 'none'; }
+        function openBankModal() { document.getElementById('bankModal').style.display = 'block'; }
         
         function switchTab(type) {
-            document.getElementById('forgotFlow').style.display = 'none'; // Hide forgot
+            document.getElementById('forgotFlow').style.display = 'none'; 
             if(type === 'distributor') {
                 document.getElementById('distForm').style.display = 'block';
                 document.getElementById('distForm').classList.add('active');
@@ -287,265 +307,181 @@
             }
         }
 
-        // FORGOT PASSWORD FLOW
-        function showForgot() {
-            document.getElementById('distForm').style.display = 'none';
-            document.getElementById('forgotFlow').style.display = 'block';
-            document.getElementById('step1').style.display = 'block';
-            document.getElementById('step2').style.display = 'none';
-        }
-        function hideForgot() {
-            document.getElementById('forgotFlow').style.display = 'none';
-            document.getElementById('distForm').style.display = 'block';
-        }
+        function showForgot() { document.getElementById('distForm').style.display = 'none'; document.getElementById('forgotFlow').style.display = 'block'; document.getElementById('step1').style.display = 'block'; document.getElementById('step2').style.display = 'none'; }
+        function hideForgot() { document.getElementById('forgotFlow').style.display = 'none'; document.getElementById('distForm').style.display = 'block'; }
 
         async function sendOtp() {
             const email = document.getElementById('resetEmail').value;
-            if(!email) return alert("Enter email");
-            showLoader("Sending OTP...");
+            if(!email) return alert("Enter email"); showLoader("Sending OTP...");
             try {
                 const res = await fetch(`${BACKEND_URL}/api/send-otp`, {
                     method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({email})
                 });
-                const d = await res.json();
-                hideLoader();
-                if(d.success) {
-                    alert(d.message);
-                    document.getElementById('step1').style.display = 'none';
-                    document.getElementById('step2').style.display = 'block';
-                } else alert(d.message);
+                const d = await res.json(); hideLoader();
+                if(d.success) { alert(d.message); document.getElementById('step1').style.display='none'; document.getElementById('step2').style.display='block'; } else alert(d.message);
             } catch(e) { hideLoader(); alert("Error sending OTP"); }
         }
 
         async function resetWithOtp() {
-            const email = document.getElementById('resetEmail').value;
-            const otp = document.getElementById('otpCode').value;
-            const pw = document.getElementById('newPass').value;
-            if(!otp || !pw) return alert("Fill all fields");
-            
-            showLoader("Resetting...");
+            const email = document.getElementById('resetEmail').value; const otp = document.getElementById('otpCode').value; const pw = document.getElementById('newPass').value;
+            if(!otp || !pw) return alert("Fill all fields"); showLoader("Resetting...");
             try {
                 const res = await fetch(`${BACKEND_URL}/api/reset-with-otp`, {
                     method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({email, otp, new_password:pw})
                 });
-                const d = await res.json();
-                hideLoader();
-                if(d.success) {
-                    alert(d.message);
-                    hideForgot();
-                } else alert(d.message);
+                const d = await res.json(); hideLoader();
+                if(d.success) { alert(d.message); hideForgot(); } else alert(d.message);
             } catch(e) { hideLoader(); alert("Error resetting"); }
         }
 
-        // DISTRIBUTOR CODE
-        let ACTIVE_DISTRIBUTOR_CODE = null;
-        async function applyCode() {
-            const codeInput = document.getElementById('distCode');
-            const msg = document.getElementById('codeMsg');
-            const code = codeInput.value.trim();
-            if(!code) return;
-
-            showLoader("Checking Code...");
-            try {
-                const res = await fetch(`${BACKEND_URL}/api/check_distributor`, {
-                    method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ code: code })
-                });
-                const data = await res.json();
-                hideLoader();
-
-                if (data.valid) {
-                    ACTIVE_DISTRIBUTOR_CODE = code;
-                    msg.textContent = `✅ Success! ${data.name} discount applied (${data.discount}% OFF)`;
-                    msg.style.color = "green";
-                    codeInput.style.borderColor = "green";
-                } else {
-                    ACTIVE_DISTRIBUTOR_CODE = null;
-                    msg.textContent = "❌ Invalid Code";
-                    msg.style.color = "red";
-                    codeInput.style.borderColor = "red";
-                }
-            } catch (e) {
-                console.error(e);
-                hideLoader();
-                msg.textContent = "Error checking code. Backend might be sleeping.";
-            }
-        }
-
-        // BUY PLAN
-        async function buyPlan(planType) {
-            showLoader("Starting Payment...");
+        // --- REGISTRATION FLOW ---
+        let regDataTemp = {};
+        document.getElementById('regForm').addEventListener('submit', async function(e) {
+            e.preventDefault(); showLoader("Checking...");
+            const data = Object.fromEntries(new FormData(this));
+            regDataTemp = data; // Store temp
             
-            if (!RAZORPAY_KEY_ID) {
-                await fetchConfig();
-                if(!RAZORPAY_KEY_ID) {
-                    alert("Unable to connect to payment server. Please refresh.");
-                    hideLoader();
-                    return;
-                }
-            }
-
             try {
-                const res = await fetch(`${BACKEND_URL}/create_order`, {
+                const res = await fetch(`${BACKEND_URL}/api/distributor/register`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) });
+                const r = await res.json(); hideLoader();
+                if(r.success) {
+                    document.getElementById('regStep1').style.display = 'none';
+                    document.getElementById('regStep2').style.display = 'block';
+                } else alert(r.message);
+            } catch(e) { hideLoader(); alert("Registration Failed"); }
+        });
+
+        async function verifyRegistration() {
+            const otp = document.getElementById('regOtp').value;
+            if(!otp) return alert("Enter OTP");
+            showLoader("Verifying...");
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/distributor/verify-registration`, {
                     method: 'POST', headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ plan: planType, distributor_code: ACTIVE_DISTRIBUTOR_CODE })
+                    body: JSON.stringify({ email: regDataTemp.email, otp: otp })
                 });
-                
-                if (!res.ok) throw new Error(`Server error: ${res.status}`);
-                const orderData = await res.json();
-                if(orderData.error) throw new Error(orderData.error);
-
-                hideLoader(); // Hide to show RZP modal
-
-                const options = {
-                    "key": RAZORPAY_KEY_ID,
-                    "amount": orderData.amount,
-                    "currency": "INR",
-                    "name": "Zarqeen Alif",
-                    "description": `License: ${planType.toUpperCase()}`,
-                    "order_id": orderData.id,
-                    "theme": { "color": "#2563EB" }, 
-                    "handler": async function (response){
-                        showLoader("Verifying...");
-                        try {
-                            const verifyRes = await fetch(`${BACKEND_URL}/verify_payment`, {
-                                method: 'POST', headers: {'Content-Type': 'application/json'},
-                                body: JSON.stringify({
-                                    razorpay_payment_id: response.razorpay_payment_id,
-                                    razorpay_order_id: response.razorpay_order_id,
-                                    razorpay_signature: response.razorpay_signature,
-                                    plan_type: planType
-                                })
-                            });
-                            const result = await verifyRes.json();
-                            hideLoader();
-                            if(result.success) {
-                                const blob = new Blob([result.license_key], { type: "text/plain" });
-                                const url = window.URL.createObjectURL(blob);
-                                const keyArea = document.getElementById('licenseKeyArea');
-                                keyArea.innerHTML = ""; 
-                                const downloadBtn = document.createElement("a");
-                                downloadBtn.href = url;
-                                downloadBtn.download = "license.zarqeen"; 
-                                downloadBtn.className = "btn-buy primary";
-                                downloadBtn.innerText = "⬇ Download License File";
-                                downloadBtn.style.textDecoration = "none";
-                                downloadBtn.style.display = "inline-block";
-                                keyArea.appendChild(downloadBtn);
-                                document.getElementById('licenseModal').style.display = 'block';
-                            } else {
-                                alert('Verification failed. Contact support.');
-                            }
-                        } catch (e) { hideLoader(); alert("Verification error."); }
-                    },
-                    "modal": { "ondismiss": function(){ hideLoader(); } }
-                };
-                const rzp1 = new Razorpay(options);
-                rzp1.open();
-
-            } catch(e) {
-                console.error(e);
-                hideLoader();
-                alert("Connection Error. " + e.message);
-            }
+                const r = await res.json(); hideLoader();
+                if(r.success) {
+                    alert(`Success! Your Distributor Code is: ${r.code}. Please login.`);
+                    document.getElementById('registerModal').style.display = 'none';
+                    openLoginModal();
+                } else alert(r.message);
+            } catch(e) { hideLoader(); alert("Verification Failed"); }
         }
 
-        // DISTRIBUTOR LOGIN
+        // LOGIN
         document.getElementById('distForm').addEventListener('submit', async function(e) {
             e.preventDefault(); showLoader("Logging in...");
             const data = Object.fromEntries(new FormData(this));
             try {
-                const res = await fetch(`${BACKEND_URL}/api/distributor/login`, {
-                    method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data)
-                });
-                const r = await res.json();
-                hideLoader();
-                if(r.success) {
-                    localStorage.setItem('dist_token', r.token);
-                    closeLoginModal();
-                    loadDashboard(1);
-                } else alert(r.message || "Failed");
+                const res = await fetch(`${BACKEND_URL}/api/distributor/login`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) });
+                const r = await res.json(); hideLoader();
+                if(r.success) { localStorage.setItem('dist_token', r.token); closeLoginModal(); loadDashboard(1); } else alert(r.message || "Failed");
             } catch(e) { hideLoader(); alert("Error connecting"); }
         });
 
-        // REGISTER
-        document.getElementById('registerForm').addEventListener('submit', async function(e) {
-            e.preventDefault(); showLoader("Registering...");
+        // BANK UPDATE
+        document.getElementById('bankForm').addEventListener('submit', async function(e) {
+            e.preventDefault(); showLoader("Updating...");
+            const token = localStorage.getItem('dist_token');
             const data = Object.fromEntries(new FormData(this));
             try {
-                const res = await fetch(`${BACKEND_URL}/api/distributor/register`, {
-                    method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data)
+                const res = await fetch(`${BACKEND_URL}/api/distributor/update-bank`, {
+                    method: 'POST', headers: {'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`}, body: JSON.stringify(data)
                 });
-                const r = await res.json();
-                hideLoader();
-                if(r.success) {
-                    alert(`Registration Successful! Your Code: ${r.code}`);
-                    document.getElementById('registerModal').style.display = 'none';
-                    openLoginModal();
-                } else alert(r.message || "Failed");
-            } catch(e) { hideLoader(); alert("Error connecting"); }
+                const r = await res.json(); hideLoader();
+                if(r.success) { alert("Updated!"); document.getElementById('bankModal').style.display='none'; loadDashboard(1); }
+            } catch(e) { hideLoader(); alert("Update Failed"); }
         });
 
-        // DASHBOARD & PAGINATION
+        // CODE & BUY
+        let ACTIVE_DISTRIBUTOR_CODE = null;
+        async function applyCode() {
+            const code = document.getElementById('distCode').value.trim(); if(!code) return; showLoader("Checking Code...");
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/check_distributor`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ code }) });
+                const data = await res.json(); hideLoader();
+                if (data.valid) {
+                    ACTIVE_DISTRIBUTOR_CODE = code;
+                    document.getElementById('codeMsg').innerText = `✅ ${data.name} applied (${data.discount}% OFF)`;
+                    document.getElementById('codeMsg').style.color='green';
+                } else {
+                    ACTIVE_DISTRIBUTOR_CODE = null;
+                    document.getElementById('codeMsg').innerText="❌ Invalid Code";
+                    document.getElementById('codeMsg').style.color='red';
+                }
+            } catch(e) { hideLoader(); }
+        }
+
+        async function buyPlan(planType) {
+            showLoader("Starting Payment...");
+            if (!RAZORPAY_KEY_ID) await fetchConfig();
+            try {
+                const res = await fetch(`${BACKEND_URL}/create_order`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ plan: planType, distributor_code: ACTIVE_DISTRIBUTOR_CODE }) });
+                const orderData = await res.json(); hideLoader();
+                
+                const options = {
+                    "key": RAZORPAY_KEY_ID, "amount": orderData.amount, "currency": "INR", "name": "Zarqeen Alif",
+                    "handler": async function (response){
+                        showLoader("Verifying...");
+                        try {
+                            const verifyRes = await fetch(`${BACKEND_URL}/verify_payment`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ razorpay_payment_id: response.razorpay_payment_id, razorpay_order_id: response.razorpay_order_id, razorpay_signature: response.razorpay_signature, plan_type: planType }) });
+                            const result = await verifyRes.json(); hideLoader();
+                            if(result.success) {
+                                const blob = new Blob([result.license_key], { type: "text/plain" }); const url = window.URL.createObjectURL(blob);
+                                document.getElementById('licenseKeyArea').innerHTML = `<a href="${url}" download="license.zarqeen" class="btn-buy primary" style="text-decoration:none;">⬇ Download License File</a>`;
+                                document.getElementById('licenseModal').style.display='block';
+                            } else alert('Verification failed.');
+                        } catch (e) { hideLoader(); alert("Error"); }
+                    }, "modal": { "ondismiss": function(){ hideLoader(); } }
+                };
+                new Razorpay(options).open();
+            } catch(e) { hideLoader(); alert("Connection Error"); }
+        }
+
+        // DASHBOARD
         let CURRENT_PAGE = 1;
         async function loadDashboard(page) {
-            CURRENT_PAGE = page;
-            const token = localStorage.getItem('dist_token');
-            if(!token) return;
-            
-            showLoader("Loading Dashboard...");
+            CURRENT_PAGE = page; const token = localStorage.getItem('dist_token'); if(!token) return; showLoader("Loading Dashboard...");
             try {
-                const res = await fetch(`${BACKEND_URL}/api/distributor/data?page=${page}`, {
-                    method: 'GET', headers: {'Authorization': `Bearer ${token}`}
-                });
+                const res = await fetch(`${BACKEND_URL}/api/distributor/data?page=${page}`, { method: 'GET', headers: {'Authorization': `Bearer ${token}`} });
                 if(res.status === 401) { doLogout(); return; }
                 const data = await res.json();
                 
-                // Fill Data
+                // Header
                 document.getElementById('dashName').innerText = data.name;
                 document.getElementById('dashCode').innerText = data.code;
                 document.getElementById('dashTotal').innerText = data.total_sales;
-                document.getElementById('dashComm').innerHTML = `
-                    <span style="color:#2563EB">Earned: ₹${Number(data.commission_earned).toFixed(2)}</span><br>
-                    <span style="color:#059669; font-size:0.8em">Paid: ₹${Number(data.commission_paid).toFixed(2)}</span><br>
-                    <span style="color:#DC2626; font-size:0.9em; font-weight:800">Balance: ₹${Number(data.balance_due).toFixed(2)}</span>`;
+                document.getElementById('dashComm').innerHTML = `<span style="color:#2563EB">Earned: ₹${Number(data.commission_earned).toFixed(2)}</span><br><span style="color:#059669;font-size:0.8em">Paid: ₹${Number(data.commission_paid).toFixed(2)}</span><br><span style="color:#DC2626;font-size:0.9em;font-weight:800">Balance: ₹${Number(data.balance_due).toFixed(2)}</span>`;
                 document.getElementById('dashDisc').innerText = data.discount;
                 
                 // Bank
                 const b = data.bank_info;
-                document.getElementById('d_bank').innerText = b.bank_name || '-';
-                document.getElementById('d_holder').innerText = b.account_holder || '-';
-                document.getElementById('d_acct').innerText = b.account_number || '-';
-                document.getElementById('d_ifsc').innerText = b.ifsc || '-';
-                document.getElementById('d_upi').innerText = b.upi || '-';
+                document.getElementById('in_bank').value = b.bank_name||''; document.getElementById('in_holder').value = b.account_holder||'';
+                document.getElementById('in_acct').value = b.account_number||''; document.getElementById('in_ifsc').value = b.ifsc||'';
+                document.getElementById('in_upi').value = b.upi||'';
+                
+                document.getElementById('d_bank').innerText = b.bank_name||'-'; document.getElementById('d_holder').innerText = b.account_holder||'-';
+                document.getElementById('d_acct').innerText = b.account_number||'-'; document.getElementById('d_ifsc').innerText = b.ifsc||'-'; document.getElementById('d_upi').innerText = b.upi||'-';
 
                 // Table
-                const tbody = document.getElementById('dashTableBody');
-                tbody.innerHTML = "";
+                const tbody = document.getElementById('dashTableBody'); tbody.innerHTML = "";
                 data.sales_history.forEach(row => {
-                    const statusClass = row.status === 'INSTALLED' ? 'status-installed' : 'status-pending';
-                    const downUrl = `${data.backend_url}download/license/${row.key}`;
-                    tbody.innerHTML += `<tr><td>${row.date}</td><td>${row.plan}</td><td>₹${row.amount}</td><td><span class="status-badge ${statusClass}">${row.status}</span></td><td style="font-family:monospace">${row.key}</td><td>${row.version||'-'}</td><td>${row.last_login||'-'}</td><td>${row.expiry||'-'}</td><td><a href="${downUrl}" class="nav-btn" style="padding:4px 8px;font-size:0.8rem;">⬇</a></td></tr>`;
+                    tbody.innerHTML += `<tr><td>${row.date}</td><td>${row.plan}</td><td>₹${row.amount}</td><td>${row.status}</td><td style="font-family:monospace">${row.key}</td><td><a href="${data.backend_url}download/license/${row.key}" class="nav-btn" style="padding:4px 8px;font-size:0.8rem;">⬇</a></td></tr>`;
                 });
 
-                // Pagination Buttons
-                const pageInfo = document.getElementById('pageInfo');
-                const prev = document.getElementById('prevBtn');
-                const next = document.getElementById('nextBtn');
-                
-                pageInfo.innerText = `Page ${page} of ${data.pagination.total_pages}`;
+                // Pagination
+                const prev = document.getElementById('prevBtn'); const next = document.getElementById('nextBtn');
+                document.getElementById('pageInfo').innerText = `Page ${page} of ${data.pagination.total_pages}`;
                 prev.style.display = data.pagination.has_prev ? 'inline-block' : 'none';
                 next.style.display = data.pagination.has_next ? 'inline-block' : 'none';
 
-                // Show View
-                document.querySelector('header').style.display='none';
-                document.querySelector('.hero').style.display='none';
-                document.getElementById('features').style.display='none';
-                document.getElementById('pricing').style.display='none';
-                document.querySelector('footer').style.display='none';
-                document.getElementById('dashboardSection').style.display='block';
+                // View Swap
+                document.querySelector('header').style.display='none'; document.querySelector('.hero').style.display='none';
+                document.getElementById('features').style.display='none'; document.getElementById('pricing').style.display='none';
+                document.querySelector('footer').style.display='none'; document.getElementById('dashboardSection').style.display='block';
                 hideLoader(); window.scrollTo(0,0);
-                
-            } catch(e) { hideLoader(); console.error(e); }
+            } catch(e) { hideLoader(); }
         }
 
         function changePage(dir) { loadDashboard(CURRENT_PAGE + dir); }
