@@ -499,6 +499,27 @@
                 prev.style.display = data.pagination.has_prev ? 'inline-block' : 'none';
                 next.style.display = data.pagination.has_next ? 'inline-block' : 'none';
 
+                // Inside loadDashboard(page) function...
+
+        // ... (Previous code for Name, Code, Total Sales) ...
+
+        // NEW: Populate Level & Progress
+        const p = data.progress;
+        document.getElementById('lvlName').innerText = p.current_level;
+        document.getElementById('lvlDisc').innerText = `-${data.discount}% MRP`; // Show current discount
+        
+        if (p.is_max) {
+            document.getElementById('lvlMsg').innerText = "You are at Top Level! 🏆";
+            document.getElementById('lvlBar').style.width = "100%";
+            document.getElementById('lvlBar').style.backgroundColor = "#10B981"; // Green for max
+        } else {
+            const percent = Math.min((p.month_sales / p.target) * 100, 100);
+            document.getElementById('lvlMsg').innerText = `${p.month_sales} / ${p.target} sales to ${p.next_level}`;
+            document.getElementById('lvlBar').style.width = `${percent}%`;
+        }
+
+        // ... (Rest of the function for Bank, Table, etc.) ...
+
                 // View Swap
                 document.querySelector('header').style.display='none'; document.querySelector('.hero').style.display='none';
                 document.getElementById('features').style.display='none'; document.getElementById('pricing').style.display='none';
