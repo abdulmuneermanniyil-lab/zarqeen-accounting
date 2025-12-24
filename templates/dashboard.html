@@ -118,43 +118,46 @@
             </details>
 
             <div class="table-container">
-                <table>
-                    <thead>
-                        <tr><th>Name / Email</th><th>Code</th><th>Financials</th><th>Banking</th><th>Actions</th></tr>
-                    </thead>
-                    <tbody>
-                        {% for d in distributors %}
-                        <tr>
-                            <td>
-                                <b>{{ d.obj.name }}</b><br>
-                                <span style="font-size:0.8rem; color:#6B7280;">{{ d.obj.email }}</span>
-                            </td>
-                            <td>
-                                <span style="font-family:monospace; font-weight:bold; font-size:1rem;">{{ d.obj.code }}</span><br>
-                                <span class="badge bg-gray-light">Disc: {{d.obj.discount_percent}}%</span>
-                            </td>
-                            <td style="font-size:0.85rem; line-height:1.4;">
-                                Earned: ₹{{ "%.2f"|format(d.earned) }}<br>
-                                Paid: <span style="color:#059669">₹{{ "%.2f"|format(d.obj.commission_paid) }}</span><br>
-                                Bal: <span class="{{ 'balance-neg' if d.balance > 0 else 'balance-pos' }}">₹{{ "%.2f"|format(d.balance) }}</span>
-                            </td>
-                            <td style="font-size:0.8rem; color:#4B5563;">
-                                {% if d.obj.bank_name %}{{ d.obj.bank_name }} - {{ d.obj.account_number }}<br>{% endif %}
-                                {% if d.obj.upi_id %}UPI: {{ d.obj.upi_id }}{% endif %}
-                                {% if not d.obj.bank_name and not d.obj.upi_id %}-{% endif %}
-                            </td>
-                            <td>
-                                <button class="btn btn-blue btn-sm" onclick="openEdit('{{d.obj.id}}', '{{d.obj.name}}', '{{d.obj.email}}', '{{d.obj.phone}}', '{{d.obj.discount_percent}}', '{{d.obj.bank_name}}', '{{d.obj.account_holder}}', '{{d.obj.account_number}}', '{{d.obj.ifsc_code}}', '{{d.obj.upi_id}}', '{{d.obj.commission_paid}}')">Edit / Pay</button>
-                                <form action="{{ url_for('delete_distributor', id=d.obj.id) }}" method="POST" style="display:inline" onsubmit="return confirm('Are you sure? This will detach all associated licenses.');">
-                                    <button class="btn btn-red btn-sm">Del</button>
-                                </form>
-                            </td>
-                        </tr>
-                        {% else %}
-                        <tr><td colspan="5" style="text-align:center; padding:20px;">No distributors found.</td></tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                <!-- Only showing the specific table change needed -->
+<!-- In the Licenses Table part of dashboard.html -->
+
+<table id="licTable">
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Key</th>
+            <th>Plan</th>
+            <th>Distributor</th>
+            <th>Amt</th>
+            <th>Status</th>
+            <th>Version</th>  <!-- New -->
+            <th>Last Active</th> <!-- New -->
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody id="licBody">
+        {% for lic in licenses %}
+        <tr>
+            <td>{{ lic.created_at.strftime('%Y-%m-%d') }}</td>
+            <td style="font-family:monospace; font-weight:bold;">{{ lic.license_key }}</td>
+            <td>{{ lic.plan_type }}</td>
+            <td>{{ lic.distributor.name if lic.distributor else 'Direct' }}</td>
+            <td>₹{{ lic.amount_paid }}</td>
+            <td>
+                <span style="padding:2px 6px; border-radius:4px; font-size:0.8rem; background:{{ '#D1FAE5' if lic.is_used else '#F3F4F6' }}; color:{{ '#065F46' if lic.is_used else '#666' }}">
+                    {{ 'USED' if lic.is_used else 'ACTIVE' }}
+                </span>
+            </td>
+            <td>{{ lic.software_version or '-' }}</td> <!-- New -->
+            <td style="font-size:0.8rem">{{ lic.last_login_date.strftime('%Y-%m-%d %H:%M') if lic.last_login_date else '-' }}</td> <!-- New -->
+            <td>
+                <a href="/download/license/{{ lic.license_key }}" class="btn btn-green btn-sm" title="Download">⬇</a>
+                <!-- ... other buttons ... -->
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
             </div>
         </div>
 
