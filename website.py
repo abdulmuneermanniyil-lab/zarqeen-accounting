@@ -311,29 +311,56 @@ def api_distributor_login():
     return jsonify({'success': False, 'message': 'Invalid Login'})
 
 # C. DASHBOARD & DATA
-@app.route('/api/distributor/data', methods=['GET'])
+@app.route("/api/distributor/data", methods=["GET"])
 def api_get_distributor_data():
-    token = request.headers.get('Authorization', '').replace('Bearer ', '')
+    token = request.headers.get("Authorization", "").replace("Bearer ", "")
     dist = Distributor.query.filter_by(api_token=token).first()
-    if not dist: return jsonify({'error': 'Invalid Token'}), 401
-    
-    page = request.args.get('page', 1, type=int)
+    if not dist: return jsonify({"error": "Invalid Token"}), 401
+
+    # 1. Pagination & History
+    page = request.args.get("page", 1, type=int)
     query = License.query.filter_by(distributor_id=dist.id).order_by(License.created_at.desc())
     pagination = query.paginate(page=page, per_page=10, error_out=False)
     
+    # 2. Financials
     total_earned = sum(safe_float(l.amount_paid) for l in query.all()) * 0.20
-    sales_data = []
-    for s in pagination.items:
-        exp = s.expiry_date.strftime('%Y-%m-%d') if s.expiry_date else '-'
-        sales_data.append({'date': s.created_at.strftime('%Y-%m-%d'), 'plan': s.plan_type, 'amount': s.amount_paid, 'status': 'INSTALLED' if s.is_used else 'PENDING', 'key': s.license_key, 'version': s.software_version, 'last_login': s.last_login_date.strftime('%Y-%m-%d %H:%M') if s.last_login_date else '-', 'expiry': exp})
+    
+    # 3. Level & Progress Logic
+    current_lvl_id = dist.level
+    current_lvl_data = LEVELS.get(current_lvl_id, LEVELS[1])
+    
+    # Calculate Current Month Sales
+    now = datetime.utcnow()
+    start_of_month = datetime(now.year, now.month, 1)
+    month_sales = License.query.filter(
+        License.distributor_id == dist.id,
+        License.created_at >= start_of_month
+    ).count()
+    
+    # Determine Next Level Target
+    next_lvl_id = current_lvl_id + 1
+    next_lvl_data = LEVELS.get(next_lvl_id)
+    
+    progress_info = {
+        "current_level": current_lvl_data['name'],
+        "month_sales": month_sales,
+        "next_level": next_lvl_data['name'] if next_lvl_data else "Max Level",
+        "target": next_lvl_data['target'] if next_lvl_data else 0,
+        "is_max": False if next_lvl_data else True
+    }
+
+    # 4. Format Sales History
+    sales_data = [{'date': s.created_at.strftime('%Y-%m-%d'), 'plan': s.plan_type, 'amount': s.amount_paid, 'status': 'INSTALLED' if s.is_used else 'PENDING', 'key': s.license_key} for s in pagination.items]
 
     return jsonify({
         "name": dist.name, "code": dist.code, "discount": dist.discount_percent,
-        "total_sales": query.count(), "commission_earned": total_earned, "commission_paid": safe_float(dist.commission_paid),
+        "total_sales": query.count(), "commission_earned": total_earned,
+        "commission_paid": safe_float(dist.commission_paid),
         "balance_due": total_earned - safe_float(dist.commission_paid),
         "sales_history": sales_data, "backend_url": request.host_url,
         "bank_info": {"bank_name": dist.bank_name, "account_holder": dist.account_holder, "account_number": dist.account_number, "ifsc": dist.ifsc_code, "upi": dist.upi_id},
-        "pagination": {"total_pages": pagination.pages, "has_next": pagination.has_next, "has_prev": pagination.has_prev}
+        "pagination": {"total_pages": pagination.pages, "has_next": pagination.has_next, "has_prev": pagination.has_prev},
+        "progress": progress_info # <--- Sending this to frontend
     })
 
 # D. UPDATE BANKING
