@@ -5,22 +5,17 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Zarqeen Alif - India's Best Value Invoicing Software</title>
-    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
-    <!-- Razorpay SDK -->
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <link rel="icon" type="image/png" href="static/header.png">
-    
     <style>
         :root { --primary: #2563EB; --primary-dark: #1E40AF; --accent: #F59E0B; --bg-light: #F3F4F6; --text-main: #111827; --text-muted: #6B7280; --white: #ffffff; --success: #10B981; }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; scroll-behavior: smooth; }
         body { background-color: var(--bg-light); color: var(--text-main); line-height: 1.6; }
         a { text-decoration: none; } ul { list-style: none; }
-        
         #actionLoader { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.9); z-index: 999999; flex-direction: column; align-items: center; justify-content: center; }
         .spinner { width: 50px; height: 50px; border: 5px solid #E5E7EB; border-top: 5px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        
         header { background: var(--white); box-shadow: 0 1px 3px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 1000; }
         .nav-container { max-width: 1200px; margin: 0 auto; padding: 1rem 1.5rem; display: flex; justify-content: space-between; align-items: center; }
         .logo-area { display: flex; align-items: center; gap: 12px; }
@@ -31,34 +26,28 @@
         .nav-links a:hover { color: var(--primary); }
         .nav-btn { background: var(--primary); color: var(--white) !important; padding: 0.6rem 1.2rem; border-radius: 8px; transition: background 0.2s; }
         .nav-btn:hover { background: var(--primary-dark); }
-        
         .hero { text-align: center; padding: 5rem 1rem 4rem; background: linear-gradient(180deg, #FFFFFF 0%, #EFF6FF 100%); border-bottom: 1px solid #DBEAFE; }
         .tagline { display: inline-block; background: #DBEAFE; color: var(--primary-dark); padding: 6px 16px; border-radius: 50px; font-size: 0.85rem; font-weight: 700; margin-bottom: 1.5rem; border: 1px solid #BFDBFE; }
         .hero h1 { font-size: 3rem; font-weight: 800; color: #111827; line-height: 1.2; margin-bottom: 1.5rem; letter-spacing: -1px; }
         .hero h1 span { color: var(--primary); }
         .hero p { font-size: 1.2rem; color: var(--text-muted); max-width: 700px; margin: 0 auto 2.5rem; }
         .cta-group { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; }
-        
         .btn-lg { padding: 1rem 2rem; font-size: 1.1rem; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; transition: transform 0.2s; }
         .btn-lg:hover { transform: translateY(-2px); }
         .btn-primary { background: var(--primary); color: var(--white); }
         .btn-outline { background: var(--white); color: var(--text-main); border: 1px solid #D1D5DB; }
         .specs { font-size: 0.85rem; color: var(--text-muted); margin-top: 1.5rem; opacity: 0.8; }
-        
         .features { max-width: 1200px; margin: -3rem auto 3rem; padding: 0 1.5rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 2rem; position: relative; z-index: 10; }
         .feature-card { background: var(--white); padding: 2rem; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); border: 1px solid #E5E7EB; transition: transform 0.2s; }
         .feature-card:hover { transform: translateY(-5px); border-color: var(--primary); }
         .icon-box { font-size: 2rem; margin-bottom: 1rem; background: #EFF6FF; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; border-radius: 12px; }
         .feature-card h3 { font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem; color: #1F2937; }
-        
         .pricing-section { padding: 4rem 1rem; text-align: center; }
         .section-title { font-size: 2.25rem; font-weight: 800; margin-bottom: 0.5rem; }
         .section-subtitle { color: var(--text-muted); margin-bottom: 3rem; font-size: 1.1rem; }
-        
         .dist-input-container { max-width: 400px; margin: 0 auto 2rem; text-align: center; }
         .dist-input-box { display: flex; gap: 10px; justify-content: center; margin-top: 5px; }
         .dist-input { padding: 10px; border: 1px solid #ccc; border-radius: 6px; width: 60%; text-transform: uppercase; font-weight: bold; }
-        
         .pricing-grid { max-width: 1000px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; align-items: start; }
         .plan-card { background: var(--white); padding: 2.5rem; border-radius: 16px; border: 1px solid #E5E7EB; position: relative; display: flex; flex-direction: column; height: 100%; transition: 0.3s; }
         .plan-card.popular { border: 2px solid var(--primary); box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); transform: scale(1.05); z-index: 2; }
@@ -70,21 +59,16 @@
         .features-list { list-style: none; text-align: left; margin-bottom: 2rem; }
         .features-list li { margin-bottom: 0.8rem; color: #374151; display: flex; align-items: center; gap: 10px; font-size: 0.95rem; }
         .features-list li::before { content: "✓"; color: var(--success); font-weight: 800; }
-        
         .btn-buy { width: 100%; padding: 1rem; border-radius: 8px; font-weight: 700; font-size: 1rem; cursor: pointer; border: none; transition: 0.2s; margin-top: auto; }
         .btn-buy.primary { background: var(--primary); color: var(--white); box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2); }
         .btn-buy.primary:hover { background: var(--primary-dark); box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3); }
         .btn-buy.secondary { background: #E5E7EB; color: #374151; }
         .btn-buy.secondary:hover { background: #D1D5DB; }
-        
         footer { margin-top: 4rem; padding: 3rem 1rem; background: var(--white); border-top: 1px solid #E5E7EB; text-align: center; }
-
-        /* MODALS */
         .modal { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); backdrop-filter: blur(4px); animation: fadeIn 0.2s; }
         .modal-content { background-color: var(--white); margin: 10vh auto; padding: 2rem; border-radius: 12px; width: 90%; max-width: 450px; position: relative; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); }
         .close-icon { position: absolute; right: 20px; top: 20px; font-size: 24px; cursor: pointer; color: #aaa; }
         .key-box { background: #F3F4F6; padding: 1rem; border: 2px dashed #D1D5DB; border-radius: 8px; margin: 1.5rem 0; font-family: monospace; font-size: 1.1rem; color: var(--primary-dark); word-break: break-all; }
-        
         .login-tabs { display: flex; margin-bottom: 20px; border-bottom: 1px solid #E5E7EB; }
         .tab-btn { flex: 1; padding: 10px; border: none; background: none; font-weight: 600; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; }
         .tab-btn.active { color: var(--primary); border-bottom: 2px solid var(--primary); }
@@ -93,8 +77,6 @@
         .form-group { margin-bottom: 15px; text-align: left; }
         .form-group label { display: block; font-size: 0.9rem; margin-bottom: 5px; font-weight: 600; }
         .form-group input { width: 100%; padding: 10px; border: 1px solid #D1D5DB; border-radius: 6px; }
-
-        /* DASHBOARD */
         #dashboardSection { display: none; padding: 2rem; background: #F3F4F6; min-height: 100vh; }
         .dash-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
@@ -106,8 +88,6 @@
         .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 700; }
         .status-installed { background: #D1FAE5; color: #065F46; }
         .status-pending { background: #FEE2E2; color: #991B1B; }
-        .level-badge { background: gold; color: black; padding: 2px 8px; border-radius: 20px; font-size: 0.8rem; margin-left: 10px; border: 1px solid #eab308; }
-
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @media (max-width: 768px) { .nav-links { display: none; } .hero h1 { font-size: 2.25rem; } }
     </style>
@@ -124,8 +104,8 @@
             <nav class="nav-links">
                 <a href="#features">Features</a>
                 <a href="#pricing">Pricing</a>
-                <a onclick="openRegisterModal()" style="color:var(--primary); cursor:pointer;">Join as Distributor</a>
-                <a onclick="openLoginModal()" style="color:var(--primary); cursor:pointer;">Login</a>
+                <a onclick="openRegisterModal()" style="color:var(--primary); cursor: pointer;">Join as Distributor</a>
+                <a onclick="openLoginModal()" style="color:var(--primary); cursor: pointer;">Login</a>
                 <a href="https://drive.google.com/drive/folders/17O3vY4KYUzd7Rma4o8rp3j2iIrpqhJe9?usp=drive_link" target="_blank" class="nav-btn">Download for Windows</a>
             </nav>
         </div>
@@ -175,19 +155,13 @@
     <div id="dashboardSection">
         <div style="max-width:1200px; margin:0 auto;">
             <div class="dash-header">
-                <div>
-                    <h2 id="dashName">Distributor</h2>
-                    <p style="color:#6B7280; font-size:0.9rem;">
-                        Code: <strong id="dashCode" style="color:#111; font-family:monospace;"></strong>
-                        <span id="levelBadge"></span>
-                    </p>
-                </div>
+                <div><h2 id="dashName">Distributor</h2><p style="color:#6B7280;">Code: <strong id="dashCode"></strong></p></div>
                 <button onclick="doLogout()" class="btn-buy secondary" style="width:auto; margin:0; background:#EF4444; color:white;">Logout</button>
             </div>
             <div class="dash-grid">
-                <div class="dash-card"><div class="dash-val" id="dashTotal">0</div><div style="font-size:0.9rem" id="dashTargetMsg">Total Sales</div></div>
-                <div class="dash-card"><div class="dash-val">₹<span id="dashComm">0.00</span></div><div>Financials</div></div>
-                <div class="dash-card"><div class="dash-val"><span id="dashDisc">0</span>%</div><div>Discount (MRP)</div></div>
+                <div class="dash-card"><div class="dash-val" id="dashTotal">0</div><div>Total Licenses Sold</div></div>
+                <div class="dash-card"><div class="dash-val">₹<span id="dashComm">0.00</span></div><div>Your Commission (Est.)</div></div>
+                <div class="dash-card"><div class="dash-val"><span id="dashDisc">0</span>%</div><div>Current Discount</div></div>
             </div>
             <div class="dash-header" style="margin-top:-10px;">
                 <h3>My Banking Details</h3>
@@ -195,11 +169,10 @@
                     <div><p>Bank: <strong id="d_bank"></strong></p><p>Holder: <strong id="d_holder"></strong></p></div>
                     <div><p>Acct: <strong id="d_acct"></strong></p><p>IFSC: <strong id="d_ifsc"></strong></p><p>UPI: <strong id="d_upi"></strong></p></div>
                 </div>
-                <p style="color:#666; font-size:0.8rem; margin-top:5px;">* Contact admin to update banking info.</p>
             </div>
             <h3 style="margin-bottom:15px; display:flex; justify-content:space-between;">Sales History <span id="pageInfo" style="font-size:0.9rem; color:gray"></span></h3>
             <table class="dash-table">
-                <thead><tr><th>Date</th><th>Plan</th><th>Amount</th><th>Status</th><th>Key</th><th>Ver</th><th>Last Active</th><th>Action</th></tr></thead>
+                <thead><tr><th>Date</th><th>Plan</th><th>Amount</th><th>Status</th><th>Key</th><th>Ver</th><th>Last Active</th><th>Expiry</th><th>Action</th></tr></thead>
                 <tbody id="dashTableBody"></tbody>
             </table>
             <div style="display:flex; justify-content:center; gap:10px; margin-top:20px;">
@@ -212,22 +185,6 @@
     <!-- LICENSE MODAL -->
     <div id="licenseModal" class="modal"><div class="modal-content" style="text-align:center;"><div style="font-size:3.5rem;">🎉</div><h2 style="color:#059669;">Payment Successful!</h2><p>Download your license below.</p><div id="licenseKeyArea" class="key-box"></div><button class="btn-buy secondary" onclick="closeLicenseModal()">Close</button></div></div>
 
-    <!-- REGISTER MODAL -->
-    <div id="registerModal" class="modal">
-        <div class="modal-content">
-            <span class="close-icon" onclick="document.getElementById('registerModal').style.display='none'">&times;</span>
-            <h2 style="text-align:center;">Join as Partner</h2>
-            <p style="text-align:center; color:gray; font-size:0.9rem; margin-bottom:15px;">Start at Bronze level. Earn commissions!</p>
-            <form id="regForm" class="login-form active">
-                <div class="form-group"><label>Full Name</label><input type="text" name="name" required></div>
-                <div class="form-group"><label>Email Address</label><input type="email" name="email" required></div>
-                <div class="form-group"><label>Phone Number</label><input type="text" name="phone" required></div>
-                <div class="form-group"><label>Password</label><input type="password" name="password" required></div>
-                <button type="submit" class="btn-buy primary">Create Account</button>
-            </form>
-        </div>
-    </div>
-
     <!-- LOGIN MODAL -->
     <div id="loginModal" class="modal">
         <div class="modal-content">
@@ -238,6 +195,7 @@
                 <button class="tab-btn" onclick="switchTab('admin')">Admin</button>
             </div>
             
+            <!-- DISTRIBUTOR LOGIN -->
             <form id="distForm" class="login-form active">
                 <div class="form-group"><label>Email</label><input type="email" name="email" required></div>
                 <div class="form-group"><label>Password</label><input type="password" name="password" required></div>
@@ -245,6 +203,7 @@
                 <button type="submit" class="btn-buy primary">Login</button>
             </form>
 
+            <!-- FORGOT PASSWORD (OTP FLOW) -->
             <div id="forgotFlow" style="display:none;">
                 <div id="step1">
                     <h3>Reset Password</h3>
@@ -260,10 +219,26 @@
                 <p style="text-align:center; margin-top:10px;"><a onclick="hideForgot()" style="cursor:pointer; color:gray;">Back</a></p>
             </div>
 
+            <!-- ADMIN LOGIN -->
             <form id="adminForm" class="login-form" method="POST">
                 <div class="form-group"><label>Username</label><input type="text" name="username" required></div>
                 <div class="form-group"><label>Password</label><input type="password" name="password" required></div>
                 <button type="submit" class="btn-buy primary" style="background:#111827;">Login Admin</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- REGISTER MODAL -->
+    <div id="registerModal" class="modal">
+        <div class="modal-content">
+            <span class="close-icon" onclick="document.getElementById('registerModal').style.display='none'">&times;</span>
+            <h2 style="text-align:center; margin-bottom:20px;">Register as Distributor</h2>
+            <form id="registerForm">
+                <div class="form-group"><label>Full Name</label><input type="text" name="name" required></div>
+                <div class="form-group"><label>Email</label><input type="email" name="email" required></div>
+                <div class="form-group"><label>Phone</label><input type="text" name="phone" required></div>
+                <div class="form-group"><label>Password</label><input type="password" name="password" required></div>
+                <button type="submit" class="btn-buy primary">Register</button>
             </form>
         </div>
     </div>
@@ -274,6 +249,7 @@
         const BACKEND_URL = "https://zarqeen-backend.onrender.com";
         document.getElementById('adminForm').action = `${BACKEND_URL}/admin/login`;
 
+        // LOADING
         function showLoader(txt) { 
             const loader = document.getElementById('actionLoader');
             document.getElementById('loaderText').innerText = txt || "Loading...";
@@ -282,18 +258,24 @@
         }
         function hideLoader() { document.getElementById('actionLoader').style.display = 'none'; }
 
+        // CONFIG
         async function fetchConfig() {
-            try { const res = await fetch(`${BACKEND_URL}/api/get-config`); const data = await res.json(); RAZORPAY_KEY_ID = data.key_id; } catch(e) { console.error(e); }
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/get-config`);
+                const data = await res.json();
+                RAZORPAY_KEY_ID = data.key_id;
+            } catch(e) { console.error(e); }
         }
         fetchConfig();
 
+        // TABS & MODALS
         function closeLicenseModal() { document.getElementById('licenseModal').style.display = 'none'; location.reload(); }
         function openLoginModal() { document.getElementById('loginModal').style.display = 'block'; }
-        function openRegisterModal() { document.getElementById('registerModal').style.display = 'block'; }
         function closeLoginModal() { document.getElementById('loginModal').style.display = 'none'; }
+        function openRegisterModal() { document.getElementById('registerModal').style.display = 'block'; }
         
         function switchTab(type) {
-            document.getElementById('forgotFlow').style.display = 'none'; 
+            document.getElementById('forgotFlow').style.display = 'none'; // Hide forgot
             if(type === 'distributor') {
                 document.getElementById('distForm').style.display = 'block';
                 document.getElementById('distForm').classList.add('active');
@@ -305,146 +287,265 @@
             }
         }
 
-        function showForgot() { document.getElementById('distForm').style.display = 'none'; document.getElementById('forgotFlow').style.display = 'block'; document.getElementById('step1').style.display = 'block'; document.getElementById('step2').style.display = 'none'; }
-        function hideForgot() { document.getElementById('forgotFlow').style.display = 'none'; document.getElementById('distForm').style.display = 'block'; }
+        // FORGOT PASSWORD FLOW
+        function showForgot() {
+            document.getElementById('distForm').style.display = 'none';
+            document.getElementById('forgotFlow').style.display = 'block';
+            document.getElementById('step1').style.display = 'block';
+            document.getElementById('step2').style.display = 'none';
+        }
+        function hideForgot() {
+            document.getElementById('forgotFlow').style.display = 'none';
+            document.getElementById('distForm').style.display = 'block';
+        }
 
         async function sendOtp() {
             const email = document.getElementById('resetEmail').value;
-            if(!email) return alert("Enter email"); showLoader("Sending OTP...");
+            if(!email) return alert("Enter email");
+            showLoader("Sending OTP...");
             try {
                 const res = await fetch(`${BACKEND_URL}/api/send-otp`, {
                     method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({email})
                 });
-                const d = await res.json(); hideLoader();
-                if(d.success) { alert(d.message); document.getElementById('step1').style.display='none'; document.getElementById('step2').style.display='block'; } else alert(d.message);
+                const d = await res.json();
+                hideLoader();
+                if(d.success) {
+                    alert(d.message);
+                    document.getElementById('step1').style.display = 'none';
+                    document.getElementById('step2').style.display = 'block';
+                } else alert(d.message);
             } catch(e) { hideLoader(); alert("Error sending OTP"); }
         }
 
         async function resetWithOtp() {
-            const email = document.getElementById('resetEmail').value; const otp = document.getElementById('otpCode').value; const pw = document.getElementById('newPass').value;
-            if(!otp || !pw) return alert("Fill all fields"); showLoader("Resetting...");
+            const email = document.getElementById('resetEmail').value;
+            const otp = document.getElementById('otpCode').value;
+            const pw = document.getElementById('newPass').value;
+            if(!otp || !pw) return alert("Fill all fields");
+            
+            showLoader("Resetting...");
             try {
                 const res = await fetch(`${BACKEND_URL}/api/reset-with-otp`, {
                     method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({email, otp, new_password:pw})
                 });
-                const d = await res.json(); hideLoader();
-                if(d.success) { alert(d.message); hideForgot(); } else alert(d.message);
+                const d = await res.json();
+                hideLoader();
+                if(d.success) {
+                    alert(d.message);
+                    hideForgot();
+                } else alert(d.message);
             } catch(e) { hideLoader(); alert("Error resetting"); }
         }
 
-        // REGISTER
-        document.getElementById('regForm').addEventListener('submit', async function(e) {
-            e.preventDefault(); showLoader("Creating Account...");
-            const data = Object.fromEntries(new FormData(this));
-            try {
-                const res = await fetch(`${BACKEND_URL}/api/distributor/register`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) });
-                const r = await res.json(); hideLoader();
-                if(r.success) {
-                    alert(`Welcome! Your Code is: ${r.code}`);
-                    document.getElementById('registerModal').style.display='none';
-                    openLoginModal();
-                } else alert(r.message);
-            } catch(e) { hideLoader(); alert("Registration Failed"); }
-        });
+        // DISTRIBUTOR CODE
+        let ACTIVE_DISTRIBUTOR_CODE = null;
+        async function applyCode() {
+            const codeInput = document.getElementById('distCode');
+            const msg = document.getElementById('codeMsg');
+            const code = codeInput.value.trim();
+            if(!code) return;
 
-        // LOGIN
+            showLoader("Checking Code...");
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/check_distributor`, {
+                    method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ code: code })
+                });
+                const data = await res.json();
+                hideLoader();
+
+                if (data.valid) {
+                    ACTIVE_DISTRIBUTOR_CODE = code;
+                    msg.textContent = `✅ Success! ${data.name} discount applied (${data.discount}% OFF)`;
+                    msg.style.color = "green";
+                    codeInput.style.borderColor = "green";
+                } else {
+                    ACTIVE_DISTRIBUTOR_CODE = null;
+                    msg.textContent = "❌ Invalid Code";
+                    msg.style.color = "red";
+                    codeInput.style.borderColor = "red";
+                }
+            } catch (e) {
+                console.error(e);
+                hideLoader();
+                msg.textContent = "Error checking code. Backend might be sleeping.";
+            }
+        }
+
+        // BUY PLAN
+        async function buyPlan(planType) {
+            showLoader("Starting Payment...");
+            
+            if (!RAZORPAY_KEY_ID) {
+                await fetchConfig();
+                if(!RAZORPAY_KEY_ID) {
+                    alert("Unable to connect to payment server. Please refresh.");
+                    hideLoader();
+                    return;
+                }
+            }
+
+            try {
+                const res = await fetch(`${BACKEND_URL}/create_order`, {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ plan: planType, distributor_code: ACTIVE_DISTRIBUTOR_CODE })
+                });
+                
+                if (!res.ok) throw new Error(`Server error: ${res.status}`);
+                const orderData = await res.json();
+                if(orderData.error) throw new Error(orderData.error);
+
+                hideLoader(); // Hide to show RZP modal
+
+                const options = {
+                    "key": RAZORPAY_KEY_ID,
+                    "amount": orderData.amount,
+                    "currency": "INR",
+                    "name": "Zarqeen Alif",
+                    "description": `License: ${planType.toUpperCase()}`,
+                    "order_id": orderData.id,
+                    "theme": { "color": "#2563EB" }, 
+                    "handler": async function (response){
+                        showLoader("Verifying...");
+                        try {
+                            const verifyRes = await fetch(`${BACKEND_URL}/verify_payment`, {
+                                method: 'POST', headers: {'Content-Type': 'application/json'},
+                                body: JSON.stringify({
+                                    razorpay_payment_id: response.razorpay_payment_id,
+                                    razorpay_order_id: response.razorpay_order_id,
+                                    razorpay_signature: response.razorpay_signature,
+                                    plan_type: planType
+                                })
+                            });
+                            const result = await verifyRes.json();
+                            hideLoader();
+                            if(result.success) {
+                                const blob = new Blob([result.license_key], { type: "text/plain" });
+                                const url = window.URL.createObjectURL(blob);
+                                const keyArea = document.getElementById('licenseKeyArea');
+                                keyArea.innerHTML = ""; 
+                                const downloadBtn = document.createElement("a");
+                                downloadBtn.href = url;
+                                downloadBtn.download = "license.zarqeen"; 
+                                downloadBtn.className = "btn-buy primary";
+                                downloadBtn.innerText = "⬇ Download License File";
+                                downloadBtn.style.textDecoration = "none";
+                                downloadBtn.style.display = "inline-block";
+                                keyArea.appendChild(downloadBtn);
+                                document.getElementById('licenseModal').style.display = 'block';
+                            } else {
+                                alert('Verification failed. Contact support.');
+                            }
+                        } catch (e) { hideLoader(); alert("Verification error."); }
+                    },
+                    "modal": { "ondismiss": function(){ hideLoader(); } }
+                };
+                const rzp1 = new Razorpay(options);
+                rzp1.open();
+
+            } catch(e) {
+                console.error(e);
+                hideLoader();
+                alert("Connection Error. " + e.message);
+            }
+        }
+
+        // DISTRIBUTOR LOGIN
         document.getElementById('distForm').addEventListener('submit', async function(e) {
             e.preventDefault(); showLoader("Logging in...");
             const data = Object.fromEntries(new FormData(this));
             try {
-                const res = await fetch(`${BACKEND_URL}/api/distributor/login`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) });
-                const r = await res.json(); hideLoader();
-                if(r.success) { localStorage.setItem('dist_token', r.token); closeLoginModal(); loadDashboard(1); } else alert(r.message || "Failed");
+                const res = await fetch(`${BACKEND_URL}/api/distributor/login`, {
+                    method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data)
+                });
+                const r = await res.json();
+                hideLoader();
+                if(r.success) {
+                    localStorage.setItem('dist_token', r.token);
+                    closeLoginModal();
+                    loadDashboard(1);
+                } else alert(r.message || "Failed");
             } catch(e) { hideLoader(); alert("Error connecting"); }
         });
 
-        // CODE & BUY
-        let ACTIVE_DISTRIBUTOR_CODE = null;
-        async function applyCode() {
-            const code = document.getElementById('distCode').value.trim(); if(!code) return; showLoader("Checking Code...");
+        // REGISTER
+        document.getElementById('registerForm').addEventListener('submit', async function(e) {
+            e.preventDefault(); showLoader("Registering...");
+            const data = Object.fromEntries(new FormData(this));
             try {
-                const res = await fetch(`${BACKEND_URL}/api/check_distributor`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ code }) });
-                const data = await res.json(); hideLoader();
-                if (data.valid) {
-                    ACTIVE_DISTRIBUTOR_CODE = code;
-                    document.getElementById('codeMsg').innerText = `✅ ${data.name} applied (${data.discount}% OFF)`;
-                    document.getElementById('codeMsg').style.color='green';
-                } else {
-                    ACTIVE_DISTRIBUTOR_CODE = null;
-                    document.getElementById('codeMsg').innerText="❌ Invalid Code";
-                    document.getElementById('codeMsg').style.color='red';
-                }
-            } catch(e) { hideLoader(); }
-        }
+                const res = await fetch(`${BACKEND_URL}/api/distributor/register`, {
+                    method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data)
+                });
+                const r = await res.json();
+                hideLoader();
+                if(r.success) {
+                    alert(`Registration Successful! Your Code: ${r.code}`);
+                    document.getElementById('registerModal').style.display = 'none';
+                    openLoginModal();
+                } else alert(r.message || "Failed");
+            } catch(e) { hideLoader(); alert("Error connecting"); }
+        });
 
-        async function buyPlan(planType) {
-            showLoader("Starting Payment...");
-            if (!RAZORPAY_KEY_ID) await fetchConfig();
-            try {
-                const res = await fetch(`${BACKEND_URL}/create_order`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ plan: planType, distributor_code: ACTIVE_DISTRIBUTOR_CODE }) });
-                const orderData = await res.json(); hideLoader();
-                
-                const options = {
-                    "key": RAZORPAY_KEY_ID, "amount": orderData.amount, "currency": "INR", "name": "Zarqeen Alif",
-                    "handler": async function (response){
-                        showLoader("Verifying...");
-                        try {
-                            const verifyRes = await fetch(`${BACKEND_URL}/verify_payment`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ razorpay_payment_id: response.razorpay_payment_id, razorpay_order_id: response.razorpay_order_id, razorpay_signature: response.razorpay_signature, plan_type: planType }) });
-                            const result = await verifyRes.json(); hideLoader();
-                            if(result.success) {
-                                const blob = new Blob([result.license_key], { type: "text/plain" }); const url = window.URL.createObjectURL(blob);
-                                document.getElementById('licenseKeyArea').innerHTML = `<a href="${url}" download="license.zarqeen" class="btn-buy primary" style="text-decoration:none;">⬇ Download License File</a>`;
-                                document.getElementById('licenseModal').style.display='block';
-                            } else alert('Verification failed.');
-                        } catch (e) { hideLoader(); alert("Error"); }
-                    }, "modal": { "ondismiss": function(){ hideLoader(); } }
-                };
-                new Razorpay(options).open();
-            } catch(e) { hideLoader(); alert("Connection Error"); }
-        }
-
-        // DASHBOARD
+        // DASHBOARD & PAGINATION
         let CURRENT_PAGE = 1;
         async function loadDashboard(page) {
-            CURRENT_PAGE = page; const token = localStorage.getItem('dist_token'); if(!token) return; showLoader("Loading Dashboard...");
+            CURRENT_PAGE = page;
+            const token = localStorage.getItem('dist_token');
+            if(!token) return;
+            
+            showLoader("Loading Dashboard...");
             try {
-                const res = await fetch(`${BACKEND_URL}/api/distributor/data?page=${page}`, { method: 'GET', headers: {'Authorization': `Bearer ${token}`} });
+                const res = await fetch(`${BACKEND_URL}/api/distributor/data?page=${page}`, {
+                    method: 'GET', headers: {'Authorization': `Bearer ${token}`}
+                });
                 if(res.status === 401) { doLogout(); return; }
                 const data = await res.json();
                 
-                // Header
+                // Fill Data
                 document.getElementById('dashName').innerText = data.name;
                 document.getElementById('dashCode').innerText = data.code;
-                document.getElementById('levelBadge').innerHTML = `<span class="level-badge">${data.level}</span>`;
-                
-                // Stats
-                document.getElementById('dashTotal').innerHTML = `${data.total_sales}<br><small style="font-size:0.5em;color:gray">Month: ${data.current_month_sales} / Next Level: ${data.next_target}</small>`;
-                document.getElementById('dashComm').innerHTML = `<span style="color:#2563EB">Earned: ₹${Number(data.commission_earned).toFixed(2)}</span><br><span style="color:#059669;font-size:0.8em">Paid: ₹${Number(data.commission_paid).toFixed(2)}</span><br><span style="color:#DC2626;font-size:0.9em;font-weight:800">Balance: ₹${Number(data.balance_due).toFixed(2)}</span>`;
-                document.getElementById('dashDisc').innerHTML = `${data.discount}% <br><small style="font-size:0.5em;color:gray">Comm: ${data.commission_pct}%</small>`;
+                document.getElementById('dashTotal').innerText = data.total_sales;
+                document.getElementById('dashComm').innerHTML = `
+                    <span style="color:#2563EB">Earned: ₹${Number(data.commission_earned).toFixed(2)}</span><br>
+                    <span style="color:#059669; font-size:0.8em">Paid: ₹${Number(data.commission_paid).toFixed(2)}</span><br>
+                    <span style="color:#DC2626; font-size:0.9em; font-weight:800">Balance: ₹${Number(data.balance_due).toFixed(2)}</span>`;
+                document.getElementById('dashDisc').innerText = data.discount;
                 
                 // Bank
                 const b = data.bank_info;
-                document.getElementById('d_bank').innerText = b.bank_name||'-'; document.getElementById('d_holder').innerText = b.account_holder||'-';
-                document.getElementById('d_acct').innerText = b.account_number||'-'; document.getElementById('d_ifsc').innerText = b.ifsc||'-'; document.getElementById('d_upi').innerText = b.upi||'-';
+                document.getElementById('d_bank').innerText = b.bank_name || '-';
+                document.getElementById('d_holder').innerText = b.account_holder || '-';
+                document.getElementById('d_acct').innerText = b.account_number || '-';
+                document.getElementById('d_ifsc').innerText = b.ifsc || '-';
+                document.getElementById('d_upi').innerText = b.upi || '-';
 
                 // Table
-                const tbody = document.getElementById('dashTableBody'); tbody.innerHTML = "";
+                const tbody = document.getElementById('dashTableBody');
+                tbody.innerHTML = "";
                 data.sales_history.forEach(row => {
-                    tbody.innerHTML += `<tr><td>${row.date}</td><td>${row.plan}</td><td>₹${row.amount}</td><td>${row.status}</td><td style="font-family:monospace">${row.key}</td><td>${row.version||'-'}</td><td>${row.last_login||'-'}</td><td><a href="${data.backend_url}download/license/${row.key}" class="nav-btn" style="padding:4px 8px;font-size:0.8rem;">⬇</a></td></tr>`;
+                    const statusClass = row.status === 'INSTALLED' ? 'status-installed' : 'status-pending';
+                    const downUrl = `${data.backend_url}download/license/${row.key}`;
+                    tbody.innerHTML += `<tr><td>${row.date}</td><td>${row.plan}</td><td>₹${row.amount}</td><td><span class="status-badge ${statusClass}">${row.status}</span></td><td style="font-family:monospace">${row.key}</td><td>${row.version||'-'}</td><td>${row.last_login||'-'}</td><td>${row.expiry||'-'}</td><td><a href="${downUrl}" class="nav-btn" style="padding:4px 8px;font-size:0.8rem;">⬇</a></td></tr>`;
                 });
 
-                // Pagination
-                const prev = document.getElementById('prevBtn'); const next = document.getElementById('nextBtn');
-                document.getElementById('pageInfo').innerText = `Page ${page} of ${data.pagination.total_pages}`;
+                // Pagination Buttons
+                const pageInfo = document.getElementById('pageInfo');
+                const prev = document.getElementById('prevBtn');
+                const next = document.getElementById('nextBtn');
+                
+                pageInfo.innerText = `Page ${page} of ${data.pagination.total_pages}`;
                 prev.style.display = data.pagination.has_prev ? 'inline-block' : 'none';
                 next.style.display = data.pagination.has_next ? 'inline-block' : 'none';
 
-                // View Swap
-                document.querySelector('header').style.display='none'; document.querySelector('.hero').style.display='none';
-                document.getElementById('features').style.display='none'; document.getElementById('pricing').style.display='none';
-                document.querySelector('footer').style.display='none'; document.getElementById('dashboardSection').style.display='block';
+                // Show View
+                document.querySelector('header').style.display='none';
+                document.querySelector('.hero').style.display='none';
+                document.getElementById('features').style.display='none';
+                document.getElementById('pricing').style.display='none';
+                document.querySelector('footer').style.display='none';
+                document.getElementById('dashboardSection').style.display='block';
                 hideLoader(); window.scrollTo(0,0);
-            } catch(e) { hideLoader(); }
+                
+            } catch(e) { hideLoader(); console.error(e); }
         }
 
         function changePage(dir) { loadDashboard(CURRENT_PAGE + dir); }
