@@ -159,10 +159,33 @@
                 <button onclick="doLogout()" class="btn-buy secondary" style="width:auto; margin:0; background:#EF4444; color:white;">Logout</button>
             </div>
             <div class="dash-grid">
-                <div class="dash-card"><div class="dash-val" id="dashTotal">0</div><div>Total Licenses Sold</div></div>
-                <div class="dash-card"><div class="dash-val">₹<span id="dashComm">0.00</span></div><div>Your Commission (Est.)</div></div>
-                <div class="dash-card"><div class="dash-val"><span id="dashDisc">0</span>%</div><div>Current Discount</div></div>
-            </div>
+    <div class="dash-card">
+        <div class="dash-val" id="dashTotal">0</div>
+        <div>Total Lifetime Sales</div>
+    </div>
+    <div class="dash-card">
+        <div class="dash-val">₹<span id="dashComm">0.00</span></div>
+        <div>Your Financials</div>
+    </div>
+    
+    <!-- NEW LEVEL CARD -->
+    <div class="dash-card" style="position:relative; overflow:hidden;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div class="dash-val" style="font-size:1.5rem; color:#d97706;" id="lvlName">Bronze</div>
+            <span style="font-size:0.8rem; background:#FEF3C7; color:#92400E; padding:2px 6px; border-radius:4px;" id="lvlDisc">10% Off</span>
+        </div>
+        
+        <div style="margin-top:10px; font-size:0.85rem; color:#6B7280;">
+            <span id="lvlMsg">0 / 5 to Silver</span>
+        </div>
+        
+        <!-- Progress Bar -->
+        <div style="background:#E5E7EB; height:6px; width:100%; border-radius:10px; margin-top:5px;">
+            <div id="lvlBar" style="background:#d97706; height:100%; width:0%; border-radius:10px; transition:width 0.5s;"></div>
+        </div>
+        <div style="font-size:0.75rem; color:#9CA3AF; margin-top:5px;">Based on this month's performance</div>
+    </div>
+</div>
             <div class="dash-header" style="margin-top:-10px;">
                 <div style="display:flex; justify-content:space-between; width:100%;">
                     <h3>My Banking Details</h3>
