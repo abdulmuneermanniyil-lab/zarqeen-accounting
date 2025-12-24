@@ -190,7 +190,7 @@
             </div>
             <h3 style="margin-bottom:15px; display:flex; justify-content:space-between;">Sales History <span id="pageInfo" style="font-size:0.9rem; color:gray"></span></h3>
             <table class="dash-table">
-                <thead><tr><th>Date</th><th>Plan</th><th>Amount</th><th>Status</th><th>Key</th><th>Action</th></tr></thead>
+                <thead><tr><th>Date</th><th>Plan</th><th>Amount</th><th>Status</th><th>Key</th><th>Ver</th><th>Last Active</th><th>Action</th></tr></thead>
                 <tbody id="dashTableBody"></tbody>
             </table>
             <div style="display:flex; justify-content:center; gap:10px; margin-top:20px;">
@@ -508,7 +508,19 @@
                 data.sales_history.forEach(row => {
                     const statusClass = row.status === 'INSTALLED' ? 'status-installed' : 'status-pending';
                     const downUrl = `${data.backend_url}download/license/${row.key}`;
-                    tbody.innerHTML += `<tr><td>${row.date}</td><td>${row.plan}</td><td>₹${row.amount}</td><td><span class="status-badge ${statusClass}">${row.status}</span></td><td style="font-family:monospace">${row.key}</td><td><a href="${downUrl}" class="nav-btn" style="padding:4px 8px;font-size:0.8rem;">⬇</a></td></tr>`;
+                    
+                    // Added Version and Last Login columns to HTML
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${row.date}</td>
+                            <td>${row.plan}</td>
+                            <td>₹${row.amount}</td>
+                            <td><span class="status-badge ${statusClass}">${row.status}</span></td>
+                            <td style="font-family:monospace">${row.key}</td>
+                            <td>${row.version || '-'}</td>
+                            <td style="font-size:0.8rem">${row.last_login || '-'}</td>
+                            <td><a href="${downUrl}" class="nav-btn" style="padding:4px 8px;font-size:0.8rem;">⬇</a></td>
+                        </tr>`;
                 });
 
                 // Pagination Buttons
