@@ -62,7 +62,7 @@ db = SQLAlchemy(app)
 # -------------------------------------------------
 RAZORPAY_KEY_ID = os.environ.get("RAZORPAY_KEY_ID")
 RAZORPAY_KEY_SECRET = os.environ.get("RAZORPAY_KEY_SECRET")
-BREVO_API_KEY = os.environ.get("BREVO_API_KEY") # <--- MUST ADD THIS TO RENDER ENV
+BREVO_API_KEY = os.environ.get("BREVO_API_KEY") 
 
 ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "admin")
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "admin123")
@@ -109,7 +109,12 @@ class License(db.Model):
     amount_paid = db.Column(db.Float, default=0.0)
     is_used = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    used_at = db.Column(db.DateTime)
+    
+    # Updated Fields for Tracking
+    used_at = db.Column(db.DateTime)          # First time activation
+    last_login_date = db.Column(db.DateTime)  # Most recent usage
+    software_version = db.Column(db.String(20)) # e.g. "v1.2.5"
+    
     distributor_id = db.Column(db.Integer, db.ForeignKey("distributor.id"))
 
 # -------------------------------------------------
@@ -127,18 +132,22 @@ def safe_float(v):
     except: return 0.0
 
 def generate_unique_key(plan_type, dist_code=None):
-    # Format: ZQBA-ALIF-XXXX-XXXX
+    # Format: ZQBA-ALIF-XXXXXX-XXXXXX (Longer Key)
     p = "BA" if plan_type == "basic" else "PR"
     d = dist_code[:4].upper() if dist_code else "ALIF"
     d = d.ljust(4, "X")
-    r1 = "".join(random.choices(string.ascii_uppercase + string.digits, k=4))
-    r2 = "".join(random.choices(string.ascii_uppercase + string.digits, k=4))
+    
+    # Increased randomness to 6 chars per block
+    r1 = "".join(random.choices(string.ascii_uppercase + string.digits, k=6))
+    r2 = "".join(random.choices(string.ascii_uppercase + string.digits, k=6))
+    
     key = f"ZQ{p}-{d}-{r1}-{r2}"
+    
     if License.query.filter_by(license_key=key).first():
         return generate_unique_key(plan_type, dist_code)
     return key
 
-# --- BREVO EMAIL SENDER (Prevents Server Crash) ---
+# --- BREVO EMAIL SENDER ---
 def send_otp_email(email, otp):
     if not BREVO_API_KEY:
         print(">>> ERROR: BREVO_API_KEY missing in Env Vars. OTP logged only.")
@@ -171,7 +180,7 @@ def send_otp_email(email, otp):
         return False
 
 # -------------------------------------------------
-# 5. PUBLIC API ROUTES (Payments & Checks)
+# 5. PUBLIC API ROUTES
 # -------------------------------------------------
 @app.route("/")
 def home():
@@ -204,7 +213,6 @@ def create_order():
         final_amount = base_amount
         dist_id_str = "None"
 
-        # Lookup Distributor safely
         if code:
             dist = Distributor.query.filter_by(code=code).first()
             if dist:
@@ -212,7 +220,6 @@ def create_order():
                 final_amount = int(base_amount - discount_amount)
                 dist_id_str = str(dist.id)
 
-        # Create Razorpay Order
         order = razorpay_client.order.create({
             "amount": final_amount,
             "currency": "INR",
@@ -231,14 +238,12 @@ def create_order():
 def verify_payment():
     data = request.json
     try:
-        # 1. Verify Signature
         razorpay_client.utility.verify_payment_signature({
             'razorpay_order_id': data['razorpay_order_id'],
             'razorpay_payment_id': data['razorpay_payment_id'],
             'razorpay_signature': data['razorpay_signature']
         })
         
-        # 2. Get Distributor info from Order
         order_info = razorpay_client.order.fetch(data['razorpay_order_id'])
         dist_id_val = order_info['notes'].get('distributor_id')
         
@@ -247,10 +252,8 @@ def verify_payment():
             try: dist_obj = Distributor.query.get(int(dist_id_val))
             except: pass
         
-        # 3. Generate Key
         new_key = generate_unique_key(data.get('plan_type'), dist_obj.code if dist_obj else None)
         
-        # 4. Save License
         new_license = License(
             license_key=new_key,
             plan_type=data.get('plan_type'),
@@ -274,21 +277,37 @@ def download_license_file(key):
         download_name="license.zarqeen"
     )
 
+# --- DESKTOP APP API (Updated) ---
 @app.route('/api/validate_license', methods=['POST'])
 def validate_license():
     data = request.json
     key_input = data.get('license_key', '').strip()
+    
+    # Get Version from Desktop App (Defaults to Unknown)
+    sw_version = data.get('version', 'Unknown')
+    
     lic = License.query.filter_by(license_key=key_input).first()
     if lic:
-        if lic.is_used: return jsonify({'valid': False, 'message': 'License already used.'})
+        if lic.is_used: 
+            # If already used, just update Last Login and Version
+            lic.last_login_date = datetime.utcnow()
+            lic.software_version = sw_version
+            db.session.commit()
+            return jsonify({'valid': False, 'message': 'License already used.'})
+        
+        # First time activation
         lic.is_used = True
         lic.used_at = datetime.utcnow()
+        lic.last_login_date = datetime.utcnow()
+        lic.software_version = sw_version
+        
         db.session.commit()
         
         s_name = lic.distributor.name if lic.distributor else "Zarqeen Official"
         s_con = lic.distributor.phone if lic.distributor else "zarqeensoftware@gmail.com"
         dur = 365 if lic.plan_type == 'basic' else 1095
         return jsonify({'valid': True, 'plan': lic.plan_type, 'duration_days': dur, 'support_info': {'name': s_name, 'contact': s_con}})
+    
     return jsonify({'valid': False, 'message': 'Invalid License Key'})
 
 # -------------------------------------------------
@@ -410,10 +429,11 @@ def logout():
 def export_data(type):
     si = io.StringIO(); cw = csv.writer(si)
     if type == 'licenses':
-        cw.writerow(['Date', 'Key', 'Plan', 'Amount', 'Distributor', 'Status'])
+        # Added Version and Last Login to Export
+        cw.writerow(['Date', 'Key', 'Plan', 'Amount', 'Distributor', 'Status', 'Version', 'Last Login'])
         for r in License.query.all():
             d = r.distributor.name if r.distributor else 'Direct'
-            cw.writerow([r.created_at, r.license_key, r.plan_type, r.amount_paid, d, r.is_used])
+            cw.writerow([r.created_at, r.license_key, r.plan_type, r.amount_paid, d, r.is_used, r.software_version, r.last_login_date])
     elif type == 'distributors':
         cw.writerow(['Name', 'Code', 'Email', 'Total Earned', 'Paid', 'Balance'])
         for r in Distributor.query.all():
@@ -448,7 +468,17 @@ def api_get_distributor_data():
     pagination = query.paginate(page=page, per_page=10, error_out=False)
     
     total_earned = sum(safe_float(l.amount_paid) for l in query.all()) * 0.20
-    sales_data = [{'date': s.created_at.strftime('%Y-%m-%d'), 'plan': s.plan_type, 'amount': s.amount_paid, 'status': 'INSTALLED' if s.is_used else 'PENDING', 'key': s.license_key} for s in pagination.items]
+    
+    # Added Version and Last Login to Distributor Data
+    sales_data = [{
+        'date': s.created_at.strftime('%Y-%m-%d'), 
+        'plan': s.plan_type, 
+        'amount': s.amount_paid, 
+        'status': 'INSTALLED' if s.is_used else 'PENDING', 
+        'key': s.license_key,
+        'version': s.software_version,
+        'last_login': s.last_login_date.strftime('%Y-%m-%d %H:%M') if s.last_login_date else '-'
+    } for s in pagination.items]
 
     return jsonify({
         "name": dist.name, "code": dist.code, "discount": dist.discount_percent,
@@ -473,12 +503,10 @@ def send_otp():
 
     print(f">>> DEBUG OTP for {email}: {otp}")
     
-    # Use Requests for Safe Sending
     sent = send_otp_email(email, otp)
     if sent:
         return jsonify({"success": True, "message": "OTP sent to email"})
     else:
-        # Fallback to allow login if mail fails (Development mode/No key)
         return jsonify({"success": True, "message": "OTP generated (Check Logs)"})
 
 @app.route("/api/reset-with-otp", methods=["POST"])
@@ -506,7 +534,7 @@ def reset_db():
     with app.app_context():
         try: db.create_all()
         except: pass
-    return "DB Updated"
+    return "DB Updated with new version fields"
 
 if __name__ == "__main__":
     app.run(debug=True)
