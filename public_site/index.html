@@ -410,54 +410,95 @@
         }
 
         // --- NEW REGISTRATION LOGIC ---
-        let regDataTemp = {}; 
+        // --- REGISTRATION LOGIC (FIXED) ---
+let regDataTemp = {}; 
 
-        async function sendRegOtp() {
-            const form = document.getElementById('regForm');
-            const data = Object.fromEntries(new FormData(form));
-            regDataTemp = data; 
+async function sendRegOtp() {
+    const form = document.getElementById('regForm');
+    // Get data manually to ensure fields are captured
+    const data = {
+        name: form.querySelector('[name="name"]').value,
+        phone: form.querySelector('[name="phone"]').value,
+        email: form.querySelector('[name="email"]').value,
+        password: form.querySelector('[name="password"]').value
+    };
+    regDataTemp = data; 
 
-            if(!data.name || !data.email || !data.password) return alert("Please fill all fields first.");
+    if(!data.name || !data.email || !data.password) {
+        alert("Please fill all fields first.");
+        return;
+    }
+    
+    showLoader("Sending OTP...");
+    
+    try {
+        const res = await fetch(`${BACKEND_URL}/api/distributor/register`, { 
+            method: 'POST', 
+            headers: {'Content-Type': 'application/json'}, 
+            body: JSON.stringify(data) 
+        });
+        const r = await res.json(); 
+        hideLoader(); // CRITICAL: Hides loader so you can type
+        
+        if(r.success) {
+            alert(r.message);
+            // Hide the "Get OTP" button and show OTP Input
+            document.getElementById('otpRequestArea').style.display = 'none';
+            document.getElementById('otpInputSection').style.display = 'block';
             
-            showLoader("Sending Code...");
-            try {
-                const res = await fetch(`${BACKEND_URL}/api/distributor/register`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) });
-                const r = await res.json(); hideLoader();
-                
-                if(r.success) {
-                    alert(r.message);
-                    document.getElementById('otpInputSection').style.display = 'block';
-                } else {
-                    alert(r.message);
-                }
-            } catch(e) { hideLoader(); alert("Error contacting server"); }
+            // Focus on OTP field for better UX
+            setTimeout(() => document.getElementById('regOtp').focus(), 500);
+        } else {
+            alert(r.message);
         }
+    } catch(e) { 
+        hideLoader(); 
+        alert("Error contacting server. Check internet."); 
+    }
+}
 
-        async function verifyRegOtp() {
-            const otp = document.getElementById('regOtp').value;
-            if(!otp) return alert("Enter Code");
+async function verifyRegOtp() {
+    const otp = document.getElementById('regOtp').value.trim();
+    if(!otp) return alert("Please Enter Code");
+    
+    showLoader("Verifying...");
+    try {
+        const res = await fetch(`${BACKEND_URL}/api/distributor/verify-registration`, {
+            method: 'POST', 
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ email: regDataTemp.email, otp: otp })
+        });
+        const r = await res.json(); 
+        
+        if(r.success) {
+            // Auto Login logic after verification
+            const loginRes = await fetch(`${BACKEND_URL}/api/distributor/login`, {
+                method: 'POST', headers: {'Content-Type': 'application/json'}, 
+                body: JSON.stringify({ email: regDataTemp.email, password: regDataTemp.password })
+            });
+            const loginJson = await loginRes.json();
             
-            showLoader("Verifying...");
-            try {
-                const res = await fetch(`${BACKEND_URL}/api/distributor/verify-registration`, {
-                    method: 'POST', headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ email: regDataTemp.email, otp: otp })
-                });
-                const r = await res.json(); hideLoader();
-                
-                if(r.success) {
-                    alert("Verified! You can now login.");
-                    const btn = document.getElementById('finalRegBtn');
-                    btn.disabled = false;
-                    btn.style.opacity = '1';
-                    btn.style.cursor = 'pointer';
-                    btn.innerText = "Login to Dashboard";
-                    ACTIVE_DISTRIBUTOR_CODE = r.code; 
-                } else {
-                    alert(r.message);
-                }
-            } catch(e) { hideLoader(); alert("Verification Failed"); }
+            hideLoader();
+            
+            if(loginJson.success) {
+                localStorage.setItem('dist_token', loginJson.token);
+                document.getElementById('registerModal').style.display = 'none';
+                alert(`Welcome! Your Distributor Code is: ${r.code}`);
+                loadDashboard(1);
+            } else {
+                alert("Verification successful, but auto-login failed. Please login manually.");
+                document.getElementById('registerModal').style.display = 'none';
+                openLoginModal();
+            }
+        } else {
+            hideLoader();
+            alert(r.message);
         }
+    } catch(e) { 
+        hideLoader(); 
+        alert("Verification Failed"); 
+    }
+}
         
         document.getElementById('regForm').addEventListener('submit', async function(e) {
             e.preventDefault();
