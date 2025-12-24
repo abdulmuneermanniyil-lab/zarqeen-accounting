@@ -17,11 +17,15 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from werkzeug.security import generate_password_hash, check_password_hash
 
+# -------------------------------------------------
+# 1. APP CONFIGURATION
+# -------------------------------------------------
 app = Flask(__name__)
-app.secret_key = os.environ.get("SECRET_KEY", "CHANGE_THIS_SECRET")
+# Security: Load secret from ENV, fallback to random if missing (forces session invalidation on restart if not set)
+app.secret_key = os.environ.get("SECRET_KEY", secrets.token_hex(16))
 FRONTEND_URL = "https://zarqeen.in"
 
-# Config
+# Cookie Security (Cross-Domain)
 app.config.update(
     SESSION_COOKIE_SAMESITE='None',
     SESSION_COOKIE_SECURE=True,
@@ -29,24 +33,41 @@ app.config.update(
     SESSION_COOKIE_DOMAIN=None 
 )
 
-CORS(app, resources={r"/*": {"origins": ["https://zarqeen.in", "https://www.zarqeen.in"]}}, supports_credentials=True)
+# CORS (Allow Frontend)
+CORS(
+    app,
+    resources={r"/*": {"origins": ["https://zarqeen.in", "https://www.zarqeen.in"]}},
+    supports_credentials=True
+)
 
+# Database
 raw_db_url = os.environ.get("DATABASE_URL", "sqlite:///site.db")
 if raw_db_url.startswith("postgres://"):
     raw_db_url = raw_db_url.replace("postgres://", "postgresql://", 1)
 
 app.config["SQLALCHEMY_DATABASE_URI"] = raw_db_url
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {"pool_pre_ping": True, "pool_recycle": 300, "pool_size": 2, "max_overflow": 1}
+
+# Optimization to prevent "SSL SYSCALL" errors
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    "pool_pre_ping": True,
+    "pool_recycle": 300,
+    "pool_size": 2,
+    "max_overflow": 1
+}
 
 db = SQLAlchemy(app)
 
-# Credentials
+# -------------------------------------------------
+# 2. KEYS & CREDENTIALS (SECURE)
+# -------------------------------------------------
 RAZORPAY_KEY_ID = os.environ.get("RAZORPAY_KEY_ID")
 RAZORPAY_KEY_SECRET = os.environ.get("RAZORPAY_KEY_SECRET")
 BREVO_API_KEY = os.environ.get("BREVO_API_KEY") 
-ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "admin")
-ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "admin123")
+
+# SECURE: No default values. Must be set in Render Environment Variables.
+ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME")
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD")
 
 razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
 
@@ -57,7 +78,9 @@ LEVELS = {
     3: {'name': 'Gold',   'discount': 20, 'commission': 40, 'target': 20}
 }
 
-# --- MODELS ---
+# -------------------------------------------------
+# 3. DATABASE MODELS
+# -------------------------------------------------
 class Settings(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     special_bonus_percent = db.Column(db.Integer, default=0)
@@ -98,7 +121,9 @@ class License(db.Model):
         days = 365 if self.plan_type == 'basic' else 1095
         return self.used_at + timedelta(days=days)
 
-# --- HELPERS ---
+# -------------------------------------------------
+# 4. HELPERS
+# -------------------------------------------------
 def login_required(f):
     @wraps(f)
     def wrap(*args, **kwargs):
@@ -112,7 +137,7 @@ def safe_float(v):
 
 def generate_unique_key(plan_type, dist_code=None):
     p = "BA" if plan_type == 'basic' else "PR"
-    d = dist_code[:4].upper() if dist_code else "ALIF"
+    d = dist_code.upper().strip()[:4] if dist_code else "ALIF"
     d = d.ljust(4, 'X')
     r1 = "".join(random.choices(string.ascii_uppercase + string.digits, k=6))
     r2 = "".join(random.choices(string.ascii_uppercase + string.digits, k=6))
@@ -128,7 +153,21 @@ def send_brevo_email(to_email, subject, html_content):
     try: requests.post(url, json=payload, headers=headers, timeout=5); return True
     except: return False
 
-# --- ROUTES ---
+def check_level_update(dist):
+    now = datetime.utcnow()
+    if dist.last_level_check and dist.last_level_check.month == now.month and dist.last_level_check.year == now.year: return
+    first = now.replace(day=1)
+    last_month_end = first - timedelta(days=1)
+    last_month_start = last_month_end.replace(day=1)
+    count = License.query.filter(License.distributor_id==dist.id, License.created_at >= last_month_start, License.created_at <= last_month_end).count()
+    current = dist.level; new_lvl = current
+    if current < 3 and count >= LEVELS[current+1]['target']: new_lvl += 1
+    elif current > 1 and count < LEVELS[current]['target']: new_lvl -= 1
+    dist.level = new_lvl; dist.last_level_check = now; db.session.commit()
+
+# -------------------------------------------------
+# 5. ROUTES
+# -------------------------------------------------
 @app.route('/')
 def home(): return redirect(FRONTEND_URL)
 
@@ -306,6 +345,7 @@ def api_distributor_login():
     data = request.json; dist = Distributor.query.filter_by(email=data.get('email')).first()
     if dist and dist.check_password(data.get('password')):
         if not dist.is_verified: return jsonify({'success': False, 'message': 'Not verified.'})
+        check_level_update(dist) # Check if level changed
         dist.api_token = secrets.token_hex(16); db.session.commit(); return jsonify({'success': True, 'token': dist.api_token})
     return jsonify({'success': False, 'message': 'Invalid Login'})
 
