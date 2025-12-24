@@ -529,12 +529,25 @@ def reset_with_otp():
     
     return jsonify({"success": False, "message": "Invalid OTP"})
 
+# ... (Rest of code remains same) ...
+
 @app.route("/reset-db-now")
 def reset_db():
     with app.app_context():
-        try: db.create_all()
-        except: pass
-    return "DB Updated with new version fields"
+        # 1. DROP ALL TABLES (Forces schema update)
+        db.drop_all()
+        
+        # 2. CREATE ALL TABLES (With new columns)
+        db.create_all()
+        
+        # 3. Create a Demo Distributor (Optional, for testing)
+        if not Distributor.query.first():
+            d = Distributor(code="DEMO", name="Demo Account", phone="9999999999", email="demo@gmail.com", discount_percent=10)
+            d.set_password("demo123")
+            db.session.add(d)
+            db.session.commit()
+            
+    return "✅ DB Completely Reset! New columns (Version, Last Login) are now active."
 
 if __name__ == "__main__":
     app.run(debug=True)
