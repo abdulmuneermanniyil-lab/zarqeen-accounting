@@ -18,7 +18,7 @@ from flask_cors import CORS
 from werkzeug.security import generate_password_hash, check_password_hash
 
 # -------------------------------------------------
-# 1. CONFIGURATION
+# 1. APP CONFIGURATION
 # -------------------------------------------------
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "CHANGE_THIS_SECRET")
@@ -31,7 +31,11 @@ app.config.update(
     SESSION_COOKIE_DOMAIN=None 
 )
 
-CORS(app, resources={r"/*": {"origins": ["https://zarqeen.in", "https://www.zarqeen.in"]}}, supports_credentials=True)
+CORS(
+    app,
+    resources={r"/*": {"origins": ["https://zarqeen.in", "https://www.zarqeen.in"]}},
+    supports_credentials=True
+)
 
 raw_db_url = os.environ.get("DATABASE_URL", "sqlite:///site.db")
 if raw_db_url.startswith("postgres://"):
@@ -39,20 +43,31 @@ if raw_db_url.startswith("postgres://"):
 
 app.config["SQLALCHEMY_DATABASE_URI"] = raw_db_url
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {"pool_pre_ping": True, "pool_recycle": 300, "pool_size": 2, "max_overflow": 1}
+
+# Optimization to prevent "SSL SYSCALL" errors
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    "pool_pre_ping": True,
+    "pool_recycle": 300,
+    "pool_size": 2,
+    "max_overflow": 1
+}
 
 db = SQLAlchemy(app)
 
+# -------------------------------------------------
+# 2. KEYS
+# -------------------------------------------------
 RAZORPAY_KEY_ID = os.environ.get("RAZORPAY_KEY_ID")
 RAZORPAY_KEY_SECRET = os.environ.get("RAZORPAY_KEY_SECRET")
 BREVO_API_KEY = os.environ.get("BREVO_API_KEY") 
+
 ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "admin")
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "admin123")
 
 razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
 
 # -------------------------------------------------
-# 2. MODELS
+# 3. DATABASE MODELS
 # -------------------------------------------------
 class Distributor(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -62,41 +77,43 @@ class Distributor(db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
     discount_percent = db.Column(db.Integer, default=10)
-    
+
     # Banking
     bank_name = db.Column(db.String(100))
     account_holder = db.Column(db.String(100))
     account_number = db.Column(db.String(50))
     ifsc_code = db.Column(db.String(20))
     upi_id = db.Column(db.String(100))
-    
-    commission_paid = db.Column(db.Float, default=0.0)      
-    api_token = db.Column(db.String(100), nullable=True)
-    
-    # OTP & Verification
-    otp_code = db.Column(db.String(10), nullable=True)
-    otp_expiry = db.Column(db.DateTime, nullable=True)
-    reset_token = db.Column(db.String(100), nullable=True)
-    is_verified = db.Column(db.Boolean, default=False) # <--- NEW: Email Verification Status
-    
-    licenses = db.relationship('License', backref='distributor', lazy=True)
 
-    def set_password(self, password): self.password_hash = generate_password_hash(password)
-    def check_password(self, password): return check_password_hash(self.password_hash, password)
+    commission_paid = db.Column(db.Float, default=0.0)
+    api_token = db.Column(db.String(100))
+
+    # OTP & Verification
+    otp_code = db.Column(db.String(10))
+    otp_expiry = db.Column(db.DateTime)
+    reset_token = db.Column(db.String(100))
+    
+    # ⚠️ THIS WAS MISSING IN DB, CAUSING ERROR 500
+    is_verified = db.Column(db.Boolean, default=False)
+
+    licenses = db.relationship("License", backref="distributor", lazy=True)
+
+    def set_password(self, pwd): self.password_hash = generate_password_hash(pwd)
+    def check_password(self, pwd): return check_password_hash(self.password_hash, pwd)
 
 class License(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     license_key = db.Column(db.String(60), unique=True, nullable=False)
     plan_type = db.Column(db.String(20), nullable=False)
-    payment_id = db.Column(db.String(100), nullable=False)
+    payment_id = db.Column(db.String(100))
     amount_paid = db.Column(db.Float, default=0.0)
     is_used = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    used_at = db.Column(db.DateTime, nullable=True)
-    last_login_date = db.Column(db.DateTime, nullable=True)
-    software_version = db.Column(db.String(20), nullable=True)
-    distributor_id = db.Column(db.Integer, db.ForeignKey('distributor.id'), nullable=True)
-    
+    used_at = db.Column(db.DateTime)
+    last_login_date = db.Column(db.DateTime)
+    software_version = db.Column(db.String(20))
+    distributor_id = db.Column(db.Integer, db.ForeignKey("distributor.id"))
+
     @property
     def expiry_date(self):
         if not self.used_at: return None
@@ -104,32 +121,33 @@ class License(db.Model):
         return self.used_at + timedelta(days=days)
 
 # -------------------------------------------------
-# 3. HELPERS
+# 4. HELPERS
 # -------------------------------------------------
 def login_required(f):
     @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if not session.get('admin_logged_in'): return redirect(url_for('login'))
+    def wrap(*args, **kwargs):
+        if not session.get("admin_logged_in"): return redirect(url_for("login"))
         return f(*args, **kwargs)
-    return decorated_function
+    return wrap
 
-def safe_float(val):
-    try: return float(val) if val else 0.0
+def safe_float(v):
+    try: return float(v)
     except: return 0.0
 
 def generate_unique_key(plan_type, dist_code=None):
-    p = "BA" if plan_type == 'basic' else "PR"
-    d = dist_code.upper().strip()[:4] if dist_code else "ALIF"
-    d = d.ljust(4, 'X')
-    r1 = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
-    r2 = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+    p = "BA" if plan_type == "basic" else "PR"
+    d = dist_code[:4].upper() if dist_code else "ALIF"
+    d = d.ljust(4, "X")
+    r1 = "".join(random.choices(string.ascii_uppercase + string.digits, k=6))
+    r2 = "".join(random.choices(string.ascii_uppercase + string.digits, k=6))
     key = f"ZQ{p}-{d}-{r1}-{r2}"
-    if License.query.filter_by(license_key=key).first(): return generate_unique_key(plan_type, dist_code)
+    if License.query.filter_by(license_key=key).first():
+        return generate_unique_key(plan_type, dist_code)
     return key
 
 def send_brevo_email(to_email, subject, html_content):
     if not BREVO_API_KEY:
-        print(">>> BREVO KEY MISSING. Email not sent.")
+        print(">>> BREVO KEY MISSING. Email logged to console.")
         return False
     
     url = "https://api.brevo.com/v3/smtp/email"
@@ -148,48 +166,51 @@ def send_brevo_email(to_email, subject, html_content):
         return False
 
 # -------------------------------------------------
-# 4. PUBLIC ROUTES
+# 5. PUBLIC ROUTES
 # -------------------------------------------------
-@app.route('/')
+@app.route("/")
 def home(): return redirect(FRONTEND_URL)
 
-@app.route('/api/get-config', methods=['GET'])
-def get_config(): return jsonify({'key_id': RAZORPAY_KEY_ID})
+@app.route("/api/get-config")
+def get_config(): return jsonify({"key_id": RAZORPAY_KEY_ID})
 
-@app.route('/api/check_distributor', methods=['POST'])
+@app.route("/api/check_distributor", methods=["POST"])
 def check_distributor():
     try:
-        code = request.json.get('code', '').strip().upper()
+        code = request.json.get("code", "").strip().upper()
         dist = Distributor.query.filter_by(code=code).first()
-        # Only allow verified distributors to give discounts
+        # Only allow Verified Distributors
         if dist and dist.is_verified:
-            return jsonify({'valid': True, 'discount': dist.discount_percent, 'name': dist.name})
-        return jsonify({'valid': False})
-    except: return jsonify({'valid': False}), 500
+            return jsonify({"valid": True, "discount": dist.discount_percent, "name": dist.name})
+        return jsonify({"valid": False})
+    except: return jsonify({"valid": False}), 500
 
-@app.route('/create_order', methods=['POST'])
+@app.route("/create_order", methods=["POST"])
 def create_order():
     try:
         data = request.json
-        code = data.get('distributor_code', '').strip().upper()
-        base_amount = 29900 if data.get('plan') == 'basic' else 59900
+        plan = data.get("plan")
+        code = data.get("distributor_code", "").strip().upper() if data.get("distributor_code") else ""
+        
+        base_amount = 29900 if plan == "basic" else 59900
         final_amount = base_amount
         dist_id_str = "None"
-        
+
         if code:
             dist = Distributor.query.filter_by(code=code).first()
             if dist and dist.is_verified:
-                final_amount = int(base_amount - ((base_amount * dist.discount_percent) / 100))
+                discount_amount = (base_amount * dist.discount_percent) / 100
+                final_amount = int(base_amount - discount_amount)
                 dist_id_str = str(dist.id)
-        
+
         order = razorpay_client.order.create({
-            'amount': final_amount, 'currency': 'INR', 'payment_capture': '1',
-            'notes': {'plan': str(data.get('plan')), 'distributor_id': dist_id_str}
+            "amount": final_amount, "currency": "INR", "payment_capture": "1",
+            "notes": {"plan": str(plan), "distributor_id": dist_id_str}
         })
         return jsonify(order)
-    except Exception as e: return jsonify({'error': str(e)}), 500
+    except Exception as e: return jsonify({"error": str(e)}), 500
 
-@app.route('/verify_payment', methods=['POST'])
+@app.route("/verify_payment", methods=["POST"])
 def verify_payment():
     data = request.json
     try:
@@ -206,12 +227,12 @@ def verify_payment():
             amount_paid=order['amount'] / 100, distributor_id=dist_obj.id if dist_obj else None
         )
         db.session.add(new_lic); db.session.commit()
-        return jsonify({'success': True, 'license_key': new_key})
-    except Exception as e: return jsonify({'success': False, 'message': str(e)})
+        return jsonify({"success": True, "license_key": new_key})
+    except Exception as e: return jsonify({"success": False, "message": str(e)})
 
-@app.route('/download/license/<key>')
+@app.route("/download/license/<key>")
 def download_license_file(key):
-    return send_file(io.BytesIO(key.encode()), mimetype='text/plain', as_attachment=True, download_name='license.zarqeen')
+    return send_file(io.BytesIO(key.encode()), mimetype="text/plain", as_attachment=True, download_name="license.zarqeen")
 
 @app.route('/api/validate_license', methods=['POST'])
 def validate_license():
@@ -233,41 +254,39 @@ def validate_license():
     return jsonify({'valid': False, 'message': 'Invalid Key'})
 
 # -------------------------------------------------
-# 5. DISTRIBUTOR SYSTEM
+# 6. DISTRIBUTOR REGISTRATION & DASHBOARD
 # -------------------------------------------------
 
-# A. REGISTRATION (With OTP Limit & Verification)
+# A. REGISTER
 @app.route('/api/distributor/register', methods=['POST'])
 def register_distributor():
     data = request.json
     email = data.get('email').strip()
     
-    # 1. Check Max Limit (Safety against spam)
+    # 1. Limit Check (approx 450,000 unique 4-letter codes)
     if Distributor.query.count() > 450000:
-        return jsonify({'success': False, 'message': 'Registration Limit Reached'})
+        return jsonify({'success': False, 'message': 'Distributor limit reached.'})
 
     dist = Distributor.query.filter_by(email=email).first()
     
     if dist and dist.is_verified:
-        return jsonify({'success': False, 'message': 'Email already registered and verified.'})
+        return jsonify({'success': False, 'message': 'Email already registered.'})
     
-    # If not exists or not verified, we process them
     otp = str(random.randint(100000, 999999))
     
     if not dist:
-        # Generate Unique Code
         while True:
             code = ''.join(random.choices(string.ascii_uppercase, k=4))
             if not Distributor.query.filter_by(code=code).first(): break
         
         dist = Distributor(
             code=code, name=data.get('name'), phone=data.get('phone'), email=email,
-            discount_percent=10, is_verified=False # Start Unverified
+            discount_percent=10, is_verified=False 
         )
         dist.set_password(data.get('password'))
         db.session.add(dist)
     else:
-        # Update existing unverified account with new password/details if needed
+        # Update existing unverified account
         dist.name = data.get('name')
         dist.phone = data.get('phone')
         dist.set_password(data.get('password'))
@@ -276,12 +295,12 @@ def register_distributor():
     dist.otp_expiry = datetime.utcnow() + timedelta(minutes=10)
     db.session.commit()
     
-    # Send Verification Email
-    html = f"<h2>Verify Your Account</h2><p>Your OTP is: <b>{otp}</b></p>"
-    send_brevo_email(email, "Verify Zarqeen Account", html)
+    print(f">>> REGISTRATION OTP for {email}: {otp}")
+    send_brevo_email(email, "Verify Zarqeen Account", f"<h2>OTP: {otp}</h2>")
     
-    return jsonify({'success': True, 'message': 'OTP Sent to Email. Please Verify.', 'require_otp': True})
+    return jsonify({'success': True, 'message': 'OTP Sent. Please Verify.'})
 
+# B. VERIFY
 @app.route('/api/distributor/verify-registration', methods=['POST'])
 def verify_registration():
     data = request.json
@@ -292,78 +311,50 @@ def verify_registration():
         dist.is_verified = True
         dist.otp_code = None
         db.session.commit()
-        return jsonify({'success': True, 'message': 'Account Verified! Your Code: ' + dist.code, 'code': dist.code})
+        return jsonify({'success': True, 'message': 'Verified!', 'code': dist.code})
     
-    return jsonify({'success': False, 'message': 'Invalid or Expired OTP'})
+    return jsonify({'success': False, 'message': 'Invalid OTP'})
 
-# B. LOGIN
+# C. LOGIN
 @app.route('/api/distributor/login', methods=['POST'])
 def api_distributor_login():
     data = request.json
     dist = Distributor.query.filter_by(email=data.get('email')).first()
     if dist and dist.check_password(data.get('password')):
         if not dist.is_verified:
-            return jsonify({'success': False, 'message': 'Account not verified. Register again to verify.'})
+            return jsonify({'success': False, 'message': 'Account not verified.'})
             
         dist.api_token = secrets.token_hex(16)
         db.session.commit()
         return jsonify({'success': True, 'token': dist.api_token})
     return jsonify({'success': False, 'message': 'Invalid Login'})
 
-# C. DASHBOARD & DATA
-@app.route("/api/distributor/data", methods=["GET"])
+# D. DATA & BANKING
+@app.route('/api/distributor/data', methods=['GET'])
 def api_get_distributor_data():
-    token = request.headers.get("Authorization", "").replace("Bearer ", "")
+    token = request.headers.get('Authorization', '').replace('Bearer ', '')
     dist = Distributor.query.filter_by(api_token=token).first()
-    if not dist: return jsonify({"error": "Invalid Token"}), 401
-
-    # 1. Pagination & History
-    page = request.args.get("page", 1, type=int)
+    if not dist: return jsonify({'error': 'Invalid Token'}), 401
+    
+    page = request.args.get('page', 1, type=int)
     query = License.query.filter_by(distributor_id=dist.id).order_by(License.created_at.desc())
     pagination = query.paginate(page=page, per_page=10, error_out=False)
     
-    # 2. Financials
     total_earned = sum(safe_float(l.amount_paid) for l in query.all()) * 0.20
-    
-    # 3. Level & Progress Logic
-    current_lvl_id = dist.level
-    current_lvl_data = LEVELS.get(current_lvl_id, LEVELS[1])
-    
-    # Calculate Current Month Sales
-    now = datetime.utcnow()
-    start_of_month = datetime(now.year, now.month, 1)
-    month_sales = License.query.filter(
-        License.distributor_id == dist.id,
-        License.created_at >= start_of_month
-    ).count()
-    
-    # Determine Next Level Target
-    next_lvl_id = current_lvl_id + 1
-    next_lvl_data = LEVELS.get(next_lvl_id)
-    
-    progress_info = {
-        "current_level": current_lvl_data['name'],
-        "month_sales": month_sales,
-        "next_level": next_lvl_data['name'] if next_lvl_data else "Max Level",
-        "target": next_lvl_data['target'] if next_lvl_data else 0,
-        "is_max": False if next_lvl_data else True
-    }
-
-    # 4. Format Sales History
-    sales_data = [{'date': s.created_at.strftime('%Y-%m-%d'), 'plan': s.plan_type, 'amount': s.amount_paid, 'status': 'INSTALLED' if s.is_used else 'PENDING', 'key': s.license_key} for s in pagination.items]
+    sales_data = []
+    for s in pagination.items:
+        exp = s.expiry_date.strftime('%Y-%m-%d') if s.expiry_date else '-'
+        sales_data.append({'date': s.created_at.strftime('%Y-%m-%d'), 'plan': s.plan_type, 'amount': s.amount_paid, 'status': 'INSTALLED' if s.is_used else 'PENDING', 'key': s.license_key, 'version': s.software_version, 'last_login': s.last_login_date.strftime('%Y-%m-%d %H:%M') if s.last_login_date else '-', 'expiry': exp})
 
     return jsonify({
         "name": dist.name, "code": dist.code, "discount": dist.discount_percent,
-        "total_sales": query.count(), "commission_earned": total_earned,
-        "commission_paid": safe_float(dist.commission_paid),
+        "total_sales": query.count(), "commission_earned": total_earned, "commission_paid": safe_float(dist.commission_paid),
         "balance_due": total_earned - safe_float(dist.commission_paid),
         "sales_history": sales_data, "backend_url": request.host_url,
         "bank_info": {"bank_name": dist.bank_name, "account_holder": dist.account_holder, "account_number": dist.account_number, "ifsc": dist.ifsc_code, "upi": dist.upi_id},
-        "pagination": {"total_pages": pagination.pages, "has_next": pagination.has_next, "has_prev": pagination.has_prev},
-        "progress": progress_info # <--- Sending this to frontend
+        "pagination": {"total_pages": pagination.pages, "has_next": pagination.has_next, "has_prev": pagination.has_prev}
     })
 
-# D. UPDATE BANKING
 @app.route('/api/distributor/update-bank', methods=['POST'])
 def update_bank():
     token = request.headers.get('Authorization', '').replace('Bearer ', '')
@@ -377,38 +368,11 @@ def update_bank():
     dist.ifsc_code = data.get('ifsc_code')
     dist.upi_id = data.get('upi_id')
     db.session.commit()
-    return jsonify({'success': True, 'message': 'Bank Details Updated'})
+    return jsonify({'success': True})
 
-# E. PASSWORD RESET (Forgot Password)
-@app.route('/api/send-otp', methods=['POST'])
-def send_otp():
-    email = request.json.get('email')
-    dist = Distributor.query.filter_by(email=email).first()
-    if not dist: return jsonify({'success': False, 'message': 'Email not registered'})
-    
-    otp = str(random.randint(100000, 999999))
-    dist.otp_code = otp
-    dist.otp_expiry = datetime.utcnow() + timedelta(minutes=10)
-    db.session.commit()
-    
-    print(f">>> DEBUG OTP for {email}: {otp}")
-    send_brevo_email(email, "Password Reset Code", f"<h2>OTP: {otp}</h2>")
-    return jsonify({'success': True, 'message': 'OTP sent'})
-
-@app.route('/api/reset-with-otp', methods=['POST'])
-def reset_with_otp():
-    data = request.json
-    dist = Distributor.query.filter_by(email=data.get('email')).first()
-    if not dist: return jsonify({'success': False})
-    
-    if str(dist.otp_code) == str(data.get('otp')) and datetime.utcnow() <= dist.otp_expiry:
-        dist.set_password(data.get('new_password'))
-        dist.otp_code = None
-        db.session.commit()
-        return jsonify({'success': True, 'message': 'Password changed'})
-    return jsonify({'success': False, 'message': 'Invalid OTP'})
-
-# --- ADMIN PANEL ROUTES ---
+# -------------------------------------------------
+# 7. ADMIN PANEL
+# -------------------------------------------------
 @app.route("/admin/dashboard")
 @login_required
 def dashboard():
@@ -427,8 +391,10 @@ def add_distributor():
         code = request.form.get("code", "").strip().upper()
         email = request.form.get("email", "").strip()
         if not code or not email: return redirect(url_for("dashboard"))
-        if Distributor.query.filter((Distributor.code==code)|(Distributor.email==email)).first(): return redirect(url_for("dashboard"))
         
+        if Distributor.query.filter((Distributor.code==code)|(Distributor.email==email)).first():
+            flash("Exists already", "danger"); return redirect(url_for("dashboard"))
+
         new_dist = Distributor(
             code=code, name=request.form.get("name"), phone=request.form.get("phone"), email=email,
             discount_percent=int(request.form.get("discount", 10)), is_verified=True, # Admin created = Verified
@@ -511,12 +477,35 @@ def export_data(type):
     output.headers["Content-type"] = "text/csv"
     return output
 
+@app.route("/api/send-otp", methods=["POST"])
+def send_otp():
+    # Forgot Password Flow
+    email = request.json.get("email")
+    dist = Distributor.query.filter_by(email=email).first()
+    if not dist: return jsonify({"success": False, "message": "Email not registered"})
+    otp = str(random.randint(100000, 999999))
+    dist.otp_code = otp; dist.otp_expiry = datetime.utcnow() + timedelta(minutes=10)
+    db.session.commit()
+    print(f">>> DEBUG OTP for {email}: {otp}")
+    send_brevo_email(email, "Reset Password Code", f"<h2>OTP: {otp}</h2>")
+    return jsonify({"success": True, "message": "OTP sent"})
+
+@app.route("/api/reset-with-otp", methods=["POST"])
+def reset_with_otp():
+    data = request.json
+    dist = Distributor.query.filter_by(email=data.get("email")).first()
+    if not dist: return jsonify({"success": False})
+    if str(dist.otp_code) == str(data.get("otp")) and datetime.utcnow() <= dist.otp_expiry:
+        dist.set_password(data.get("new_password")); dist.otp_code = None; db.session.commit()
+        return jsonify({"success": True, "message": "Password Changed"})
+    return jsonify({"success": False, "message": "Invalid/Expired OTP"})
+
 @app.route("/reset-db-now")
 def reset_db():
     with app.app_context():
-        try: db.create_all()
+        try: db.drop_all(); db.create_all()
         except: pass
-    return "DB Updated with verified column"
+    return "DB Updated with is_verified column"
 
 if __name__ == "__main__":
     app.run(debug=True)
