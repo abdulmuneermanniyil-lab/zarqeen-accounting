@@ -92,6 +92,34 @@
             {% endif %}
         {% endwith %}
 
+        <!-- Add this BEFORE the Distributors Card -->
+<div class="card" style="background:#F0F9FF; border:1px solid #BAE6FD;">
+    <h2>🎉 Special Occasion Bonus</h2>
+    <form action="/admin/update_settings" method="POST" style="display:flex; gap:15px; align-items:center;">
+        <div>
+            <label>Extra Commission % (On MRP)</label>
+            <input type="number" name="bonus" value="{{ settings.special_bonus_percent }}" style="width:150px;">
+        </div>
+        <div>
+            <label>Occasion Message</label>
+            <input type="text" name="message" value="{{ settings.special_message }}" placeholder="e.g. Christmas Bonus!">
+        </div>
+        <button class="btn btn-blue" style="margin-top:15px;">Update Bonus</button>
+    </form>
+    <p style="font-size:0.8rem; color:#0369A1; margin-top:5px;">This % is added ON TOP of the distributor's level commission.</p>
+</div>
+
+<!-- Update Distributor Table Row -->
+<!-- Inside <tbody>... -->
+<tr>
+    <td>{{ d.obj.name }}<br><small>{{ d.obj.email }}</small></td>
+    <td>
+        <strong>{{ d.obj.code }}</strong><br>
+        <span class="badge" style="background:gold; color:black;">{{ d.level_name }}</span>
+    </td>
+    <!-- ... Rest same ... -->
+        
+        
         <!-- 1. DISTRIBUTORS -->
         <div class="card">
             <div class="header-row">
