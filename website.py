@@ -56,7 +56,7 @@ razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
 LEVELS = {
     1: {'name': 'Bronze', 'target': 0, 'commission': 15},
     2: {'name': 'Silver', 'target': 5, 'commission': 25},
-    3: {'name': 'Gold',   'target': 20, 'commission': 40}
+    3: {'name': 'Gold',   'target': 20, 'commission': 35}
 }
 
 # --- MODELS ---
