@@ -281,7 +281,14 @@ def validate_license():
         if lic.is_used: db.session.commit(); return jsonify({'valid': False, 'message': 'Used.'})
         lic.is_used = True; lic.used_at = datetime.utcnow(); db.session.commit()
         dur = 365 if lic.plan_type == 'basic' else 1095
-        return jsonify({'valid': True, 'plan': lic.plan_type, 'duration_days': dur, 'support_info': {'name': lic.distributor.name if lic.distributor else "Zarqeen", 'contact': lic.distributor.phone if lic.distributor else "zarqeensoftware@gmail.com"}})
+        return jsonify({
+    'valid': True,
+    'plan': lic.plan_type,
+    'duration_days': dur,
+    'distributor_phone': lic.distributor.phone if lic.distributor else None,
+    'distributor_name': lic.distributor.name if lic.distributor else "Zarqeen"
+})
+
     return jsonify({'valid': False, 'message': 'Invalid'})
 
 # --- ADMIN ---
