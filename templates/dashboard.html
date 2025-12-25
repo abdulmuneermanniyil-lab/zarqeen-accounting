@@ -89,32 +89,58 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for d in distributors %}
-                    <tr>
-                        <form action="/admin/edit_distributor/{{ d.obj.id }}" method="POST">
-                            <td><input type="text" name="name" value="{{ d.obj.name }}"></td>
-                            <td>{{ d.obj.code }}<br><small>{{ d.obj.email }}</small></td>
-                            <td>{{ d.level_name }}</td>
-                            <td>₹{{ d.earned }}</td>
-                            <td><input type="number" step="0.01" name="manual_paid_total" value="{{ d.obj.commission_paid }}" style="width: 80px;"></td>
-                            <td style="color: {{ 'red' if d.balance > 0 else 'green' }}">₹{{ d.balance }}</td>
-                            <td style="font-size: 0.8rem;">
-                                {{ d.obj.bank_name }}<br>
-                                {{ d.obj.account_number }}<br>
-                                {{ d.obj.ifsc_code }}
-                            </td>
-                            <td>
-                                <button type="submit" class="btn btn-sm">Save</button>
-                            </td>
-                        </form>
-                        <td>
-                            <form action="/admin/delete_distributor/{{ d.obj.id }}" method="POST" onsubmit="return confirm('Delete?');">
-                                <button type="submit" class="btn btn-sm btn-red">X</button>
-                            </form>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
+    {% for d in distributors %}
+    <tr>
+        <form action="/admin/edit_distributor/{{ d.obj.id }}" method="POST">
+            <!-- Name & Email Input -->
+            <td>
+                <input type="text" name="name" value="{{ d.obj.name }}" style="width:100%; margin-bottom:5px; font-weight:bold;">
+                <input type="email" name="email" value="{{ d.obj.email }}" style="width:100%; font-size:0.85rem;">
+            </td>
+            
+            <!-- Code (Read Only) & Phone Input -->
+            <td>
+                <strong style="color:#2563EB;">{{ d.obj.code }}</strong>
+                <br>
+                <input type="text" name="phone" value="{{ d.obj.phone }}" placeholder="Phone" style="width:100px; margin-top:5px; font-size:0.8rem;">
+            </td>
+            
+            <!-- Level & Discount Input -->
+            <td>
+                <span class="badge">{{ d.level_name }}</span>
+                <div style="margin-top:5px; display:flex; align-items:center; gap:5px;">
+                    <small>Disc%</small>
+                    <input type="number" name="discount" value="{{ d.obj.discount_percent }}" style="width:50px;">
+                </div>
+            </td>
+            
+            <!-- Financials -->
+            <td>₹{{ d.earned }}</td>
+            <td>
+                <input type="number" step="0.01" name="manual_paid_total" value="{{ d.obj.commission_paid }}" style="width: 80px;">
+            </td>
+            <td style="color: {{ 'red' if d.balance > 0 else 'green' }}">₹{{ d.balance }}</td>
+            
+            <!-- Bank Info (Hover to see, or keep simple) -->
+            <td style="font-size: 0.8rem;">
+                <input type="text" name="upi_id" value="{{ d.obj.upi_id or '' }}" placeholder="UPI ID" style="width:100%;">
+            </td>
+            
+            <!-- Actions -->
+            <td>
+                <button type="submit" class="btn btn-sm" title="Save Changes">💾 Save</button>
+            </td>
+        </form>
+        
+        <!-- Delete Button (Outside the edit form) -->
+        <td>
+            <form action="/admin/delete_distributor/{{ d.obj.id }}" method="POST" onsubmit="return confirm('Are you sure? This will delete all sales history for this user.');">
+                <button type="submit" class="btn btn-sm btn-red">X</button>
+            </form>
+        </td>
+    </tr>
+    {% endfor %}
+</tbody>
             </table>
         </div>
     </div>
