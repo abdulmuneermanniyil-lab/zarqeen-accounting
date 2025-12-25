@@ -193,23 +193,64 @@ order = razorpay_client.order.create({
 def verify_payment():
     data = request.json
     try:
-        razorpay_client.utility.verify_payment_signature({'razorpay_order_id': data['razorpay_order_id'], 'razorpay_payment_id': data['razorpay_payment_id'], 'razorpay_signature': data['razorpay_signature']})
-        order = razorpay_client.order.fetch(data['razorpay_order_id'])
-        dist_id = order['notes'].get('distributor_id')
-        dist_obj = Distributor.query.get(int(dist_id)) if dist_id and dist_id != "None" else None
+        # 1. Verify Signature
+        # IMPORTANT: Razorpay expects strictly strings here
+        params_dict = {
+            'razorpay_order_id': str(data['razorpay_order_id']),
+            'razorpay_payment_id': str(data['razorpay_payment_id']),
+            'razorpay_signature': str(data['razorpay_signature'])
+        }
+        razorpay_client.utility.verify_payment_signature(params_dict)
         
-        comm = 0.0
-        if dist_obj:
-            mrp = 299.0 if data.get('plan_type') == 'basic' else 599.0
-            st = Settings.query.first()
-            bonus = st.special_bonus_percent if st else 0
-            comm = (mrp * (LEVELS[dist_obj.level]['commission'] + bonus)) / 100
+        # 2. Fetch Order Data safely
+        try:
+            order = razorpay_client.order.fetch(data['razorpay_order_id'])
+            # Safely get notes, default to empty dict if missing
+            notes = order.get('notes', {})
+            dist_id = notes.get('distributor_id')
+            amount_paid_paise = order.get('amount', 0)
+        except Exception as e:
+            print(f"Error fetching order: {e}")
+            # Fallback if fetch fails (Unlikely but safe)
+            dist_id = "None"
+            amount_paid_paise = 29900 if data.get('plan_type') == 'basic' else 59900
 
+        # 3. Calculate Commission
+        dist_obj = None
+        comm = 0.0
+        
+        if dist_id and str(dist_id) != "None":
+            try:
+                dist_obj = Distributor.query.get(int(dist_id))
+                if dist_obj:
+                    # Calculate Commission
+                    mrp = 299.0 if data.get('plan_type') == 'basic' else 599.0
+                    st = Settings.query.first()
+                    bonus = st.special_bonus_percent if st else 0
+                    comm = (mrp * (LEVELS[dist_obj.level]['commission'] + bonus)) / 100
+            except:
+                pass # Continue even if distributor lookup fails (don't block license)
+
+        # 4. Generate License
         new_key = generate_unique_key(data.get('plan_type'), dist_obj.code if dist_obj else None)
-        new_lic = License(license_key=new_key, plan_type=data.get('plan_type'), payment_id=data['razorpay_payment_id'], amount_paid=order['amount']/100, commission_earned=comm, distributor_id=dist_obj.id if dist_obj else None)
-        db.session.add(new_lic); db.session.commit()
+        
+        new_lic = License(
+            license_key=new_key, 
+            plan_type=data.get('plan_type'), 
+            payment_id=data['razorpay_payment_id'], 
+            amount_paid=amount_paid_paise / 100.0, 
+            commission_earned=comm, 
+            distributor_id=dist_obj.id if dist_obj else None
+        )
+        
+        db.session.add(new_lic)
+        db.session.commit()
+        
         return jsonify({'success': True, 'license_key': new_key})
-    except Exception as e: return jsonify({'success': False, 'message': str(e)})
+        
+    except Exception as e:
+        print(f"VERIFY ERROR: {str(e)}") # Print to Render Logs
+        return jsonify({'success': False, 'message': str(e)})
 
 @app.route('/download/license/<key>')
 def download_license_file(key): return send_file(io.BytesIO(key.encode()), mimetype='text/plain', as_attachment=True, download_name='license.zarqeen')
