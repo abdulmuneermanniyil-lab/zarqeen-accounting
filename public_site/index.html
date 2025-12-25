@@ -442,46 +442,79 @@
         }
 
         async function buyPlan(planType) {
-            showLoader("Starting Payment..."); if (!RAZORPAY_KEY_ID) await fetchConfig();
+            showLoader("Starting Payment..."); 
+            if (!RAZORPAY_KEY_ID) await fetchConfig();
+            
             try {
-                const res = await fetch(`${BACKEND_URL}/create_order`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ plan: planType, distributor_code: ACTIVE_DISTRIBUTOR_CODE_BUY }) });
-                const orderData = await res.json(); hideLoader();
-                const options = { "key": RAZORPAY_KEY_ID, "amount": orderData.amount, "currency": "INR", "name": "Zarqeen Alif", "handler": async function (response){ showLoader("Verifying..."); try { const verifyRes = await fetch(`${BACKEND_URL}/verify_payment`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ razorpay_payment_id: response.razorpay_payment_id, razorpay_order_id: response.razorpay_order_id, razorpay_signature: response.razorpay_signature, plan_type: planType }) }); const result = await verifyRes.json(); hideLoader(); if(result.success) { const blob = new Blob([result.license_key], { type: "text/plain" }); const url = window.URL.createObjectURL(blob); document.getElementById('licenseKeyArea').innerHTML = `<a href="${url}" download="license.zarqeen" class="btn-buy primary" style="text-decoration:none;">⬇ Download License File</a>`; document.getElementById('licenseModal').style.display='block'; } else alert('Verification failed. Contact support.'); } catch (e) { hideLoader(); alert("Verification error."); } }, "modal": { "ondismiss": function(){ hideLoader(); } } };
-                new Razorpay(options).open();
-            } catch(e) { hideLoader(); alert("Connection Error"); }
-        }
+                // 1. Create Order
+                const res = await fetch(`${BACKEND_URL}/create_order`, { 
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'}, 
+                    body: JSON.stringify({ plan: planType, distributor_code: ACTIVE_DISTRIBUTOR_CODE_BUY }) 
+                });
+                const orderData = await res.json(); 
+                hideLoader();
+                
+                if (orderData.error) {
+                    alert("Order Creation Failed: " + orderData.error);
+                    return;
+                }
 
-        document.getElementById('distForm').addEventListener('submit', async function(e) {
-            e.preventDefault(); showLoader("Logging in..."); const data = Object.fromEntries(new FormData(this));
-            try { const res = await fetch(`${BACKEND_URL}/api/distributor/login`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) }); const r = await res.json(); hideLoader(); if(r.success) { localStorage.setItem('dist_token', r.token); closeLoginModal(); loadDashboard(1); } else alert(r.message || "Failed"); } catch(e) { hideLoader(); alert("Error connecting"); }
-        });
+                // 2. Open Razorpay
+                const options = { 
+                    "key": RAZORPAY_KEY_ID, 
+                    "amount": orderData.amount, 
+                    "currency": "INR", 
+                    "name": "Zarqeen Alif", 
+                    "description": `License Key for ${planType} Plan`,
+                    "order_id": orderData.id, // CRITICAL: Must match backend order ID
+                    "handler": async function (response){ 
+                        showLoader("Verifying..."); 
+                        try { 
+                            // 3. Verify Payment
+                            const verifyRes = await fetch(`${BACKEND_URL}/verify_payment`, { 
+                                method: 'POST', 
+                                headers: {'Content-Type': 'application/json'}, 
+                                body: JSON.stringify({ 
+                                    razorpay_payment_id: response.razorpay_payment_id, 
+                                    razorpay_order_id: response.razorpay_order_id, 
+                                    razorpay_signature: response.razorpay_signature, 
+                                    plan_type: planType 
+                                }) 
+                            }); 
+                            const result = await verifyRes.json(); 
+                            hideLoader(); 
+                            
+                            if(result.success) { 
+                                // Success! Show License
+                                const blob = new Blob([result.license_key], { type: "text/plain" }); 
+                                const url = window.URL.createObjectURL(blob); 
+                                document.getElementById('licenseKeyArea').innerHTML = `<a href="${url}" download="license.zarqeen" class="btn-buy primary" style="text-decoration:none;">⬇ Download License File</a>`; 
+                                document.getElementById('licenseModal').style.display='block'; 
+                            } else {
+                                // SHOW ACTUAL SERVER ERROR
+                                alert('Verification failed: ' + result.message); 
+                            } 
+                        } catch (e) { 
+                            hideLoader(); 
+                            alert("Critical Error: " + e.message); 
+                        } 
+                    }, 
+                    "modal": { "ondismiss": function(){ hideLoader(); } } 
+                };
+                
+                const rzp = new Razorpay(options);
+                rzp.on('payment.failed', function (response){
+                    hideLoader();
+                    alert("Payment Failed: " + response.error.description);
+                });
+                rzp.open();
 
-        // ADMIN LOGIN HANDLER
-document.getElementById('adminForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    showLoader("Verifying Admin...");
-    const data = Object.fromEntries(new FormData(this));
-    try {
-        const res = await fetch(`${BACKEND_URL}/admin/login`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(data),
-            credentials: 'include'  // <--- THIS LINE IS CRITICAL
-        });
-        const result = await res.json();
-        hideLoader();
-        if(result.success) {
-            // Success! Redirect to dashboard
-            window.location.href = result.redirect || `${BACKEND_URL}/admin/dashboard`;
-        } else {
-            alert(result.message || "Invalid Credentials");
+            } catch(e) { 
+                hideLoader(); 
+                alert("Connection Error: " + e.message); 
+            }
         }
-    } catch(e) {
-        hideLoader();
-        console.error(e);
-        alert("Connection Error");
-    }
-});
 
         let CURRENT_PAGE = 1;
         async function loadDashboard(page) {
