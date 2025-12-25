@@ -2,151 +2,181 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Zarqeen Admin</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
     <style>
-        body { font-family: 'Inter', sans-serif; background: #F3F4F6; padding: 20px; }
-        .container { max-width: 1400px; margin: 0 auto; }
-        .card { background: white; padding: 20px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        h2 { margin-top: 0; color: #1F2937; display: flex; justify-content: space-between; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9rem; }
-        th, td { text-align: left; padding: 12px; border-bottom: 1px solid #E5E7EB; }
-        th { background: #F9FAFB; }
-        .btn { padding: 6px 12px; border-radius: 5px; border: none; cursor: pointer; color: white; margin-right: 5px; text-decoration: none; display: inline-block; font-size: 0.85rem;}
-        .btn-red { background: #EF4444; } .btn-green { background: #10B981; } .btn-blue { background: #2563EB; } .btn-gray { background: #6B7280; }
-        input { padding: 8px; border: 1px solid #D1D5DB; border-radius: 5px; width: 100%; box-sizing: border-box; margin-bottom: 10px; }
-        .modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); backdrop-filter: blur(2px); }
-        .modal-content { background-color: white; margin: 5vh auto; padding: 2rem; border-radius: 12px; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; }
-        .balance-pos { color: #059669; font-weight: bold; } .balance-neg { color: #DC2626; font-weight: bold; }
+        :root { --primary: #111827; --accent: #2563EB; --bg: #F3F4F6; --white: #fff; }
+        * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background: var(--bg); margin: 0; padding: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .card { background: var(--white); padding: 20px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
+        th { background: #f9fafb; font-weight: 600; }
+        .btn { padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; color: white; background: var(--primary); font-size: 0.9rem; }
+        .btn-sm { padding: 4px 8px; font-size: 0.8rem; }
+        .btn-red { background: #DC2626; }
+        .form-row { display: flex; gap: 10px; margin-bottom: 10px; align-items: flex-end; }
+        input { padding: 8px; border: 1px solid #ddd; border-radius: 4px; flex: 1; }
+        .badge { padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; }
+        .badge-green { background: #D1FAE5; color: #065F46; }
+        .badge-red { background: #FEE2E2; color: #991B1B; }
+        .tabs { display: flex; gap: 10px; margin-bottom: 10px; }
+        .tab { padding: 10px 20px; background: #ddd; cursor: pointer; border-radius: 4px; }
+        .tab.active { background: var(--primary); color: white; }
+        .section { display: none; }
+        .section.active { display: block; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- SETTINGS -->
-       <div class="card" style="background:#F0F9FF; border:1px solid #BAE6FD;">
-    <!-- Header with Logout Button on the Right -->
-    <h2 style="display: flex; justify-content: space-between; align-items: center; margin-top: 0;">
-        <span>🎉 Special Bonus</span>
-        <a href="/admin/logout" class="btn btn-red" style="text-decoration: none; font-size: 0.9rem;">Logout</a>
-    </h2>
-
-    <!-- Settings Form -->
-    <form action="/admin/update_settings" method="POST" style="display:flex; gap:15px; align-items:center; margin-top: 15px;">
-        <div style="flex: 0 0 150px;">
-            <input type="number" name="bonus" value="{{ settings.special_bonus_percent }}" style="width:100%; margin:0;" placeholder="%">
-        </div>
-        <div style="flex-grow: 1;">
-            <input type="text" name="message" value="{{ settings.special_message }}" style="width:100%; margin:0;" placeholder="Message (e.g. Christmas Offer)">
-        </div>
-        <button class="btn btn-blue">Update</button>
-    </form>
-    <p style="font-size:0.8rem; color:#0369A1; margin-top:10px; margin-bottom: 0;">
-        This percentage is added <b>on top</b> of the distributor's existing level commission.
-    </p>
-</div>
-
-        <!-- DISTRIBUTORS -->
-        <div class="card">
-            <h2><span>👥 Distributors</span><a href="/admin/export/distributors" class="btn btn-gray">⬇ CSV</a></h2>
-            <details style="margin-bottom: 20px; border: 1px solid #eee; padding: 10px; border-radius: 8px;">
-                <summary style="cursor:pointer; font-weight:600; color:#2563EB;">+ Add New Distributor</summary>
-                <form action="/admin/add_distributor" method="POST" style="margin-top:15px;">
-                    <input type="text" name="name" required placeholder="Name">
-                    <input type="email" name="email" required placeholder="Email">
-                    <input type="text" name="phone" required placeholder="Phone">
-                    <input type="text" name="code" maxlength="4" style="text-transform:uppercase" required placeholder="Code">
-                    <input type="password" name="password" required placeholder="Password">
-                    <button type="submit" class="btn btn-green">Add Distributor</button>
-                </form>
-            </details>
-            <table>
-                <thead><tr><th>Name</th><th>Code/Level</th><th>Financials</th><th>Bank</th><th>Action</th></tr></thead>
-                <tbody>
-                    {% for dist_entry in distributors %}
-                    <tr>
-                        <td>{{ dist_entry.obj.name }}<br><small style="color:gray">{{ dist_entry.obj.email }}</small></td>
-                        <td><strong>{{ dist_entry.obj.code }}</strong><br><span style="background:gold; padding:2px 5px; border-radius:4px; font-size:0.7rem;">{{ dist_entry.level_name }}</span></td>
-                        <td>Earned: ₹{{ "%.2f"|format(dist_entry.earned) }}<br>Paid: ₹{{ "%.2f"|format(dist_entry.obj.commission_paid) }}<br>Bal: <b class="{{ 'balance-neg' if dist_entry.balance > 0 else 'balance-pos' }}">₹{{ "%.2f"|format(dist_entry.balance) }}</b></td>
-                        <td style="font-size:0.8rem">{{ dist_entry.obj.bank_name or '-' }} {{ dist_entry.obj.account_number }}<br>{{ dist_entry.obj.ifsc_code }}<br>{{ dist_entry.obj.upi_id }}</td>
-                        <td>
-                            <button class="btn btn-blue" onclick="openEdit('{{dist_entry.obj.id}}', '{{dist_entry.obj.name}}', '{{dist_entry.obj.email}}', '{{dist_entry.obj.phone}}', '{{dist_entry.obj.bank_name}}', '{{dist_entry.obj.account_holder}}', '{{dist_entry.obj.account_number}}', '{{dist_entry.obj.ifsc_code}}', '{{dist_entry.obj.upi_id}}', '{{dist_entry.obj.commission_paid}}')">Edit</button>
-                            <form action="{{ url_for('delete_distributor', id=dist_entry.obj.id) }}" method="POST" style="display:inline" onsubmit="return confirm('Delete?');"><button class="btn btn-red">X</button></form>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-
-        <!-- LICENSES -->
-        <div class="card">
-            <h2><span>📂 Licenses</span><a href="/admin/export/licenses" class="btn btn-gray">⬇ CSV</a></h2>
-            <table>
-                <thead><tr><th>Date</th><th>Key</th><th>Plan</th><th>Dist</th><th>Amt</th><th>Ver</th><th>Status</th><th>Actions</th></tr></thead>
-                <tbody>
-                    {% for lic in licenses %}
-                    <tr>
-                        <td>{{ lic.created_at.strftime('%d-%b') }}</td>
-                        <td style="font-family:monospace">{{ lic.license_key }}</td>
-                        <td>{{ lic.plan_type }}</td>
-                        <td>{{ lic.distributor.name if lic.distributor else 'Direct' }}</td>
-                        <td>₹{{ lic.amount_paid }}</td>
-                        <td>{{ lic.software_version or '-' }}</td>
-                        <td>
-                            <span style="background:{{ '#D1FAE5' if lic.is_used else '#F3F4F6' }}; padding:2px 6px; border-radius:4px; font-size:0.8rem;">
-                                {{ 'USED' if lic.is_used else 'ACTIVE' }}
-                            </span>
-                        </td>
-                        <td>
-                            <a href="/download/license/{{ lic.license_key }}" class="btn btn-green">⬇</a>
-                            <form action="{{ url_for('edit_license', id=lic.id) }}" method="POST" style="display:inline;">
-                                <input type="hidden" name="status" value="{{ 'active' if lic.is_used else 'used' }}">
-                                <button class="btn btn-blue">Toggle</button>
-                            </form>
-                            <form action="{{ url_for('delete_license', id=lic.id) }}" method="POST" style="display:inline" onsubmit="return confirm('Delete?');"><button class="btn btn-red">X</button></form>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+    <div class="header">
+        <h1>Zarqeen Admin</h1>
+        <div>
+            <a href="/admin/export/licenses" class="btn">Export Sales</a>
+            <a href="/admin/export/distributors" class="btn">Export Distributors</a>
+            <a href="/admin/logout" class="btn btn-red">Logout</a>
         </div>
     </div>
 
-    <!-- EDIT MODAL -->
-    <div id="editModal" class="modal">
-        <div class="modal-content">
-            <span style="float:right; cursor:pointer; font-size:24px;" onclick="document.getElementById('editModal').style.display='none'">&times;</span>
-            <h2>Edit Distributor</h2>
-            <form id="editForm" method="POST">
-                <input type="text" name="name" id="e_name" required placeholder="Name">
-                <input type="email" name="email" id="e_email" required placeholder="Email">
-                <input type="text" name="phone" id="e_phone" placeholder="Phone">
-                <input type="text" name="bank_name" id="e_bank_name" placeholder="Bank">
-                <input type="text" name="account_holder" id="e_acct_holder" placeholder="Holder">
-                <input type="text" name="account_number" id="e_acct_no" placeholder="Acct No">
-                <input type="text" name="ifsc_code" id="e_ifsc" placeholder="IFSC">
-                <input type="text" name="upi_id" id="e_upi" placeholder="UPI">
-                <div style="background:#ECFDF5; padding:10px; margin-top:10px; border:1px solid #10B981;">
-                    <label style="color:#047857;">💰 Add Payment</label>
-                    <input type="number" name="add_payment" placeholder="Amount (e.g. 500)">
-                    <label style="color:#B91C1C;">✏️ Correct Total</label>
-                    <input type="number" name="manual_paid_total" id="e_paid_total" placeholder="Overwrite Total">
+    <!-- Stats -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 20px;">
+        <div class="card"><h3>Total Licenses</h3><p style="font-size: 2rem; font-weight: bold;">{{ licenses|length }}</p></div>
+        <div class="card"><h3>Distributors</h3><p style="font-size: 2rem; font-weight: bold;">{{ distributors|length }}</p></div>
+        <div class="card">
+            <h3>Global Settings</h3>
+            <form action="/admin/update_settings" method="POST" style="margin-top: 10px;">
+                <div class="form-row">
+                    <div><label>Bonus Commission %</label><input type="number" name="bonus" value="{{ settings.special_bonus_percent }}"></div>
+                    <button type="submit" class="btn">Update</button>
                 </div>
-                <button type="submit" class="btn btn-blue" style="width:100%; margin-top:10px;">Save</button>
             </form>
         </div>
     </div>
 
+    <div class="tabs">
+        <div class="tab active" onclick="showTab('distributors')">Distributors</div>
+        <div class="tab" onclick="showTab('licenses')">Licenses</div>
+    </div>
+
+    <!-- Distributors Section -->
+    <div id="distributors" class="section active">
+        <div class="card">
+            <h3>Add New Distributor</h3>
+            <form action="/admin/add_distributor" method="POST" class="form-row">
+                <input type="text" name="name" placeholder="Name" required>
+                <input type="text" name="code" placeholder="Code (e.g. ALIF)" required>
+                <input type="email" name="email" placeholder="Email" required>
+                <input type="text" name="phone" placeholder="Phone" required>
+                <input type="number" name="discount" placeholder="Discount %" value="10" required>
+                <input type="password" name="password" placeholder="Password" required>
+                <button type="submit" class="btn">Add</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <h3>Distributor List</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Code</th>
+                        <th>Level</th>
+                        <th>Earned</th>
+                        <th>Paid</th>
+                        <th>Balance</th>
+                        <th>Bank Details</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for d in distributors %}
+                    <tr>
+                        <form action="/admin/edit_distributor/{{ d.obj.id }}" method="POST">
+                            <td><input type="text" name="name" value="{{ d.obj.name }}"></td>
+                            <td>{{ d.obj.code }}<br><small>{{ d.obj.email }}</small></td>
+                            <td>{{ d.level_name }}</td>
+                            <td>₹{{ d.earned }}</td>
+                            <td><input type="number" step="0.01" name="manual_paid_total" value="{{ d.obj.commission_paid }}" style="width: 80px;"></td>
+                            <td style="color: {{ 'red' if d.balance > 0 else 'green' }}">₹{{ d.balance }}</td>
+                            <td style="font-size: 0.8rem;">
+                                {{ d.obj.bank_name }}<br>
+                                {{ d.obj.account_number }}<br>
+                                {{ d.obj.ifsc_code }}
+                            </td>
+                            <td>
+                                <button type="submit" class="btn btn-sm">Save</button>
+                            </td>
+                        </form>
+                        <td>
+                            <form action="/admin/delete_distributor/{{ d.obj.id }}" method="POST" onsubmit="return confirm('Delete?');">
+                                <button type="submit" class="btn btn-sm btn-red">X</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Licenses Section -->
+    <div id="licenses" class="section">
+        <div class="card">
+            <h3>Recent Licenses</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Key</th>
+                        <th>Plan</th>
+                        <th>Amount</th>
+                        <th>Distributor</th>
+                        <th>Status</th>
+                        <th>Version</th>
+                        <th>Expiry</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for l in licenses %}
+                    <tr>
+                        <td>{{ l.created_at.strftime('%Y-%m-%d') }}</td>
+                        <td style="font-family: monospace;">{{ l.license_key }}</td>
+                        <td>{{ l.plan_type }}</td>
+                        <td>₹{{ l.amount_paid }}</td>
+                        <td>{{ l.distributor.name if l.distributor else 'Direct' }}</td>
+                        <td>
+                            {% if l.is_used %}
+                                <span class="badge badge-green">INSTALLED</span>
+                            {% else %}
+                                <span class="badge badge-red">PENDING</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ l.software_version }}</td>
+                        <td>{{ l.expiry_date.strftime('%Y-%m-%d') if l.expiry_date else '-' }}</td>
+                        <td>
+                            <form action="/admin/edit_license/{{ l.id }}" method="POST" style="display:inline;">
+                                <input type="hidden" name="status" value="{{ 'pending' if l.is_used else 'used' }}">
+                                <button type="submit" class="btn btn-sm">Toggle</button>
+                            </form>
+                            <form action="/admin/delete_license/{{ l.id }}" method="POST" style="display:inline;" onsubmit="return confirm('Delete?');">
+                                <button type="submit" class="btn btn-sm btn-red">X</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
     <script>
-        function openEdit(id, name, email, phone, bName, bHolder, bNo, ifsc, upi, currentPaid) {
-            document.getElementById('editForm').action = `/admin/edit_distributor/${id}`;
-            document.getElementById('e_name').value = name; document.getElementById('e_email').value = email; document.getElementById('e_phone').value = phone;
-            document.getElementById('e_bank_name').value = bName != 'None' ? bName : ''; document.getElementById('e_acct_holder').value = bHolder != 'None' ? bHolder : '';
-            document.getElementById('e_acct_no').value = bNo != 'None' ? bNo : ''; document.getElementById('e_ifsc').value = ifsc != 'None' ? ifsc : '';
-            document.getElementById('e_upi').value = upi != 'None' ? upi : ''; document.getElementById('e_paid_total').placeholder = `Current: ${currentPaid}`;
-            document.getElementById('editModal').style.display = 'block';
+        function showTab(id) {
+            document.querySelectorAll('.section').forEach(d => d.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            event.target.classList.add('active');
         }
-        window.onclick = function(e) { if(e.target == document.getElementById('editModal')) document.getElementById('editModal').style.display='none'; }
     </script>
 </body>
 </html>
