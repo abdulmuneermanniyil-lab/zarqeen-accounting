@@ -99,7 +99,11 @@
     </style>
 </head>
 <body>
-    <div id="actionLoader"><div class="spinner"></div><div id="loaderText" style="font-weight:600; margin-bottom:5px;">Processing...</div><div id="loaderSubText" style="font-size:0.9rem; color:gray"></div></div>
+    <div id="actionLoader" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.9); z-index: 999999; flex-direction: column; align-items: center; justify-content: center;">
+    <div class="spinner"></div>
+    <div id="loaderText" style="font-weight:600; margin-bottom:5px;">Loading Dashboard...</div>
+    <div id="loaderSubText" style="font-size:0.9rem; color:gray">Waking up server... please wait.</div>
+</div>
 
     <header>
         <div class="nav-container">
