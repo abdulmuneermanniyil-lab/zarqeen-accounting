@@ -142,7 +142,7 @@
         <div class="cta-group">
             <a href="https://drive.google.com/drive/folders/17O3vY4KYUzd7Rma4o8rp3j2iIrpqhJe9?usp=drive_link" target="_blank" onclick="checkDownload(event)"><button class="btn-lg btn-primary">Download Free Trial</button></a>
         </div>
-        <div class="specs">v1.1.0 • Supports A4, A5, Thermal 2" & 3" • 200MB • No Internet Required</div>
+        <div class="specs">v1.2.0 • Supports A4, A5, Thermal 2" & 3" • 200MB • No Internet Required</div>
     </section>
 
     <section id="features" class="features">
@@ -214,7 +214,6 @@
 
     <div id="bankModal" class="modal"><div class="modal-content"><span class="close-icon" onclick="document.getElementById('bankModal').style.display='none'">&times;</span><h2 style="text-align:center; margin-bottom:20px;">Update Banking Details</h2><form id="bankForm" class="login-form active" style="display:block;"><div class="form-group"><label>Bank Name</label><input type="text" name="bank_name" id="in_bank"></div><div class="form-group"><label>Account Holder Name</label><input type="text" name="account_holder" id="in_holder"></div><div class="form-group"><label>Account Number</label><input type="text" name="account_number" id="in_acct"></div><div class="form-group"><label>IFSC Code</label><input type="text" name="ifsc_code" id="in_ifsc"></div><div class="form-group"><label>UPI ID</label><input type="text" name="upi_id" id="in_upi"></div><button type="submit" class="btn-buy primary">Save Details</button></form></div></div>
 
-    <!-- UPDATED REGISTER MODAL: PASSWORD DISABLED INITIALLY -->
     <div id="registerModal" class="modal">
         <div class="modal-content">
             <span class="close-icon" onclick="document.getElementById('registerModal').style.display='none'">&times;</span>
@@ -238,7 +237,6 @@
                     </div>
                 </div>
                 
-                <!-- PASSWORD FIELD DISABLED INITIALLY -->
                 <div class="form-group">
                     <label>Password</label>
                     <input type="password" name="password" id="regPass" required disabled placeholder="Verify OTP first to enable">
@@ -256,7 +254,12 @@
             <div class="login-tabs"><button class="tab-btn active" onclick="switchTab('distributor')">Distributor</button><button class="tab-btn" onclick="switchTab('admin')">Admin</button></div>
             <form id="distForm" class="login-form active"><div class="form-group"><label>Email</label><input type="email" name="email" required></div><div class="form-group"><label>Password</label><input type="password" name="password" required></div><div style="text-align:right;"><a onclick="showForgot()" style="color:blue; cursor:pointer; font-size:0.8rem;">Forgot Password?</a></div><button type="submit" class="btn-buy primary">Login</button></form>
             <div id="forgotFlow" style="display:none;"><div id="step1"><h3>Reset Password</h3><div class="form-group"><label>Enter Email</label><input type="email" id="resetEmail"></div><button onclick="sendOtp()" class="btn-buy primary">Send OTP</button></div><div id="step2" style="display:none;"><h3>Verify OTP</h3><div class="form-group"><label>Enter 6-digit Code</label><input type="text" id="otpCode"></div><div class="form-group"><label>New Password</label><input type="password" id="newPass"></div><button onclick="resetWithOtp()" class="btn-buy primary">Change Password</button></div><p style="text-align:center; margin-top:10px;"><a onclick="hideForgot()" style="cursor:pointer; color:gray;">Back</a></p></div>
-            <form id="adminForm" class="login-form"><div class="form-group"><label>Username</label><input type="text" name="username" required></div><div class="form-group"><label>Password</label><input type="password" name="password" required></div><button type="submit" class="btn-buy primary" style="background:#111827;">Login Admin</button></form>
+            
+            <form id="adminForm" class="login-form">
+                <div class="form-group"><label>Username</label><input type="text" name="username" required></div>
+                <div class="form-group"><label>Password</label><input type="password" name="password" required></div>
+                <button type="submit" class="btn-buy primary" style="background:#111827;">Login Admin</button>
+            </form>
         </div>
     </div>
 
@@ -301,44 +304,29 @@
         let regDataTemp = {}; 
         async function sendRegOtp() {
             const form = document.getElementById('regForm'); 
-            const name = form.querySelector('[name="name"]').value.trim();
-            const phone = form.querySelector('[name="phone"]').value.trim();
-            const email = form.querySelector('[name="email"]').value.trim();
+            const name = form.querySelector('[name="name"]').value;
+            const phone = form.querySelector('[name="phone"]').value;
+            const email = form.querySelector('[name="email"]').value;
             
-            // 1. Better Validation Popup
-            if(!name || !email || !phone) {
-                return alert("⚠️ Please enter your Name, Phone, and Email to receive the OTP.");
-            }
-            
-            // Generate Dummy Password
             const dummyPass = "TEMP_" + Date.now();
             const data = { name, phone, email, password: dummyPass };
             regDataTemp = data; 
             
+            if(!name || !email) return alert("Please fill Name and Email first.");
             showLoader("Sending Code...");
             
             try { 
-                const res = await fetch(`${BACKEND_URL}/api/distributor/register`, { 
-                    method: 'POST', 
-                    headers: {'Content-Type': 'application/json'}, 
-                    body: JSON.stringify(data) 
-                }); 
+                const res = await fetch(`${BACKEND_URL}/api/distributor/register`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) }); 
                 const r = await res.json(); 
                 hideLoader(); 
-                
                 if(r.success) { 
-                    // 2. Success Popup (Now uses message from backend)
-                    alert("✅ " + (r.message || "OTP Sent!")); 
+                    alert(r.message); 
                     document.getElementById('otpInputSection').style.display = 'block'; 
-                    // Optional: Focus the OTP box
-                    document.getElementById('regOtp').focus();
                 } else { 
-                    // 3. Error Popup
-                    alert("❌ " + (r.message || "Failed to send OTP.")); 
+                    alert(r.message); 
                 } 
             } catch(e) { 
-                hideLoader(); 
-                alert("❌ Connection Error. Please check your internet."); 
+                hideLoader(); alert("Error contacting server"); 
             }
         }
 
@@ -355,22 +343,17 @@
                 if(r.success) { 
                     alert("Email Verified! Please set your password now.");
                     
-                    // 1. Enable Password Input
                     const passInput = document.getElementById('regPass');
                     passInput.disabled = false;
                     passInput.placeholder = "Enter your desired password";
                     passInput.focus();
                     
-                    // 2. Enable Complete Registration Button
                     const finalBtn = document.getElementById('finalRegBtn');
                     finalBtn.disabled = false;
                     finalBtn.classList.remove('btn-disabled');
                     
-                    // 3. Store OTP to use it for password setting
                     regDataTemp.otp = otp;
                     regDataTemp.code = r.code;
-                    
-                    // 4. Hide OTP section to clean up UI (Optional)
                     document.getElementById('otpInputSection').style.display = 'none';
                     
                 } else { 
@@ -381,7 +364,6 @@
             }
         }
         
-        // REPLACED FINAL REGISTRATION LOGIC
         document.getElementById('finalRegBtn').addEventListener('click', async function(e) { 
             e.preventDefault(); 
             const realPassword = document.getElementById('regPass').value;
@@ -390,8 +372,6 @@
             showLoader("Setting Password...");
 
             try {
-                // Call reset-with-otp to update the dummy password to the real one
-                // This works because we removed the OTP clearing from verify_registration in backend
                 const resetRes = await fetch(`${BACKEND_URL}/api/reset-with-otp`, { 
                     method: 'POST', 
                     headers: {'Content-Type': 'application/json'}, 
@@ -400,7 +380,6 @@
                 const resetJson = await resetRes.json();
 
                 if(resetJson.success) {
-                    // Password set successfully, now Login
                     const loginRes = await fetch(`${BACKEND_URL}/api/distributor/login`, { 
                         method: 'POST', 
                         headers: {'Content-Type': 'application/json'}, 
@@ -446,7 +425,6 @@
             if (!RAZORPAY_KEY_ID) await fetchConfig();
             
             try {
-                // 1. Create Order
                 const res = await fetch(`${BACKEND_URL}/create_order`, { 
                     method: 'POST', 
                     headers: {'Content-Type': 'application/json'}, 
@@ -460,18 +438,16 @@
                     return;
                 }
 
-                // 2. Open Razorpay
                 const options = { 
                     "key": RAZORPAY_KEY_ID, 
                     "amount": orderData.amount, 
                     "currency": "INR", 
                     "name": "Zarqeen Alif", 
                     "description": `License Key for ${planType} Plan`,
-                    "order_id": orderData.id, // CRITICAL: Must match backend order ID
+                    "order_id": orderData.id, 
                     "handler": async function (response){ 
                         showLoader("Verifying..."); 
                         try { 
-                            // 3. Verify Payment
                             const verifyRes = await fetch(`${BACKEND_URL}/verify_payment`, { 
                                 method: 'POST', 
                                 headers: {'Content-Type': 'application/json'}, 
@@ -486,13 +462,11 @@
                             hideLoader(); 
                             
                             if(result.success) { 
-                                // Success! Show License
                                 const blob = new Blob([result.license_key], { type: "text/plain" }); 
                                 const url = window.URL.createObjectURL(blob); 
                                 document.getElementById('licenseKeyArea').innerHTML = `<a href="${url}" download="license.zarqeen" class="btn-buy primary" style="text-decoration:none;">⬇ Download License File</a>`; 
                                 document.getElementById('licenseModal').style.display='block'; 
                             } else {
-                                // SHOW ACTUAL SERVER ERROR
                                 alert('Verification failed: ' + result.message); 
                             } 
                         } catch (e) { 
@@ -515,6 +489,39 @@
                 alert("Connection Error: " + e.message); 
             }
         }
+
+        document.getElementById('distForm').addEventListener('submit', async function(e) {
+            e.preventDefault(); showLoader("Logging in..."); const data = Object.fromEntries(new FormData(this));
+            try { const res = await fetch(`${BACKEND_URL}/api/distributor/login`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) }); const r = await res.json(); hideLoader(); if(r.success) { localStorage.setItem('dist_token', r.token); closeLoginModal(); loadDashboard(1); } else alert(r.message || "Failed"); } catch(e) { hideLoader(); alert("Error connecting"); }
+        });
+
+        document.getElementById('adminForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            showLoader("Verifying Admin...");
+            const data = Object.fromEntries(new FormData(this));
+            try {
+                const res = await fetch(`${BACKEND_URL}/admin/login`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(data),
+                    credentials: 'include'
+                });
+                const result = await res.json();
+                hideLoader();
+                if(result.success) {
+                    if (result.redirect && result.redirect.startsWith('http')) {
+                        window.location.href = result.redirect;
+                    } else {
+                        window.location.href = `${BACKEND_URL}/admin/dashboard`;
+                    }
+                } else {
+                    alert(result.message || "Invalid Credentials");
+                }
+            } catch(e) {
+                hideLoader();
+                alert("Connection Error");
+            }
+        });
 
         let CURRENT_PAGE = 1;
         async function loadDashboard(page) {
