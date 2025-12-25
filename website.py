@@ -166,9 +166,11 @@ def check_distributor():
 @app.route('/create_order', methods=['POST'])
 def create_order():
     try:
-        data = request.json; code = data.get('distributor_code', '').strip().upper()
+        data = request.json
+        code = data.get('distributor_code', '').strip().upper()
         base_amount = 29900 if data.get('plan') == 'basic' else 59900
-        final_amount = base_amount; dist_id_str = "None"
+        final_amount = base_amount
+        dist_id_str = "None"
         
         if code:
             dist = Distributor.query.filter_by(code=code).first()
@@ -177,17 +179,20 @@ def create_order():
                 final_amount = int(base_amount - ((base_amount * disc_pct) / 100))
                 dist_id_str = str(dist.id)
                 
-        # CORRECTED LINE (Removed payment_capture)
-order = razorpay_client.order.create({
-    'amount': final_amount, 
-    'currency': 'INR', 
-    'notes': {
-        'plan': str(data.get('plan')), 
-        'distributor_id': dist_id_str
-    }
-})
+        # This block MUST be indented inside the 'try'
+        order = razorpay_client.order.create({
+            'amount': final_amount, 
+            'currency': 'INR', 
+            'notes': {
+                'plan': str(data.get('plan')), 
+                'distributor_id': dist_id_str
+            }
+        })
         return jsonify(order)
-    except Exception as e: return jsonify({'error': str(e)}), 500
+
+    except Exception as e:
+        # This 'except' MUST be aligned with the 'try' above
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/verify_payment', methods=['POST'])
 def verify_payment():
