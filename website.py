@@ -29,7 +29,6 @@ app.config.update(
     SESSION_COOKIE_DOMAIN=None 
 )
 
-# CORS setup to allow frontend requests
 CORS(app, resources={r"/*": {"origins": ["https://zarqeen.in", "https://www.zarqeen.in"]}}, supports_credentials=True)
 
 raw_db_url = os.environ.get("DATABASE_URL", "sqlite:///site.db")
@@ -45,12 +44,12 @@ db = SQLAlchemy(app)
 RAZORPAY_KEY_ID = os.environ.get("RAZORPAY_KEY_ID")
 RAZORPAY_KEY_SECRET = os.environ.get("RAZORPAY_KEY_SECRET")
 BREVO_API_KEY = os.environ.get("BREVO_API_KEY") 
-ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME")
-ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD")
+ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "admin")
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "admin123")
 
 razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
 
-# LEVEL DEFINITIONS (For Targets/Commissions)
+# LEVEL DEFINITIONS
 LEVELS = {
     1: {'name': 'Bronze', 'target': 0, 'commission': 15},
     2: {'name': 'Silver', 'target': 5, 'commission': 25},
@@ -269,25 +268,19 @@ def delete_license(id): db.session.delete(License.query.get_or_404(id)); db.sess
 @login_required
 def edit_license(id): l = License.query.get_or_404(id); l.is_used = (request.form.get("status") == "used"); db.session.commit(); return redirect(url_for("dashboard"))
 
-# --- MODIFIED ADMIN LOGIN ---
 @app.route("/admin/login", methods=["GET", "POST"])
 def login():
-    # 1. Handle JSON/AJAX Login (Fixes missing template error)
     if request.is_json:
         data = request.get_json()
         if data.get("username") == ADMIN_USERNAME and data.get("password") == ADMIN_PASSWORD:
             session["admin_logged_in"] = True
             return jsonify({'success': True, 'redirect': url_for('dashboard')})
         return jsonify({'success': False, 'message': 'Invalid Username or Password'})
-
-    # 2. Handle Standard POST Login (Fallback)
     if request.method == "POST":
         if request.form.get("username") == ADMIN_USERNAME and request.form.get("password") == ADMIN_PASSWORD:
             session["admin_logged_in"] = True
             return redirect(url_for("dashboard"))
         return "Invalid Credentials", 401
-    
-    # 3. If GET request (browser), redirect to frontend because we don't have login.html
     return redirect(FRONTEND_URL)
 
 @app.route("/admin/logout")
@@ -330,7 +323,10 @@ def verify_registration():
     d = request.json; dist = Distributor.query.filter_by(email=d.get('email')).first()
     if not dist: return jsonify({'success': False})
     if str(dist.otp_code) == str(d.get('otp')) and datetime.utcnow() <= dist.otp_expiry:
-        dist.is_verified = True; dist.otp_code = None; db.session.commit()
+        dist.is_verified = True
+        # NOTE: otp_code is intentionally NOT cleared here so it can be used 
+        # immediately by reset-with-otp to set the real password.
+        db.session.commit()
         return jsonify({'success': True, 'code': dist.code})
     return jsonify({'success': False, 'message': 'Invalid OTP'})
 
