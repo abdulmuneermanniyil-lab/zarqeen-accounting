@@ -29,6 +29,7 @@ app.config.update(
     SESSION_COOKIE_DOMAIN=None 
 )
 
+# CORS setup to allow frontend requests
 CORS(app, resources={r"/*": {"origins": ["https://zarqeen.in", "https://www.zarqeen.in"]}}, supports_credentials=True)
 
 raw_db_url = os.environ.get("DATABASE_URL", "sqlite:///site.db")
@@ -69,7 +70,7 @@ class Distributor(db.Model):
     phone = db.Column(db.String(20), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
-    discount_percent = db.Column(db.Integer, default=10) # <-- THIS determines the price cut
+    discount_percent = db.Column(db.Integer, default=10) 
     
     bank_name = db.Column(db.String(100)); account_holder = db.Column(db.String(100))
     account_number = db.Column(db.String(50)); ifsc_code = db.Column(db.String(20)); upi_id = db.Column(db.String(100))
@@ -153,7 +154,6 @@ def check_distributor():
         code = request.json.get('code', '').strip().upper()
         dist = Distributor.query.filter_by(code=code).first()
         if dist and dist.is_verified:
-            # FIX: Use the discount from DB (Admin set), not just the Level default
             return jsonify({'valid': True, 'discount': dist.discount_percent, 'name': dist.name})
         return jsonify({'valid': False})
     except: return jsonify({'valid': False}), 500
@@ -168,7 +168,6 @@ def create_order():
         if code:
             dist = Distributor.query.filter_by(code=code).first()
             if dist and dist.is_verified:
-                # FIX: Correct Calculation using Distributor Specific Discount
                 disc_pct = dist.discount_percent 
                 final_amount = int(base_amount - ((base_amount * disc_pct) / 100))
                 dist_id_str = str(dist.id)
@@ -191,7 +190,6 @@ def verify_payment():
             mrp = 299.0 if data.get('plan_type') == 'basic' else 599.0
             st = Settings.query.first()
             bonus = st.special_bonus_percent if st else 0
-            # Commission comes from Level + Bonus
             comm = (mrp * (LEVELS[dist_obj.level]['commission'] + bonus)) / 100
 
         new_key = generate_unique_key(data.get('plan_type'), dist_obj.code if dist_obj else None)
@@ -242,9 +240,7 @@ def add_distributor():
         if not code or not email: return redirect(url_for("dashboard"))
         if Distributor.query.filter((Distributor.code==code)|(Distributor.email==email)).first(): return redirect(url_for("dashboard"))
         
-        # NOTE: Discount % here is manual, overwrites Level default if needed
         disc_input = int(request.form.get("discount", 10))
-        
         new_dist = Distributor(code=code, name=request.form.get("name"), phone=request.form.get("phone"), email=email, discount_percent=disc_input, is_verified=True, level=1)
         new_dist.set_password(request.form.get("password")); db.session.add(new_dist); db.session.commit()
     except: pass
@@ -273,13 +269,30 @@ def delete_license(id): db.session.delete(License.query.get_or_404(id)); db.sess
 @login_required
 def edit_license(id): l = License.query.get_or_404(id); l.is_used = (request.form.get("status") == "used"); db.session.commit(); return redirect(url_for("dashboard"))
 
+# --- MODIFIED ADMIN LOGIN ---
 @app.route("/admin/login", methods=["GET", "POST"])
 def login():
+    # 1. Handle JSON/AJAX Login (Fixes missing template error)
+    if request.is_json:
+        data = request.get_json()
+        if data.get("username") == ADMIN_USERNAME and data.get("password") == ADMIN_PASSWORD:
+            session["admin_logged_in"] = True
+            return jsonify({'success': True, 'redirect': url_for('dashboard')})
+        return jsonify({'success': False, 'message': 'Invalid Username or Password'})
+
+    # 2. Handle Standard POST Login (Fallback)
     if request.method == "POST":
-        if request.form.get("username") == ADMIN_USERNAME and request.form.get("password") == ADMIN_PASSWORD: session["admin_logged_in"] = True; return redirect(url_for("dashboard"))
-    return render_template("login.html")
+        if request.form.get("username") == ADMIN_USERNAME and request.form.get("password") == ADMIN_PASSWORD:
+            session["admin_logged_in"] = True
+            return redirect(url_for("dashboard"))
+        return "Invalid Credentials", 401
+    
+    # 3. If GET request (browser), redirect to frontend because we don't have login.html
+    return redirect(FRONTEND_URL)
+
 @app.route("/admin/logout")
 def logout(): session.pop("admin_logged_in", None); return redirect(FRONTEND_URL)
+
 @app.route("/admin/export/<type>")
 @login_required
 def export_data(type):
@@ -346,7 +359,7 @@ def api_get_distributor_data():
     sd = [{'date': s.created_at.strftime('%Y-%m-%d'), 'plan': s.plan_type, 'amount': s.amount_paid, 'status': 'INSTALLED' if s.is_used else 'PENDING', 'key': s.license_key, 'version': s.software_version, 'last_login': s.last_login_date.strftime('%Y-%m-%d') if s.last_login_date else '-', 'expiry': s.expiry_date.strftime('%Y-%m-%d') if s.expiry_date else '-'} for s in pg.items]
 
     return jsonify({
-        "name": dist.name, "code": dist.code, "discount": dist.discount_percent, # Uses DB discount
+        "name": dist.name, "code": dist.code, "discount": dist.discount_percent, 
         "commission_pct": LEVELS[cur]['commission'],
         "total_sales": q.count(), "commission_earned": earn, "commission_paid": safe_float(dist.commission_paid), "balance_due": earn - safe_float(dist.commission_paid),
         "sales_history": sd, "backend_url": request.host_url,
