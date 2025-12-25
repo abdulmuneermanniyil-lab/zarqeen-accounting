@@ -273,17 +273,25 @@ def edit_license(id): l = License.query.get_or_404(id); l.is_used = (request.for
 
 @app.route("/admin/login", methods=["GET", "POST"])
 def login():
+    # 1. Handle JSON/AJAX Login
     if request.is_json:
         data = request.get_json()
         if data.get("username") == ADMIN_USERNAME and data.get("password") == ADMIN_PASSWORD:
             session["admin_logged_in"] = True
-            return jsonify({'success': True, 'redirect': url_for('dashboard')})
+            
+            # FIX HERE: Add _external=True to get the full backend URL
+            return jsonify({'success': True, 'redirect': url_for('dashboard', _external=True)})
+            
         return jsonify({'success': False, 'message': 'Invalid Username or Password'})
+
+    # 2. Handle Standard POST Login
     if request.method == "POST":
         if request.form.get("username") == ADMIN_USERNAME and request.form.get("password") == ADMIN_PASSWORD:
             session["admin_logged_in"] = True
             return redirect(url_for("dashboard"))
         return "Invalid Credentials", 401
+    
+    # 3. Redirect GET requests to frontend
     return redirect(FRONTEND_URL)
 
 @app.route("/admin/logout")
