@@ -118,13 +118,29 @@ def safe_float(v):
     except: return 0.0
 
 def generate_unique_key(plan_type, dist_code=None):
+    # Part 1: Prefix "AL" + Plan "BA"/"PR" (e.g., ALBA)
     p = "BA" if plan_type == 'basic' else "PR"
-    d = dist_code.upper().strip()[:4] if dist_code else "ALIF"
-    d = d.ljust(4, 'X')
-    r1 = "".join(random.choices(string.ascii_uppercase + string.digits, k=6))
-    r2 = "".join(random.choices(string.ascii_uppercase + string.digits, k=6))
-    key = f"ZQ{p}-{d}-{r1}-{r2}"
-    if License.query.filter_by(license_key=key).first(): return generate_unique_key(plan_type, dist_code)
+    part1 = f"AL{p}"
+
+    # Part 2: Complete Distributor Code OR "ALIF"
+    if dist_code:
+        # Use the full code provided by the distributor
+        part2 = dist_code.strip().upper()
+    else:
+        part2 = "ALIF"
+
+    # Part 3 & 4: Random 4-char blocks to ensure uniqueness
+    chars = string.ascii_uppercase + string.digits
+    part3 = "".join(random.choices(chars, k=4))
+    part4 = "".join(random.choices(chars, k=4))
+
+    # Combine: ALBA-FULLCODE-X1Y2-Z3A4
+    key = f"{part1}-{part2}-{part3}-{part4}"
+
+    # Recursively ensure uniqueness
+    if License.query.filter_by(license_key=key).first(): 
+        return generate_unique_key(plan_type, dist_code)
+    
     return key
 
 def send_brevo_email(to_email, subject, html_content):
