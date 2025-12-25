@@ -168,7 +168,13 @@ def check_distributor():
 def create_order():
     try:
         data = request.json
-        code = data.get('distributor_code', '').strip().upper()
+        
+        # --- FIX STARTS HERE ---
+        # We safely get the code. If it's None (from JS null), we use empty string ""
+        raw_code = data.get('distributor_code')
+        code = raw_code.strip().upper() if raw_code else ""
+        # --- FIX ENDS HERE ---
+
         base_amount = 29900 if data.get('plan') == 'basic' else 59900
         final_amount = base_amount
         dist_id_str = "None"
@@ -180,7 +186,6 @@ def create_order():
                 final_amount = int(base_amount - ((base_amount * disc_pct) / 100))
                 dist_id_str = str(dist.id)
         
-        # CORRECT SYNTAX: Inside the try block
         order = razorpay_client.order.create({
             'amount': final_amount, 
             'currency': 'INR', 
@@ -192,7 +197,6 @@ def create_order():
         return jsonify(order)
 
     except Exception as e:
-        # ALIGNED with try block
         return jsonify({'error': str(e)}), 500
 
 @app.route('/verify_payment', methods=['POST'])
