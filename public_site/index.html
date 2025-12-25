@@ -442,28 +442,32 @@
             try { const res = await fetch(`${BACKEND_URL}/api/distributor/login`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) }); const r = await res.json(); hideLoader(); if(r.success) { localStorage.setItem('dist_token', r.token); closeLoginModal(); loadDashboard(1); } else alert(r.message || "Failed"); } catch(e) { hideLoader(); alert("Error connecting"); }
         });
 
-        document.getElementById('adminForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            showLoader("Verifying Admin...");
-            const data = Object.fromEntries(new FormData(this));
-            try {
-                const res = await fetch(`${BACKEND_URL}/admin/login`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify(data)
-                });
-                const result = await res.json();
-                hideLoader();
-                if(result.success) {
-                    window.location.href = result.redirect || `${BACKEND_URL}/admin/dashboard`;
-                } else {
-                    alert(result.message || "Invalid Credentials");
-                }
-            } catch(e) {
-                hideLoader();
-                alert("Connection Error");
-            }
+        // ADMIN LOGIN HANDLER
+document.getElementById('adminForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    showLoader("Verifying Admin...");
+    const data = Object.fromEntries(new FormData(this));
+    try {
+        const res = await fetch(`${BACKEND_URL}/admin/login`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data),
+            credentials: 'include'  // <--- THIS LINE IS CRITICAL
         });
+        const result = await res.json();
+        hideLoader();
+        if(result.success) {
+            // Success! Redirect to dashboard
+            window.location.href = result.redirect || `${BACKEND_URL}/admin/dashboard`;
+        } else {
+            alert(result.message || "Invalid Credentials");
+        }
+    } catch(e) {
+        hideLoader();
+        console.error(e);
+        alert("Connection Error");
+    }
+});
 
         let CURRENT_PAGE = 1;
         async function loadDashboard(page) {
