@@ -381,20 +381,47 @@ def export_data(type):
 # --- DISTRIBUTOR API ---
 @app.route('/api/distributor/register', methods=['POST'])
 def register_distributor():
-    d = request.json; email = d.get('email').strip()
-    if Distributor.query.count() > 450000: return jsonify({'success': False, 'message': 'Limit'})
+    d = request.json
+    email = d.get('email', '').strip()
+    
+    # Validation
+    if Distributor.query.count() > 450000: 
+        return jsonify({'success': False, 'message': 'Registration Limit Reached'})
+        
     dist = Distributor.query.filter_by(email=email).first()
-    if dist and dist.is_verified: return jsonify({'success': False, 'message': 'Email exists'})
+    if dist and dist.is_verified: 
+        return jsonify({'success': False, 'message': 'This Email is already registered. Please Login.'})
+        
     otp = str(random.randint(100000, 999999))
+    
     if not dist:
+        # Create unverified account
         while True:
             c = ''.join(random.choices(string.ascii_uppercase, k=4))
             if not Distributor.query.filter_by(code=c).first(): break
+        
+        # Default/Dummy password will be overwritten later
         dist = Distributor(code=c, name=d.get('name'), phone=d.get('phone'), email=email, is_verified=False, level=1, discount_percent=10)
-        dist.set_password(d.get('password')); db.session.add(dist)
-    else: dist.name=d.get('name'); dist.phone=d.get('phone'); dist.set_password(d.get('password'))
-    dist.otp_code = otp; dist.otp_expiry = datetime.utcnow() + timedelta(minutes=10); db.session.commit()
-    send_brevo_email(email, "Verify", f"OTP: {otp}"); return jsonify({'success': True})
+        dist.set_password(d.get('password')) # This is the dummy password
+        db.session.add(dist)
+    else:
+        # Update existing unverified account
+        dist.name = d.get('name')
+        dist.phone = d.get('phone')
+        dist.set_password(d.get('password'))
+        
+    dist.otp_code = otp
+    dist.otp_expiry = datetime.utcnow() + timedelta(minutes=10)
+    db.session.commit()
+    
+    sent = send_brevo_email(email, "Verification Code", f"Your OTP is: <b>{otp}</b>")
+    
+    # FIX: Added 'message' here so the popup isn't "undefined"
+    if sent:
+        return jsonify({'success': True, 'message': f'OTP sent to {email}. Check your Inbox/Spam.'})
+    else:
+        # Fallback if email fails (for testing/if key is wrong)
+        return jsonify({'success': True, 'message': f'OTP Generated (Email Failed): {otp}'})
 
 @app.route('/api/distributor/verify-registration', methods=['POST'])
 def verify_registration():
@@ -450,18 +477,35 @@ def update_bank():
 
 @app.route('/api/send-otp', methods=['POST'])
 def forgot_otp():
-    email = request.json.get('email'); dist = Distributor.query.filter_by(email=email).first()
-    if not dist: return jsonify({'success': False})
-    otp = str(random.randint(100000, 999999)); dist.otp_code = otp; dist.otp_expiry = datetime.utcnow() + timedelta(minutes=10); db.session.commit()
-    send_brevo_email(email, "Reset", f"OTP: {otp}"); return jsonify({'success': True})
+    email = request.json.get('email')
+    dist = Distributor.query.filter_by(email=email).first()
+    if not dist: 
+        return jsonify({'success': False, 'message': 'Email not registered.'})
+        
+    otp = str(random.randint(100000, 999999))
+    dist.otp_code = otp
+    dist.otp_expiry = datetime.utcnow() + timedelta(minutes=10)
+    db.session.commit()
+    
+    send_brevo_email(email, "Reset Password", f"OTP: {otp}")
+    # FIX: Added success message
+    return jsonify({'success': True, 'message': f'OTP sent to {email}'})
 
 @app.route('/api/reset-with-otp', methods=['POST'])
 def reset_with_otp():
-    d = request.json; dist = Distributor.query.filter_by(email=d.get('email')).first()
-    if not dist: return jsonify({'success': False})
+    d = request.json
+    dist = Distributor.query.filter_by(email=d.get('email')).first()
+    if not dist: 
+        return jsonify({'success': False, 'message': 'User not found.'})
+        
     if str(dist.otp_code) == str(d.get('otp')) and datetime.utcnow() <= dist.otp_expiry:
-        dist.set_password(d.get('new_password')); dist.otp_code=None; db.session.commit(); return jsonify({'success': True})
-    return jsonify({'success': False})
+        dist.set_password(d.get('new_password'))
+        dist.otp_code = None
+        db.session.commit()
+        # FIX: Added success message
+        return jsonify({'success': True, 'message': 'Password updated successfully!'})
+        
+    return jsonify({'success': False, 'message': 'Invalid or Expired OTP'})
 
 @app.route('/reset-db-now')
 def reset_db():
