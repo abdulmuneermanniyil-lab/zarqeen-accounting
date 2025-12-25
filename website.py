@@ -177,7 +177,15 @@ def create_order():
                 final_amount = int(base_amount - ((base_amount * disc_pct) / 100))
                 dist_id_str = str(dist.id)
                 
-        order = razorpay_client.order.create({'amount': final_amount, 'currency': 'INR', 'payment_capture': '1', 'notes': {'plan': str(data.get('plan')), 'distributor_id': dist_id_str}})
+        # CORRECTED LINE (Removed payment_capture)
+order = razorpay_client.order.create({
+    'amount': final_amount, 
+    'currency': 'INR', 
+    'notes': {
+        'plan': str(data.get('plan')), 
+        'distributor_id': dist_id_str
+    }
+})
         return jsonify(order)
     except Exception as e: return jsonify({'error': str(e)}), 500
 
