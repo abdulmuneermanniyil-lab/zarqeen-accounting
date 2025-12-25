@@ -301,30 +301,44 @@
         let regDataTemp = {}; 
         async function sendRegOtp() {
             const form = document.getElementById('regForm'); 
-            const name = form.querySelector('[name="name"]').value;
-            const phone = form.querySelector('[name="phone"]').value;
-            const email = form.querySelector('[name="email"]').value;
+            const name = form.querySelector('[name="name"]').value.trim();
+            const phone = form.querySelector('[name="phone"]').value.trim();
+            const email = form.querySelector('[name="email"]').value.trim();
             
-            // Generate Dummy Password for backend check
+            // 1. Better Validation Popup
+            if(!name || !email || !phone) {
+                return alert("⚠️ Please enter your Name, Phone, and Email to receive the OTP.");
+            }
+            
+            // Generate Dummy Password
             const dummyPass = "TEMP_" + Date.now();
             const data = { name, phone, email, password: dummyPass };
             regDataTemp = data; 
             
-            if(!name || !email) return alert("Please fill Name and Email first.");
             showLoader("Sending Code...");
             
             try { 
-                const res = await fetch(`${BACKEND_URL}/api/distributor/register`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) }); 
+                const res = await fetch(`${BACKEND_URL}/api/distributor/register`, { 
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'}, 
+                    body: JSON.stringify(data) 
+                }); 
                 const r = await res.json(); 
                 hideLoader(); 
+                
                 if(r.success) { 
-                    alert(r.message); 
+                    // 2. Success Popup (Now uses message from backend)
+                    alert("✅ " + (r.message || "OTP Sent!")); 
                     document.getElementById('otpInputSection').style.display = 'block'; 
+                    // Optional: Focus the OTP box
+                    document.getElementById('regOtp').focus();
                 } else { 
-                    alert(r.message); 
+                    // 3. Error Popup
+                    alert("❌ " + (r.message || "Failed to send OTP.")); 
                 } 
             } catch(e) { 
-                hideLoader(); alert("Error contacting server"); 
+                hideLoader(); 
+                alert("❌ Connection Error. Please check your internet."); 
             }
         }
 
