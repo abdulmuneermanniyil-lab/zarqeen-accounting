@@ -223,7 +223,13 @@
             <div class="login-tabs"><button class="tab-btn active" onclick="switchTab('distributor')">Distributor</button><button class="tab-btn" onclick="switchTab('admin')">Admin</button></div>
             <form id="distForm" class="login-form active"><div class="form-group"><label>Email</label><input type="email" name="email" required></div><div class="form-group"><label>Password</label><input type="password" name="password" required></div><div style="text-align:right;"><a onclick="showForgot()" style="color:blue; cursor:pointer; font-size:0.8rem;">Forgot Password?</a></div><button type="submit" class="btn-buy primary">Login</button></form>
             <div id="forgotFlow" style="display:none;"><div id="step1"><h3>Reset Password</h3><div class="form-group"><label>Enter Email</label><input type="email" id="resetEmail"></div><button onclick="sendOtp()" class="btn-buy primary">Send OTP</button></div><div id="step2" style="display:none;"><h3>Verify OTP</h3><div class="form-group"><label>Enter 6-digit Code</label><input type="text" id="otpCode"></div><div class="form-group"><label>New Password</label><input type="password" id="newPass"></div><button onclick="resetWithOtp()" class="btn-buy primary">Change Password</button></div><p style="text-align:center; margin-top:10px;"><a onclick="hideForgot()" style="cursor:pointer; color:gray;">Back</a></p></div>
-            <form id="adminForm" class="login-form" method="POST"><div class="form-group"><label>Username</label><input type="text" name="username" required></div><div class="form-group"><label>Password</label><input type="password" name="password" required></div><button type="submit" class="btn-buy primary" style="background:#111827;">Login Admin</button></form>
+            
+            <!-- MODIFIED ADMIN FORM: REMOVED ACTION AND METHOD -->
+            <form id="adminForm" class="login-form">
+                <div class="form-group"><label>Username</label><input type="text" name="username" required></div>
+                <div class="form-group"><label>Password</label><input type="password" name="password" required></div>
+                <button type="submit" class="btn-buy primary" style="background:#111827;">Login Admin</button>
+            </form>
         </div>
     </div>
 
@@ -231,7 +237,7 @@
         document.getElementById('year').textContent = new Date().getFullYear();
         let RAZORPAY_KEY_ID = null;
         const BACKEND_URL = "https://zarqeen-backend.onrender.com";
-        document.getElementById('adminForm').action = `${BACKEND_URL}/admin/login`;
+        // Removed the line setting adminForm action, as we handle it via JS now
 
         function toggleMobileMenu() { const nav = document.getElementById('mobileNav'); nav.classList.toggle('active'); }
         function checkDownload(e) { if (/Android|iPhone|iPad/i.test(navigator.userAgent)) { if(!confirm("⚠️ Warning: This software is for Windows PC only.\n\nIt will NOT work on mobile. Do you still want to download file to transfer to PC?")) { e.preventDefault(); } } }
@@ -305,9 +311,34 @@
             } catch(e) { hideLoader(); alert("Connection Error"); }
         }
 
+        // DISTRIBUTOR LOGIN HANDLER
         document.getElementById('distForm').addEventListener('submit', async function(e) {
             e.preventDefault(); showLoader("Logging in..."); const data = Object.fromEntries(new FormData(this));
             try { const res = await fetch(`${BACKEND_URL}/api/distributor/login`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) }); const r = await res.json(); hideLoader(); if(r.success) { localStorage.setItem('dist_token', r.token); closeLoginModal(); loadDashboard(1); } else alert(r.message || "Failed"); } catch(e) { hideLoader(); alert("Error connecting"); }
+        });
+
+        // ADMIN LOGIN HANDLER (ADDED)
+        document.getElementById('adminForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            showLoader("Verifying Admin...");
+            const data = Object.fromEntries(new FormData(this));
+            try {
+                const res = await fetch(`${BACKEND_URL}/admin/login`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(data)
+                });
+                const result = await res.json();
+                hideLoader();
+                if(result.success) {
+                    window.location.href = result.redirect || `${BACKEND_URL}/admin/dashboard`;
+                } else {
+                    alert(result.message || "Invalid Credentials");
+                }
+            } catch(e) {
+                hideLoader();
+                alert("Connection Error");
+            }
         });
 
         let CURRENT_PAGE = 1;
@@ -319,7 +350,8 @@
                 const data = await res.json();
                 document.getElementById('dashName').innerText = data.name; document.getElementById('dashCode').innerText = data.code;
                 const p = data.progress; if(p) { document.getElementById('lvlName').innerText = p.current_level; document.getElementById('lvlDisc').innerText = `${data.discount}% OFF`; if (p.is_max) { document.getElementById('lvlMsg').innerText = "Max Level Reached! 🏆"; document.getElementById('lvlBar').style.width = "100%"; document.getElementById('lvlBar').style.background = "#10B981"; } else { const percent = Math.min((p.month_sales / p.target) * 100, 100); document.getElementById('lvlMsg').innerText = `${p.month_sales} / ${p.target} Sales to ${p.next_level}`; document.getElementById('lvlBar').style.width = `${percent}%`; } }
-                document.getElementById('dashTotal').innerText = data.total_sales; document.getElementById('dashComm').innerHTML = `<span style="color:#2563EB">Earned: ₹${Number(data.commission_earned).toFixed(2)}</span><br><span style="color:#059669;font-size:0.8em">Paid: ₹${Number(data.commission_paid).toFixed(2)}</span><br><span style="color:#DC2626;font-size:0.9em;font-weight:800">Balance: ₹${Number(data.balance_due).toFixed(2)}</span>`; document.getElementById('dashDisc').innerText = data.discount;
+                document.getElementById('dashTotal').innerText = data.total_sales; document.getElementById('dashComm').innerHTML = `<span style="color:#2563EB">Earned: ₹${Number(data.commission_earned).toFixed(2)}</span><br><span style="color:#059669;font-size:0.8em">Paid: ₹${Number(data.commission_paid).toFixed(2)}</span><br><span style="color:#DC2626;font-size:0.9em;font-weight:800">Balance: ₹${Number(data.balance_due).toFixed(2)}</span>`; 
+                // REMOVED: document.getElementById('dashDisc').innerText = data.discount; 
                 const b = data.bank_info; document.getElementById('in_bank').value = b.bank_name||''; document.getElementById('in_holder').value = b.account_holder||''; document.getElementById('in_acct').value = b.account_number||''; document.getElementById('in_ifsc').value = b.ifsc||''; document.getElementById('in_upi').value = b.upi||'';
                 document.getElementById('d_bank').innerText = b.bank_name||'-'; document.getElementById('d_holder').innerText = b.account_holder||'-'; document.getElementById('d_acct').innerText = b.account_number||'-'; document.getElementById('d_ifsc').innerText = b.ifsc||'-'; document.getElementById('d_upi').innerText = b.upi||'-';
                 const tbody = document.getElementById('dashTableBody'); tbody.innerHTML = "";
