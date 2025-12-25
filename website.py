@@ -252,14 +252,39 @@ def add_distributor():
 @login_required
 def edit_distributor(id):
     d = Distributor.query.get_or_404(id)
-    d.name = request.form.get("name"); d.email = request.form.get("email"); d.phone = request.form.get("phone")
-    if request.form.get("discount"): d.discount_percent = int(request.form.get("discount"))
-    d.bank_name = request.form.get("bank_name"); d.account_holder = request.form.get("account_holder"); d.account_number = request.form.get("account_number"); d.ifsc_code = request.form.get("ifsc_code"); d.upi_id = request.form.get("upi_id")
-    add = request.form.get("add_payment"); man = request.form.get("manual_paid_total")
-    if add and safe_float(add) > 0: d.commission_paid += safe_float(add)
-    elif man and man.strip(): d.commission_paid = safe_float(man)
-    if request.form.get("password"): d.set_password(request.form.get("password"))
-    db.session.commit(); return redirect(url_for("dashboard"))
+    
+    # FIX: Only update fields if they are sent in the request
+    if request.form.get("name"): 
+        d.name = request.form.get("name")
+    if request.form.get("email"): 
+        d.email = request.form.get("email")
+    if request.form.get("phone"): 
+        d.phone = request.form.get("phone")
+        
+    if request.form.get("discount"): 
+        try: d.discount_percent = int(request.form.get("discount"))
+        except: pass
+    
+    # Bank details - only update if present in form
+    if "bank_name" in request.form: d.bank_name = request.form.get("bank_name")
+    if "account_holder" in request.form: d.account_holder = request.form.get("account_holder")
+    if "account_number" in request.form: d.account_number = request.form.get("account_number")
+    if "ifsc_code" in request.form: d.ifsc_code = request.form.get("ifsc_code")
+    if "upi_id" in request.form: d.upi_id = request.form.get("upi_id")
+    
+    add = request.form.get("add_payment")
+    man = request.form.get("manual_paid_total")
+    
+    if add and safe_float(add) > 0: 
+        d.commission_paid += safe_float(add)
+    elif man and man.strip(): 
+        d.commission_paid = safe_float(man)
+    
+    if request.form.get("password"): 
+        d.set_password(request.form.get("password"))
+    
+    db.session.commit()
+    return redirect(url_for("dashboard"))
 
 @app.route("/admin/delete_distributor/<int:id>", methods=["POST"])
 @login_required
