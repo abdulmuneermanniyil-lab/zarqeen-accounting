@@ -49,7 +49,7 @@ ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "admin123")
 
 razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
 
-# LEVEL DEFINITIONS
+# --- LEVEL DEFINITIONS (3 LEVELS) ---
 LEVELS = {
     1: {'name': 'Bronze', 'target': 0, 'commission': 15},
     2: {'name': 'Silver', 'target': 5, 'commission': 25},
@@ -136,8 +136,11 @@ def check_level_update(dist):
     first = now.replace(day=1); last_month_end = first - timedelta(days=1); last_month_start = last_month_end.replace(day=1)
     count = License.query.filter(License.distributor_id==dist.id, License.created_at >= last_month_start, License.created_at <= last_month_end).count()
     current = dist.level; new_lvl = current
+    
+    # 3 LEVEL LOGIC
     if current < 3 and count >= LEVELS[current+1]['target']: new_lvl += 1
     elif current > 1 and count < LEVELS[current]['target']: new_lvl -= 1
+    
     dist.level = new_lvl; dist.last_level_check = now; db.session.commit()
 
 # --- ROUTES ---
@@ -324,8 +327,6 @@ def verify_registration():
     if not dist: return jsonify({'success': False})
     if str(dist.otp_code) == str(d.get('otp')) and datetime.utcnow() <= dist.otp_expiry:
         dist.is_verified = True
-        # NOTE: otp_code is intentionally NOT cleared here so it can be used 
-        # immediately by reset-with-otp to set the real password.
         db.session.commit()
         return jsonify({'success': True, 'code': dist.code})
     return jsonify({'success': False, 'message': 'Invalid OTP'})
@@ -349,7 +350,9 @@ def api_get_distributor_data():
     pg = q.paginate(page=page, per_page=10, error_out=False)
     
     earn = sum(safe_float(l.commission_earned) for l in q.all())
-    cur = dist.level; tgt = LEVELS[min(cur+1, 3)]['target']
+    cur = dist.level
+    # 3 LEVELS LOGIC REVERTED
+    tgt = LEVELS[min(cur+1, 3)]['target']
     msales = License.query.filter(License.distributor_id==dist.id, License.created_at>=datetime.utcnow().replace(day=1)).count()
     
     sd = [{'date': s.created_at.strftime('%Y-%m-%d'), 'plan': s.plan_type, 'amount': s.amount_paid, 'status': 'INSTALLED' if s.is_used else 'PENDING', 'key': s.license_key, 'version': s.software_version, 'last_login': s.last_login_date.strftime('%Y-%m-%d') if s.last_login_date else '-', 'expiry': s.expiry_date.strftime('%Y-%m-%d') if s.expiry_date else '-'} for s in pg.items]
