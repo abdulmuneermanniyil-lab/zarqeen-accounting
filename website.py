@@ -44,8 +44,11 @@ db = SQLAlchemy(app)
 RAZORPAY_KEY_ID = os.environ.get("RAZORPAY_KEY_ID")
 RAZORPAY_KEY_SECRET = os.environ.get("RAZORPAY_KEY_SECRET")
 BREVO_API_KEY = os.environ.get("BREVO_API_KEY") 
-ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "admin")
-ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "admin123")
+ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME")
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD")
+LOGIN_ATTEMPTS = {}
+MAX_RETRIES = 5
+LOCKOUT_TIME = timedelta(minutes=15)
 
 razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
 
@@ -298,26 +301,57 @@ def edit_license(id): l = License.query.get_or_404(id); l.is_used = (request.for
 
 @app.route("/admin/login", methods=["GET", "POST"])
 def login():
-    # 1. Handle JSON/AJAX Login
+    # 1. Get User IP (Handle Proxy/Render/Cloud hosting)
+    if request.headers.get('X-Forwarded-For'):
+        ip = request.headers.get('X-Forwarded-For').split(',')[0]
+    else:
+        ip = request.remote_addr
+
+    # 2. Check Lockout
+    if ip in LOGIN_ATTEMPTS:
+        attempt = LOGIN_ATTEMPTS[ip]
+        if attempt['count'] >= MAX_RETRIES:
+            if datetime.utcnow() - attempt['last_attempt'] < LOCKOUT_TIME:
+                remaining = int((LOCKOUT_TIME - (datetime.utcnow() - attempt['last_attempt'])).total_seconds() / 60)
+                msg = f"Too many failed attempts. Try again in {remaining} minutes."
+                if request.is_json: return jsonify({'success': False, 'message': msg})
+                return msg, 429
+            else:
+                # Lockout expired, reset
+                LOGIN_ATTEMPTS[ip] = {'count': 0, 'last_attempt': datetime.utcnow()}
+
+    # 3. Verify Credentials
+    username = ""
+    password = ""
+    
     if request.is_json:
         data = request.get_json()
-        if data.get("username") == ADMIN_USERNAME and data.get("password") == ADMIN_PASSWORD:
-            session["admin_logged_in"] = True
-            
-            # FIX HERE: Add _external=True to get the full backend URL
-            return jsonify({'success': True, 'redirect': url_for('dashboard', _external=True)})
-            
-        return jsonify({'success': False, 'message': 'Invalid Username or Password'})
+        username = data.get("username")
+        password = data.get("password")
+    else:
+        username = request.form.get("username")
+        password = request.form.get("password")
 
-    # 2. Handle Standard POST Login
-    if request.method == "POST":
-        if request.form.get("username") == ADMIN_USERNAME and request.form.get("password") == ADMIN_PASSWORD:
-            session["admin_logged_in"] = True
-            return redirect(url_for("dashboard"))
-        return "Invalid Credentials", 401
+    if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+        # Success: Reset attempts and Log in
+        if ip in LOGIN_ATTEMPTS: del LOGIN_ATTEMPTS[ip]
+        session["admin_logged_in"] = True
+        
+        if request.is_json:
+            return jsonify({'success': True, 'redirect': url_for('dashboard', _external=True)})
+        return redirect(url_for("dashboard"))
+
+    # 4. Failed: Increment Counter
+    if ip not in LOGIN_ATTEMPTS:
+        LOGIN_ATTEMPTS[ip] = {'count': 1, 'last_attempt': datetime.utcnow()}
+    else:
+        LOGIN_ATTEMPTS[ip]['count'] += 1
+        LOGIN_ATTEMPTS[ip]['last_attempt'] = datetime.utcnow()
+
+    msg = f"Invalid Credentials. Attempts remaining: {MAX_RETRIES - LOGIN_ATTEMPTS[ip]['count']}"
     
-    # 3. Redirect GET requests to frontend
-    return redirect(FRONTEND_URL)
+    if request.is_json: return jsonify({'success': False, 'message': msg})
+    return msg, 401
 
 @app.route("/admin/logout")
 def logout(): session.pop("admin_logged_in", None); return redirect(FRONTEND_URL)
