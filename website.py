@@ -273,23 +273,53 @@ def verify_payment():
 @app.route('/download/license/<key>')
 def download_license_file(key): return send_file(io.BytesIO(key.encode()), mimetype='text/plain', as_attachment=True, download_name='license.zarqeen')
 
+from datetime import datetime
+from flask import jsonify, request
+
 @app.route('/api/validate_license', methods=['POST'])
 def validate_license():
-    data = request.json; lic = License.query.filter_by(license_key=data.get('license_key', '').strip()).first()
-    if lic:
-        lic.software_version = data.get('version', 'Unknown'); lic.last_login_date = datetime.utcnow()
-        if lic.is_used: db.session.commit(); return jsonify({'valid': False, 'message': 'Used.'})
-        lic.is_used = True; lic.used_at = datetime.utcnow(); db.session.commit()
-        dur = 365 if lic.plan_type == 'basic' else 1095
-        return jsonify({
-    'valid': True,
-    'plan': lic.plan_type,
-    'duration_days': dur,
-    'distributor_phone': lic.distributor.phone if lic.distributor else None,
-    'distributor_name': lic.distributor.name if lic.distributor else "Zarqeen"
-})
+    data = request.json or {}
+    license_key = data.get('license_key', '').strip()
 
-    return jsonify({'valid': False, 'message': 'Invalid'})
+    if not license_key:
+        return jsonify({'valid': False, 'message': 'License key missing'}), 400
+
+    lic = License.query.filter_by(license_key=license_key).first()
+
+    if not lic:
+        return jsonify({'valid': False, 'message': 'Invalid license'}), 404
+
+    # Update audit info (safe to update every time)
+    lic.software_version = data.get('version', 'Unknown')
+    lic.last_login_date = datetime.utcnow()
+
+    # 🚫 Already used
+    if lic.is_used:
+        db.session.commit()
+        return jsonify({
+            'valid': False,
+            'message': 'License already used',
+            'used_at': lic.used_at.isoformat() if lic.used_at else None
+        })
+
+    # ✅ ACTIVATE LICENSE
+    lic.is_used = True
+    lic.used_at = datetime.utcnow()
+
+    # Plan duration
+    duration_days = 365 if lic.plan_type == 'basic' else 1095
+
+    db.session.commit()
+
+    return jsonify({
+        'valid': True,
+        'plan': lic.plan_type,
+        'duration_days': duration_days,
+        'distributor_phone': lic.distributor.phone if lic.distributor else None,
+        'distributor_name': lic.distributor.name if lic.distributor else "Zarqeen",
+        'activated_at': lic.used_at.isoformat()
+    })
+
 
 # --- ADMIN ---
 @app.route("/admin/dashboard")
