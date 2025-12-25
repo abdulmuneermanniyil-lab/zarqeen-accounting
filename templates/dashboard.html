@@ -23,14 +23,27 @@
 <body>
     <div class="container">
         <!-- SETTINGS -->
-        <div class="card" style="background:#F0F9FF; border:1px solid #BAE6FD;">
-            <h2>🎉 Special Bonus</h2>
-            <form action="/admin/update_settings" method="POST" style="display:flex; gap:15px; align-items:center;">
-                <input type="number" name="bonus" value="{{ settings.special_bonus_percent }}" style="width:150px;" placeholder="%">
-                <input type="text" name="message" value="{{ settings.special_message }}" placeholder="Message">
-                <button class="btn btn-blue" style="margin-bottom:10px;">Update</button>
-            </form>
+       <div class="card" style="background:#F0F9FF; border:1px solid #BAE6FD;">
+    <!-- Header with Logout Button on the Right -->
+    <h2 style="display: flex; justify-content: space-between; align-items: center; margin-top: 0;">
+        <span>🎉 Special Bonus</span>
+        <a href="/admin/logout" class="btn btn-red" style="text-decoration: none; font-size: 0.9rem;">Logout</a>
+    </h2>
+
+    <!-- Settings Form -->
+    <form action="/admin/update_settings" method="POST" style="display:flex; gap:15px; align-items:center; margin-top: 15px;">
+        <div style="flex: 0 0 150px;">
+            <input type="number" name="bonus" value="{{ settings.special_bonus_percent }}" style="width:100%; margin:0;" placeholder="%">
         </div>
+        <div style="flex-grow: 1;">
+            <input type="text" name="message" value="{{ settings.special_message }}" style="width:100%; margin:0;" placeholder="Message (e.g. Christmas Offer)">
+        </div>
+        <button class="btn btn-blue">Update</button>
+    </form>
+    <p style="font-size:0.8rem; color:#0369A1; margin-top:10px; margin-bottom: 0;">
+        This percentage is added <b>on top</b> of the distributor's existing level commission.
+    </p>
+</div>
 
         <!-- DISTRIBUTORS -->
         <div class="card">
