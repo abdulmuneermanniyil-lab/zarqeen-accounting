@@ -44,8 +44,10 @@ db = SQLAlchemy(app)
 RAZORPAY_KEY_ID = os.environ.get("RAZORPAY_KEY_ID")
 RAZORPAY_KEY_SECRET = os.environ.get("RAZORPAY_KEY_SECRET")
 BREVO_API_KEY = os.environ.get("BREVO_API_KEY") 
-ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME")
-ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD")
+ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "admin")
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "admin123")
+
+# Login Rate Limiting
 LOGIN_ATTEMPTS = {}
 MAX_RETRIES = 5
 LOCKOUT_TIME = timedelta(minutes=15)
@@ -140,7 +142,6 @@ def check_level_update(dist):
     count = License.query.filter(License.distributor_id==dist.id, License.created_at >= last_month_start, License.created_at <= last_month_end).count()
     current = dist.level; new_lvl = current
     
-    # 3 LEVEL LOGIC
     if current < 3 and count >= LEVELS[current+1]['target']: new_lvl += 1
     elif current > 1 and count < LEVELS[current]['target']: new_lvl -= 1
     
@@ -178,8 +179,8 @@ def create_order():
                 disc_pct = dist.discount_percent 
                 final_amount = int(base_amount - ((base_amount * disc_pct) / 100))
                 dist_id_str = str(dist.id)
-                
-        # This block MUST be indented inside the 'try'
+        
+        # CORRECT SYNTAX: Inside the try block
         order = razorpay_client.order.create({
             'amount': final_amount, 
             'currency': 'INR', 
@@ -191,15 +192,13 @@ def create_order():
         return jsonify(order)
 
     except Exception as e:
-        # This 'except' MUST be aligned with the 'try' above
+        # ALIGNED with try block
         return jsonify({'error': str(e)}), 500
 
 @app.route('/verify_payment', methods=['POST'])
 def verify_payment():
     data = request.json
     try:
-        # 1. Verify Signature
-        # IMPORTANT: Razorpay expects strictly strings here
         params_dict = {
             'razorpay_order_id': str(data['razorpay_order_id']),
             'razorpay_payment_id': str(data['razorpay_payment_id']),
@@ -207,20 +206,16 @@ def verify_payment():
         }
         razorpay_client.utility.verify_payment_signature(params_dict)
         
-        # 2. Fetch Order Data safely
         try:
             order = razorpay_client.order.fetch(data['razorpay_order_id'])
-            # Safely get notes, default to empty dict if missing
             notes = order.get('notes', {})
             dist_id = notes.get('distributor_id')
             amount_paid_paise = order.get('amount', 0)
         except Exception as e:
             print(f"Error fetching order: {e}")
-            # Fallback if fetch fails (Unlikely but safe)
             dist_id = "None"
             amount_paid_paise = 29900 if data.get('plan_type') == 'basic' else 59900
 
-        # 3. Calculate Commission
         dist_obj = None
         comm = 0.0
         
@@ -228,15 +223,13 @@ def verify_payment():
             try:
                 dist_obj = Distributor.query.get(int(dist_id))
                 if dist_obj:
-                    # Calculate Commission
                     mrp = 299.0 if data.get('plan_type') == 'basic' else 599.0
                     st = Settings.query.first()
                     bonus = st.special_bonus_percent if st else 0
                     comm = (mrp * (LEVELS[dist_obj.level]['commission'] + bonus)) / 100
             except:
-                pass # Continue even if distributor lookup fails (don't block license)
+                pass
 
-        # 4. Generate License
         new_key = generate_unique_key(data.get('plan_type'), dist_obj.code if dist_obj else None)
         
         new_lic = License(
@@ -254,7 +247,7 @@ def verify_payment():
         return jsonify({'success': True, 'license_key': new_key})
         
     except Exception as e:
-        print(f"VERIFY ERROR: {str(e)}") # Print to Render Logs
+        print(f"VERIFY ERROR: {str(e)}") 
         return jsonify({'success': False, 'message': str(e)})
 
 @app.route('/download/license/<key>')
@@ -310,19 +303,13 @@ def add_distributor():
 def edit_distributor(id):
     d = Distributor.query.get_or_404(id)
     
-    # FIX: Only update fields if they are sent in the request
-    if request.form.get("name"): 
-        d.name = request.form.get("name")
-    if request.form.get("email"): 
-        d.email = request.form.get("email")
-    if request.form.get("phone"): 
-        d.phone = request.form.get("phone")
-        
+    if request.form.get("name"): d.name = request.form.get("name")
+    if request.form.get("email"): d.email = request.form.get("email")
+    if request.form.get("phone"): d.phone = request.form.get("phone")
     if request.form.get("discount"): 
         try: d.discount_percent = int(request.form.get("discount"))
         except: pass
     
-    # Bank details - only update if present in form
     if "bank_name" in request.form: d.bank_name = request.form.get("bank_name")
     if "account_holder" in request.form: d.account_holder = request.form.get("account_holder")
     if "account_number" in request.form: d.account_number = request.form.get("account_number")
@@ -331,15 +318,10 @@ def edit_distributor(id):
     
     add = request.form.get("add_payment")
     man = request.form.get("manual_paid_total")
+    if add and safe_float(add) > 0: d.commission_paid += safe_float(add)
+    elif man and man.strip(): d.commission_paid = safe_float(man)
     
-    if add and safe_float(add) > 0: 
-        d.commission_paid += safe_float(add)
-    elif man and man.strip(): 
-        d.commission_paid = safe_float(man)
-    
-    if request.form.get("password"): 
-        d.set_password(request.form.get("password"))
-    
+    if request.form.get("password"): d.set_password(request.form.get("password"))
     db.session.commit()
     return redirect(url_for("dashboard"))
 
@@ -355,13 +337,9 @@ def edit_license(id): l = License.query.get_or_404(id); l.is_used = (request.for
 
 @app.route("/admin/login", methods=["GET", "POST"])
 def login():
-    # 1. Get User IP (Handle Proxy/Render/Cloud hosting)
-    if request.headers.get('X-Forwarded-For'):
-        ip = request.headers.get('X-Forwarded-For').split(',')[0]
-    else:
-        ip = request.remote_addr
+    if request.headers.get('X-Forwarded-For'): ip = request.headers.get('X-Forwarded-For').split(',')[0]
+    else: ip = request.remote_addr
 
-    # 2. Check Lockout
     if ip in LOGIN_ATTEMPTS:
         attempt = LOGIN_ATTEMPTS[ip]
         if attempt['count'] >= MAX_RETRIES:
@@ -371,13 +349,10 @@ def login():
                 if request.is_json: return jsonify({'success': False, 'message': msg})
                 return msg, 429
             else:
-                # Lockout expired, reset
                 LOGIN_ATTEMPTS[ip] = {'count': 0, 'last_attempt': datetime.utcnow()}
 
-    # 3. Verify Credentials
     username = ""
     password = ""
-    
     if request.is_json:
         data = request.get_json()
         username = data.get("username")
@@ -387,23 +362,18 @@ def login():
         password = request.form.get("password")
 
     if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
-        # Success: Reset attempts and Log in
         if ip in LOGIN_ATTEMPTS: del LOGIN_ATTEMPTS[ip]
         session["admin_logged_in"] = True
-        
         if request.is_json:
             return jsonify({'success': True, 'redirect': url_for('dashboard', _external=True)})
         return redirect(url_for("dashboard"))
 
-    # 4. Failed: Increment Counter
-    if ip not in LOGIN_ATTEMPTS:
-        LOGIN_ATTEMPTS[ip] = {'count': 1, 'last_attempt': datetime.utcnow()}
+    if ip not in LOGIN_ATTEMPTS: LOGIN_ATTEMPTS[ip] = {'count': 1, 'last_attempt': datetime.utcnow()}
     else:
         LOGIN_ATTEMPTS[ip]['count'] += 1
         LOGIN_ATTEMPTS[ip]['last_attempt'] = datetime.utcnow()
 
     msg = f"Invalid Credentials. Attempts remaining: {MAX_RETRIES - LOGIN_ATTEMPTS[ip]['count']}"
-    
     if request.is_json: return jsonify({'success': False, 'message': msg})
     return msg, 401
 
@@ -427,55 +397,29 @@ def export_data(type):
 # --- DISTRIBUTOR API ---
 @app.route('/api/distributor/register', methods=['POST'])
 def register_distributor():
-    d = request.json
-    email = d.get('email', '').strip()
-    
-    # Validation
-    if Distributor.query.count() > 450000: 
-        return jsonify({'success': False, 'message': 'Registration Limit Reached'})
-        
+    d = request.json; email = d.get('email', '').strip()
+    if Distributor.query.count() > 450000: return jsonify({'success': False, 'message': 'Registration Limit Reached'})
     dist = Distributor.query.filter_by(email=email).first()
-    if dist and dist.is_verified: 
-        return jsonify({'success': False, 'message': 'This Email is already registered. Please Login.'})
-        
+    if dist and dist.is_verified: return jsonify({'success': False, 'message': 'This Email is already registered. Please Login.'})
     otp = str(random.randint(100000, 999999))
-    
     if not dist:
-        # Create unverified account
         while True:
             c = ''.join(random.choices(string.ascii_uppercase, k=4))
             if not Distributor.query.filter_by(code=c).first(): break
-        
-        # Default/Dummy password will be overwritten later
         dist = Distributor(code=c, name=d.get('name'), phone=d.get('phone'), email=email, is_verified=False, level=1, discount_percent=10)
-        dist.set_password(d.get('password')) # This is the dummy password
-        db.session.add(dist)
-    else:
-        # Update existing unverified account
-        dist.name = d.get('name')
-        dist.phone = d.get('phone')
-        dist.set_password(d.get('password'))
-        
-    dist.otp_code = otp
-    dist.otp_expiry = datetime.utcnow() + timedelta(minutes=10)
-    db.session.commit()
-    
+        dist.set_password(d.get('password')); db.session.add(dist)
+    else: dist.name=d.get('name'); dist.phone=d.get('phone'); dist.set_password(d.get('password'))
+    dist.otp_code = otp; dist.otp_expiry = datetime.utcnow() + timedelta(minutes=10); db.session.commit()
     sent = send_brevo_email(email, "Verification Code", f"Your OTP is: <b>{otp}</b>")
-    
-    # FIX: Added 'message' here so the popup isn't "undefined"
-    if sent:
-        return jsonify({'success': True, 'message': f'OTP sent to {email}. Check your Inbox/Spam.'})
-    else:
-        # Fallback if email fails (for testing/if key is wrong)
-        return jsonify({'success': True, 'message': f'OTP Generated (Email Failed): {otp}'})
+    if sent: return jsonify({'success': True, 'message': f'OTP sent to {email}. Check your Inbox/Spam.'})
+    else: return jsonify({'success': True, 'message': f'OTP Generated (Email Failed): {otp}'})
 
 @app.route('/api/distributor/verify-registration', methods=['POST'])
 def verify_registration():
     d = request.json; dist = Distributor.query.filter_by(email=d.get('email')).first()
     if not dist: return jsonify({'success': False})
     if str(dist.otp_code) == str(d.get('otp')) and datetime.utcnow() <= dist.otp_expiry:
-        dist.is_verified = True
-        db.session.commit()
+        dist.is_verified = True; db.session.commit()
         return jsonify({'success': True, 'code': dist.code})
     return jsonify({'success': False, 'message': 'Invalid OTP'})
 
@@ -498,9 +442,7 @@ def api_get_distributor_data():
     pg = q.paginate(page=page, per_page=10, error_out=False)
     
     earn = sum(safe_float(l.commission_earned) for l in q.all())
-    cur = dist.level
-    # 3 LEVELS LOGIC REVERTED
-    tgt = LEVELS[min(cur+1, 3)]['target']
+    cur = dist.level; tgt = LEVELS[min(cur+1, 3)]['target']
     msales = License.query.filter(License.distributor_id==dist.id, License.created_at>=datetime.utcnow().replace(day=1)).count()
     
     sd = [{'date': s.created_at.strftime('%Y-%m-%d'), 'plan': s.plan_type, 'amount': s.amount_paid, 'status': 'INSTALLED' if s.is_used else 'PENDING', 'key': s.license_key, 'version': s.software_version, 'last_login': s.last_login_date.strftime('%Y-%m-%d') if s.last_login_date else '-', 'expiry': s.expiry_date.strftime('%Y-%m-%d') if s.expiry_date else '-'} for s in pg.items]
@@ -523,34 +465,19 @@ def update_bank():
 
 @app.route('/api/send-otp', methods=['POST'])
 def forgot_otp():
-    email = request.json.get('email')
-    dist = Distributor.query.filter_by(email=email).first()
-    if not dist: 
-        return jsonify({'success': False, 'message': 'Email not registered.'})
-        
-    otp = str(random.randint(100000, 999999))
-    dist.otp_code = otp
-    dist.otp_expiry = datetime.utcnow() + timedelta(minutes=10)
-    db.session.commit()
-    
+    email = request.json.get('email'); dist = Distributor.query.filter_by(email=email).first()
+    if not dist: return jsonify({'success': False, 'message': 'Email not registered.'})
+    otp = str(random.randint(100000, 999999)); dist.otp_code = otp; dist.otp_expiry = datetime.utcnow() + timedelta(minutes=10); db.session.commit()
     send_brevo_email(email, "Reset Password", f"OTP: {otp}")
-    # FIX: Added success message
     return jsonify({'success': True, 'message': f'OTP sent to {email}'})
 
 @app.route('/api/reset-with-otp', methods=['POST'])
 def reset_with_otp():
-    d = request.json
-    dist = Distributor.query.filter_by(email=d.get('email')).first()
-    if not dist: 
-        return jsonify({'success': False, 'message': 'User not found.'})
-        
+    d = request.json; dist = Distributor.query.filter_by(email=d.get('email')).first()
+    if not dist: return jsonify({'success': False, 'message': 'User not found.'})
     if str(dist.otp_code) == str(d.get('otp')) and datetime.utcnow() <= dist.otp_expiry:
-        dist.set_password(d.get('new_password'))
-        dist.otp_code = None
-        db.session.commit()
-        # FIX: Added success message
+        dist.set_password(d.get('new_password')); dist.otp_code=None; db.session.commit()
         return jsonify({'success': True, 'message': 'Password updated successfully!'})
-        
     return jsonify({'success': False, 'message': 'Invalid or Expired OTP'})
 
 @app.route('/reset-db-now')
