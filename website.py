@@ -327,7 +327,7 @@ LATEST_VERSION = "1.2.0"
 def version_check():
     update_data = {
         "version": LATEST_VERSION,
-        "download_url": "https://www.zarqeen.in/download",
+        "download_url": "https://www.zarqeen.in",
         # NEW: Add the exact message you want displayed locally
         "message": "🚀 New Update v1.2.0: Now with split address support, auto-comma removal, and faster search!",
         "headline": "Supercharged Update Available!", # Fallback
