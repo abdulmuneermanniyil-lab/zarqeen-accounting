@@ -320,18 +320,17 @@ def validate_license():
         'activated_at': lic.used_at.isoformat()
     })
 
+# --- site_backend.py (On Render) ---
 LATEST_VERSION = "1.2.0" 
 
 @app.route('/api/version_check', methods=['GET'])
 def version_check():
-    """
-    This endpoint is called by the local desktop app.
-    It returns the latest version details.
-    """
     update_data = {
         "version": LATEST_VERSION,
-        "download_url": "https://www.zarqeen.in/download", # Link to your installer
-        "headline": "🚀 Supercharged Update Available!",
+        "download_url": "https://www.zarqeen.in/download",
+        # NEW: Add the exact message you want displayed locally
+        "message": "🚀 New Update v1.2.0: Now with split address support, auto-comma removal, and faster search!",
+        "headline": "Supercharged Update Available!", # Fallback
         "features": [
             "New Invoice Templates (A5 & Thermal)",
             "Faster Inventory Search",
