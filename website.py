@@ -320,6 +320,31 @@ def validate_license():
         'activated_at': lic.used_at.isoformat()
     })
 
+LATEST_VERSION = "1.2.0" 
+
+@app.route('/api/version_check', methods=['GET'])
+def version_check():
+    """
+    This endpoint is called by the local desktop app.
+    It returns the latest version details.
+    """
+    update_data = {
+        "version": LATEST_VERSION,
+        "download_url": "https://www.zarqeen.in/download", # Link to your installer
+        "headline": "🚀 Supercharged Update Available!",
+        "features": [
+            "New Invoice Templates (A5 & Thermal)",
+            "Faster Inventory Search",
+            "Fixed 'None' display in GSTIN fields",
+            "Split Address (City & Zip) support"
+        ],
+        "ad_image": "https://www.zarqeen.in/static/images/update_banner.png" 
+    }
+    return jsonify(update_data)
+
+
+
+
 
 # --- ADMIN ---
 @app.route("/admin/dashboard")
