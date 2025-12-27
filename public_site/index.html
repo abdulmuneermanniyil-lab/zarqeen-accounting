@@ -128,9 +128,11 @@
         <a onclick="openRegisterModal()" style="color:var(--primary); cursor:pointer;">Join as Distributor</a>
         <a onclick="openLoginModal()" style="color:var(--primary); cursor:pointer;">Login</a>
         <!-- Desktop Download Button -->
-        <a href="https://drive.google.com/uc?export=download&id=14nZJFpJ808_9N0RXhGMJVxHZI2k8BQii" 
-           class="nav-btn" 
-           onclick="checkDownload(event)">Download</a>
+        <!-- Use your own domain link -->
+<a href="/static/Zarqeen_Alif_Setup.exe" 
+   download="Zarqeen_Alif_Setup.exe"
+   class="nav-btn" 
+   onclick="checkDownload(event)">Download</a>
     </nav>
     <button class="mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
 </div>
@@ -139,8 +141,11 @@
     <a onclick="toggleMobileMenu(); openRegisterModal()">Join as Distributor</a>
     <a onclick="toggleMobileMenu(); openLoginModal()">Login</a>
     <!-- Mobile Download Link -->
-    <a href="https://drive.google.com/uc?export=download&id=14nZJFpJ808_9N0RXhGMJVxHZI2k8BQii" 
-       onclick="checkDownload(event)">Download Software</a>
+    <!-- Use your own domain link -->
+<a href="/static/Zarqeen_Alif_Setup.exe" 
+   download="Zarqeen_Alif_Setup.exe"
+   class="nav-btn" 
+   onclick="checkDownload(event)">Download</a>
 </div>
     </header>
 
@@ -285,19 +290,20 @@
         function toggleMobileMenu() { const nav = document.getElementById('mobileNav'); nav.classList.toggle('active'); }
         function checkDownload(event) {
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    const downloadUrl = "https://drive.google.com/uc?export=download&id=14nZJFpJ808_9N0RXhGMJVxHZI2k8BQii";
+    
+    // Path to the file hosted on your Render server
+    const localDownloadUrl = "/static/Zarqeen_Alif_Setup.exe";
 
     if (isMobile) {
-        // Block download on mobile and show warning
         event.preventDefault();
         Swal.fire({
             title: 'Windows PC Required',
-            text: 'Zarqeen Alif is professional Windows software. Please open zarqeen.in on your Laptop or Desktop to download the installer.',
+            text: 'Zarqeen Alif is a desktop application. Please download this on your Windows computer.',
             icon: 'info',
             confirmButtonColor: '#1E40AF'
         });
     } else {
-        // On PC: Show a notification and let the direct link trigger
+        // On PC: Show success message
         const Toast = Swal.mixin({
             toast: true,
             position: 'top-end',
@@ -306,11 +312,10 @@
         });
         Toast.fire({
             icon: 'success',
-            title: 'Starting download...'
+            title: 'Download started directly from Zarqeen'
         });
         
-        // If the browser tries to block the automatic download, this line forces it
-        // window.location.href = downloadUrl; 
+        // No event.preventDefault() here means the link works immediately
     }
 }
         function showLoader(txt) { const loader = document.getElementById('actionLoader'); document.getElementById('loaderText').innerText = txt || "Loading..."; loader.style.display = 'flex'; setTimeout(() => { document.getElementById('loaderSubText').innerText = "Waking up server... please wait."; }, 3000); }
