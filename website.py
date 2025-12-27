@@ -321,7 +321,7 @@ def validate_license():
     })
 
 # --- site_backend.py (On Render) ---
-LATEST_VERSION = "1.2.0" 
+LATEST_VERSION = "1.1.0" 
 
 @app.route('/api/version_check', methods=['GET'])
 def version_check():
