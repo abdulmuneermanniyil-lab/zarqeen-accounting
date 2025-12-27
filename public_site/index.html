@@ -120,19 +120,28 @@
 
     <header>
         <div class="nav-container">
-            <div class="logo-area"><img src="static/logo.png" style="height:45px;"><span class="brand-name" style="margin-left:10px;font-size:1.3rem;font-weight:800;color:#1E40AF;">Zarqeen Alif</span></div>
-            <nav class="nav-links">
-                <a onclick="openRegisterModal()" style="color:var(--primary); cursor:pointer;">Join as Distributor</a>
-                <a onclick="openLoginModal()" style="color:var(--primary); cursor:pointer;">Login</a>
-                <a href="https://drive.google.com/drive/folders/17O3vY4KYUzd7Rma4o8rp3j2iIrpqhJe9?usp=drive_link" target="_blank" class="nav-btn" onclick="checkDownload(event)">Download</a>
-            </nav>
-            <button class="mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
-        </div>
-        <div class="mobile-nav" id="mobileNav">
-            <a onclick="toggleMobileMenu(); openRegisterModal()">Join as Distributor</a>
-            <a onclick="toggleMobileMenu(); openLoginModal()">Login</a>
-            <a href="https://drive.google.com/drive/folders/17O3vY4KYUzd7Rma4o8rp3j2iIrpqhJe9?usp=drive_link" target="_blank" onclick="checkDownload(event)">Download Software</a>
-        </div>
+    <div class="logo-area">
+        <img src="static/logo.png" style="height:45px;">
+        <span class="brand-name" style="margin-left:10px;font-size:1.3rem;font-weight:800;color:#1E40AF;">Zarqeen Alif</span>
+    </div>
+    <nav class="nav-links">
+        <a onclick="openRegisterModal()" style="color:var(--primary); cursor:pointer;">Join as Distributor</a>
+        <a onclick="openLoginModal()" style="color:var(--primary); cursor:pointer;">Login</a>
+        <!-- Desktop Download Button -->
+        <a href="https://drive.google.com/uc?export=download&id=14nZJFpJ808_9N0RXhGMJVxHZI2k8BQii" 
+           class="nav-btn" 
+           onclick="checkDownload(event)">Download</a>
+    </nav>
+    <button class="mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
+</div>
+
+<div class="mobile-nav" id="mobileNav">
+    <a onclick="toggleMobileMenu(); openRegisterModal()">Join as Distributor</a>
+    <a onclick="toggleMobileMenu(); openLoginModal()">Login</a>
+    <!-- Mobile Download Link -->
+    <a href="https://drive.google.com/uc?export=download&id=14nZJFpJ808_9N0RXhGMJVxHZI2k8BQii" 
+       onclick="checkDownload(event)">Download Software</a>
+</div>
     </header>
 
     <section class="hero">
@@ -269,7 +278,47 @@
         const BACKEND_URL = "https://zarqeen-backend.onrender.com";
 
         function toggleMobileMenu() { const nav = document.getElementById('mobileNav'); nav.classList.toggle('active'); }
-        function checkDownload(e) { if (/Android|iPhone|iPad/i.test(navigator.userAgent)) { if(!confirm("⚠️ Warning: This software is for Windows PC only.\n\nIt will NOT work on mobile. Do you still want to download file to transfer to PC?")) { e.preventDefault(); } } }
+        function checkDownload(event) {
+    // Detect mobile devices (Android, iPhone, iPad, etc.)
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+    if (isMobile) {
+        // 1. Stop the actual download
+        event.preventDefault();
+
+        // 2. Close mobile menu if it was open
+        if (typeof toggleMobileMenu === "function") {
+            const mobileNav = document.getElementById('mobileNav');
+            if (mobileNav && mobileNav.classList.contains('active')) {
+                toggleMobileMenu();
+            }
+        }
+
+        // 3. Show professional warning
+        Swal.fire({
+            title: 'Windows Only',
+            text: 'Zarqeen Alif is a desktop application for Windows PC. Please open this link on your computer to download and install.',
+            icon: 'info',
+            confirmButtonText: 'Understood',
+            confirmButtonColor: '#1E40AF'
+        });
+    } else {
+        // On PC: Show a small success notification that download is starting
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 4000,
+            timerProgressBar: true
+        });
+        
+        Toast.fire({
+            icon: 'success',
+            title: 'Setup file is downloading...'
+        });
+        // Link proceeds to direct download
+    }
+}
         function showLoader(txt) { const loader = document.getElementById('actionLoader'); document.getElementById('loaderText').innerText = txt || "Loading..."; loader.style.display = 'flex'; setTimeout(() => { document.getElementById('loaderSubText').innerText = "Waking up server... please wait."; }, 3000); }
         function hideLoader() { document.getElementById('actionLoader').style.display = 'none'; }
         
