@@ -191,7 +191,7 @@ def create_order():
         code = raw_code.strip().upper() if raw_code else ""
         # --- FIX ENDS HERE ---
 
-        base_amount = 100 if data.get('plan') == 'basic' else 59900
+        base_amount = 29900 if data.get('plan') == 'basic' else 59900
         final_amount = base_amount
         dist_id_str = "None"
         
@@ -234,7 +234,7 @@ def verify_payment():
         except Exception as e:
             print(f"Error fetching order: {e}")
             dist_id = "None"
-            amount_paid_paise = 100 if data.get('plan_type') == 'basic' else 59900
+            amount_paid_paise = 29900 if data.get('plan_type') == 'basic' else 59900
 
         dist_obj = None
         comm = 0.0
@@ -243,7 +243,7 @@ def verify_payment():
             try:
                 dist_obj = Distributor.query.get(int(dist_id))
                 if dist_obj:
-                    mrp = 1.0 if data.get('plan_type') == 'basic' else 599.0
+                    mrp = 299.0 if data.get('plan_type') == 'basic' else 599.0
                     st = Settings.query.first()
                     bonus = st.special_bonus_percent if st else 0
                     comm = (mrp * (LEVELS[dist_obj.level]['commission'] + bonus)) / 100
