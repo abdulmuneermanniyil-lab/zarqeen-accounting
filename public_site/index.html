@@ -76,6 +76,12 @@
 
         @media (max-width: 768px) { .nav-links { display: none; } .stat-grid { grid-template-columns: 1fr; } }
     </style>
+    <style>
+    .discount-box { max-width: 400px; margin: 0 auto 30px; background: #fff; padding: 15px; border-radius: 10px; border: 1px dashed var(--primary); }
+    .discount-input-group { display: flex; gap: 10px; margin-top: 10px; }
+    .discount-input-group input { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 6px; text-transform: uppercase; font-weight: 700; }
+    #discountMsg { font-size: 0.8rem; margin-top: 5px; font-weight: 600; }
+</style>
 </head>
 <body>
 
@@ -108,14 +114,49 @@
             <div class="feat-card"><h3>📊 Business Intelligence</h3><p>Built-in analytics for sales, stock movement, and quarterly tax summaries.</p></div>
         </section>
 
-        <section class="pricing-section">
-            <h2 style="margin-bottom:40px;">Simple Pricing</h2>
-            <div class="pricing-grid">
-                <div class="plan-card"><h3>Trial</h3><div class="price">Free</div><p>7-Day full access to all features.</p><button class="btn-buy btn-outline" onclick="checkDownload(event)">Get Started</button></div>
-                <div class="plan-card popular"><h3>Basic</h3><div class="price">₹299<span>/year</span></div><p>Standard support and updates.</p><button class="btn-buy btn-primary" onclick="buyPlan('basic')">Buy Now</button></div>
-                <div class="plan-card"><h3>Premium</h3><div class="price">₹599<span>/3 years</span></div><p>Best for established shops.</p><button class="btn-buy btn-primary" onclick="buyPlan('premium')">Buy Now</button></div>
+        
+
+<main id="mainPage">
+    <!-- Hero Section -->
+    <section class="hero">
+        <h1>Smart <span>Offline Billing</span> for PC</h1>
+        <p>Professional invoicing, stock management, and reports. 100% Offline.</p>
+        <a id="heroDownBtn" onclick="checkDownload(event)"><button class="btn-buy btn-primary" style="padding: 15px 40px;">Download Free Trial</button></a>
+        <p id="vText" style="margin-top:20px; font-size:0.8rem; color:gray;">v1.2.0</p>
+    </section>
+
+    <!-- Pricing & Discount -->
+    <section class="pricing-section">
+        <h2>Choose Your Plan</h2>
+        
+        <!-- Distributor Code Entry -->
+        <div class="discount-box">
+            <label style="font-size: 0.9rem; color: #666;">Have a Partner/Distributor Code?</label>
+            <div class="discount-input-group">
+                <input type="text" id="distCodeInput" placeholder="Enter Code">
+                <button onclick="applyDiscountCode()" class="nav-btn" style="border:none;">Apply</button>
             </div>
-        </section>
+            <div id="discountMsg"></div>
+        </div>
+
+        <div class="pricing-grid">
+            <div class="plan-card">
+                <h3>Trial</h3>
+                <div class="price">Free</div>
+                <p>7 Days Full Access</p>
+                <button class="btn-buy btn-outline" onclick="checkDownload(event)">Download Now</button>
+            </div>
+            <div class="plan-card popular">
+                <h3>Basic</h3>
+                <div class="price" id="price_basic">₹299<span>/year</span></div>
+                <p>Ideal for small shops</p>
+                <button class="btn-buy btn-primary" onclick="buyPlan('basic')">Buy Basic License</button>
+            </div>
+            <div class="plan-card">
+                <h3>Premium</h3>
+                <div class="price" id="price_premium">₹599<span>/3 years</span></div>
+                <p>Best for growth</p>
+   
     </main>
 
     <!-- PARTNER DASHBOARD -->
