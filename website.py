@@ -148,7 +148,7 @@ def admin_dashboard():
     for d in distributors:
         earned = sum(l.commission_earned for l in d.licenses)
         dist_list.append({"obj": d, "earned": round(earned, 2), "balance": round(earned - d.commission_paid, 2)})
-    return render_template("admin_dashboard.html", licenses=licenses, distributors=dist_list, settings=settings)
+    return render_template("dashboard.html", licenses=licenses, distributors=dist_list, settings=settings)
 
 @app.route("/admin/edit_distributor/<int:id>", methods=["POST"])
 @admin_login_required
