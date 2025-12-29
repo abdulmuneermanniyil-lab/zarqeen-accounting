@@ -24,7 +24,7 @@ app.secret_key = os.environ.get("SECRET_KEY", "ZARQEEN_ALIF_SECURE_99")
 # RENDER ENVIRONMENT VARIABLES
 BACKEND_URL = os.environ.get("BACKEND_URL", "").rstrip('/')
 DOWNLOAD_LINK = os.environ.get("DOWNLOAD_LINK")
-VERSION = os.environ.get("VERSION", "1.2.0")
+VERSION = os.environ.get("VERSION", "1.1.0")
 RAZORPAY_KEY_ID = os.environ.get("RAZORPAY_KEY_ID")
 RAZORPAY_KEY_SECRET = os.environ.get("RAZORPAY_KEY_SECRET")
 ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "admin")
