@@ -200,9 +200,6 @@ def verify_payment():
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)})
 
-@app.route('/download/license/<key>')
-def download_license(key):
-    return send_file(io.BytesIO(key.encode()), mimetype='text/plain', as_attachment=True, download_name='license.zarqeen')
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 10000)))
