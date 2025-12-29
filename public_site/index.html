@@ -287,5 +287,98 @@
         function hideLoader() { document.getElementById('actionLoader').style.display='none'; }
         window.onload = initApp;
     </script>
+                <script>
+    const _0x8892 = "aHR0cHM6Ly96YXJxZWVuLWJhY2tlbmQub25yZW5kZXIuY29t";
+    const BASE_URL = atob(_0x8892);
+    let APP_CONFIG = {};
+    let APPLIED_DIST_CODE = null;
+
+    async function initApp() {
+        try {
+            const res = await fetch(`${BASE_URL}/api/v1/config`);
+            APP_CONFIG = await res.json();
+            document.querySelectorAll('#navDownBtn, #heroDownBtn').forEach(a => a.href = APP_CONFIG.DOWNLOAD_LINK);
+        } catch(e) { console.error("Handshake failed."); }
+    }
+
+    // --- DISCOUNT LOGIC ---
+    async function applyDiscountCode() {
+        const code = document.getElementById('distCodeInput').value.trim();
+        const msg = document.getElementById('discountMsg');
+        if(!code) return;
+
+        showLoader("Checking Code...");
+        try {
+            const res = await fetch(`${BASE_URL}/api/check_distributor`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ code })
+            });
+            const data = await res.json();
+            hideLoader();
+
+            if(data.valid) {
+                APPLIED_DIST_CODE = code;
+                msg.innerText = `✅ Code Applied! ${data.discount}% Discount added.`;
+                msg.style.color = "green";
+                // Update UI prices
+                document.getElementById('price_basic').innerHTML = `₹${Math.floor(299 * (1 - data.discount/100))}<span>/year</span>`;
+                document.getElementById('price_premium').innerHTML = `₹${Math.floor(599 * (1 - data.discount/100))}<span>/3 years</span>`;
+            } else {
+                APPLIED_DIST_CODE = null;
+                msg.innerText = "❌ Invalid or expired code.";
+                msg.style.color = "red";
+            }
+        } catch(e) { hideLoader(); }
+    }
+
+    // --- RAZORPAY & BUY LOGIC ---
+    async function buyPlan(planType) {
+        showLoader("Preparing Checkout...");
+        try {
+            const res = await fetch(`${BASE_URL}/create_order`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ plan: planType, distributor_code: APPLIED_DIST_CODE })
+            });
+            const order = await res.json();
+            hideLoader();
+
+            const options = {
+                "key": APP_CONFIG.RAZORPAY_KEY_ID,
+                "amount": order.amount,
+                "currency": "INR",
+                "name": "Zarqeen Alif",
+                "description": `${planType.toUpperCase()} License`,
+                "order_id": order.id,
+                "handler": async function (response) {
+                    showLoader("Verifying Payment...");
+                    const vRes = await fetch(`${BASE_URL}/verify_payment`, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({
+                            razorpay_payment_id: response.razorpay_payment_id,
+                            razorpay_order_id: response.razorpay_order_id,
+                            razorpay_signature: response.razorpay_signature
+                        })
+                    });
+                    const result = await vRes.json();
+                    hideLoader();
+                    if(result.success) {
+                        Swal.fire('Success!', `Your License Key is: ${result.license_key}`, 'success');
+                    } else {
+                        Swal.fire('Error', 'Payment verification failed.', 'error');
+                    }
+                }
+            };
+            const rzp = new Razorpay(options);
+            rzp.open();
+        } catch(e) { hideLoader(); Swal.fire('Error', 'Could not initiate payment.', 'error'); }
+    }
+
+    // ... [Login functions, Dashboard loader, and Download protection from previous message] ...
+
+    window.onload = initApp;
+</script>
 </body>
 </html>
