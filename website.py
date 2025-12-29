@@ -69,6 +69,7 @@ class Distributor(db.Model):
     api_token = db.Column(db.String(100))
     otp_code = db.Column(db.String(10))
     otp_expiry = db.Column(db.DateTime)
+    upi_id = db.Column(db.String(100))
     licenses = db.relationship('License', backref='distributor', lazy=True)
 
     def set_password(self, pwd): self.password_hash = generate_password_hash(pwd)
@@ -78,6 +79,7 @@ class License(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     license_key = db.Column(db.String(60), unique=True, nullable=False)
     plan_type = db.Column(db.String(20), nullable=False)
+    payment_id = db.Column(db.String(100))
     amount_paid = db.Column(db.Float, default=0.0)
     commission_earned = db.Column(db.Float, default=0.0)
     is_used = db.Column(db.Boolean, default=False)
@@ -94,11 +96,11 @@ class License(db.Model):
 # --- DATABASE AUTO-INIT ---
 with app.app_context():
     db.create_all()
-    if not Settings.query.get(1):
+    if not db.session.get(Settings, 1):
         db.session.add(Settings(id=1))
         db.session.commit()
 
-# --- DECORATORS ---
+# --- HELPERS ---
 def admin_login_required(f):
     @wraps(f)
     def wrap(*args, **kwargs):
@@ -106,16 +108,21 @@ def admin_login_required(f):
         return f(*args, **kwargs)
     return wrap
 
+def generate_key(plan_type, dist_code=None):
+    prefix = "ALBA" if plan_type == 'basic' else "ALPR"
+    code = dist_code.upper() if dist_code else "ALIF"
+    rand = "".join(random.choices(string.ascii_uppercase + string.digits, k=8))
+    key = f"{prefix}-{code}-{rand[:4]}-{rand[4:]}"
+    return key if not License.query.filter_by(license_key=key).first() else generate_key(plan_type, dist_code)
+
 # --- ROUTES ---
 
 @app.route('/')
 def index():
-    """Satisfies Render Health Check and provides a basic status page."""
     return f"Zarqeen Security Server {VERSION} is Online.", 200
 
 @app.route('/api/v1/config')
 def get_public_config():
-    """Hands over variables to frontend dynamically."""
     return jsonify({
         "BACKEND_URL": BACKEND_URL or request.host_url.rstrip('/'),
         "DOWNLOAD_LINK": DOWNLOAD_LINK,
@@ -136,8 +143,7 @@ def admin_login_api():
 def admin_dashboard():
     licenses = License.query.order_by(License.created_at.desc()).all()
     distributors = Distributor.query.all()
-    settings = Settings.query.get(1)
-    
+    settings = db.session.get(Settings, 1)
     dist_list = []
     for d in distributors:
         earned = sum(l.commission_earned for l in d.licenses)
@@ -155,6 +161,33 @@ def edit_distributor(id):
     db.session.commit()
     return redirect(url_for('admin_dashboard'))
 
+@app.route("/admin/delete_distributor/<int:id>", methods=["POST"])
+@admin_login_required
+def delete_distributor(id):
+    d = db.session.get(Distributor, id)
+    if d:
+        db.session.delete(d)
+        db.session.commit()
+    return redirect(url_for('admin_dashboard'))
+
+@app.route("/admin/edit_license/<int:id>", methods=["POST"])
+@admin_login_required
+def edit_license(id):
+    l = db.session.get(License, id)
+    if l:
+        l.is_used = (request.form.get("status") == "used")
+        db.session.commit()
+    return redirect(url_for('admin_dashboard'))
+
+@app.route("/admin/delete_license/<int:id>", methods=["POST"])
+@admin_login_required
+def delete_license(id):
+    l = db.session.get(License, id)
+    if l:
+        db.session.delete(l)
+        db.session.commit()
+    return redirect(url_for('admin_dashboard'))
+
 @app.route('/api/distributor/data', methods=['GET'])
 def get_dist_data():
     token = request.headers.get('Authorization', '').replace('Bearer ', '')
@@ -165,7 +198,7 @@ def get_dist_data():
     return jsonify({"name": dist.name, "code": dist.code, "earned": round(earned, 2), "paid": round(dist.commission_paid, 2), "balance": round(earned - dist.commission_paid, 2), "history": sd})
 
 @app.route('/download/license/<key>')
-def download_license(key):
+def download_license_file(key):
     return send_file(io.BytesIO(key.encode()), mimetype='text/plain', as_attachment=True, download_name='license.zarqeen')
 
 @app.route('/api/validate_license', methods=['POST'])
@@ -181,25 +214,10 @@ def validate_license():
     db.session.commit()
     return jsonify({'valid': True, 'plan': lic.plan_type, 'dist_phone': lic.distributor.phone if lic.distributor else "N/A"})
 
-@app.route('/verify_payment', methods=['POST'])
-def verify_payment():
-    d = request.json
-    try:
-        razorpay_client.utility.verify_payment_signature(d)
-        order = razorpay_client.order.fetch(d['razorpay_order_id'])
-        plan = order['notes'].get('plan')
-        dist_id = order['notes'].get('dist_id')
-        dist = db.session.get(Distributor, int(dist_id)) if dist_id and dist_id != 'None' else None
-        
-        comm = (order['amount'] / 100) * 0.25 if dist else 0.0
-        new_key = generate_key(plan, dist.code if dist else None)
-        lic = License(license_key=new_key, plan_type=plan, amount_paid=order['amount']/100, commission_earned=comm, distributor_id=dist.id if dist else None)
-        db.session.add(lic)
-        db.session.commit()
-        return jsonify({'success': True, 'license_key': new_key})
-    except Exception as e:
-        return jsonify({'success': False, 'message': str(e)})
-
+@app.route('/admin/logout')
+def admin_logout():
+    session.pop('admin_logged_in', None)
+    return redirect("https://zarqeen.in")
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 10000)))
