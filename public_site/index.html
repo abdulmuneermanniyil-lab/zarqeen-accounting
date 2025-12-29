@@ -4,249 +4,246 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Zarqeen Alif - Smart Invoicing for India</title>
+    <title>Zarqeen Alif - Premium Invoicing for Indian Retail</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="icon" type="image/png" href="static/header.png">
     
     <style>
-        :root { --primary: #2563EB; --primary-dark: #1E40AF; --accent: #F59E0B; --bg-light: #F3F4F6; --text-main: #111827; --text-muted: #6B7280; --white: #ffffff; --success: #10B981; --danger: #EF4444; }
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; scroll-behavior: smooth; }
-        body { background-color: var(--bg-light); color: var(--text-main); line-height: 1.6; -webkit-user-select: text; user-select: text; }
+        :root { --primary: #2563EB; --primary-dark: #1E40AF; --accent: #F59E0B; --bg-light: #F3F4F6; --text-main: #111827; --text-muted: #4B5563; --white: #ffffff; --success: #10B981; --danger: #EF4444; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg-light); color: var(--text-main); line-height: 1.5; }
         
         /* LOADER */
-        #actionLoader { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.95); z-index: 999999; flex-direction: column; align-items: center; justify-content: center; }
-        .spinner { width: 50px; height: 50px; border: 5px solid #E5E7EB; border-top: 5px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
+        #actionLoader { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.98); z-index: 999999; flex-direction: column; align-items: center; justify-content: center; }
+        .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
-        header { background: var(--white); box-shadow: 0 1px 3px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 1000; }
-        .nav-container { max-width: 1200px; margin: 0 auto; padding: 1rem 1.5rem; display: flex; justify-content: space-between; align-items: center; }
-        .logo-area { display: flex; align-items: center; gap: 12px; }
-        .brand-name { font-weight: 800; font-size: 1.35rem; color: var(--primary-dark); letter-spacing: -0.5px; }
-        .nav-links { display: flex; align-items: center; gap: 2rem; }
-        .nav-links a { color: var(--text-muted); font-weight: 600; font-size: 0.95rem; transition: color 0.2s; cursor: pointer; }
-        .nav-links a:hover { color: var(--primary); }
-        .nav-btn { background: var(--primary); color: var(--white) !important; padding: 0.6rem 1.2rem; border-radius: 8px; font-weight: 700; cursor: pointer; }
-        
-        /* HERO */
-        .hero { text-align: center; padding: 6rem 1rem 4rem; background: linear-gradient(180deg, #FFFFFF 0%, #EFF6FF 100%); border-bottom: 1px solid #DBEAFE; }
-        .tagline { display: inline-block; background: #DBEAFE; color: var(--primary-dark); padding: 6px 16px; border-radius: 50px; font-size: 0.85rem; font-weight: 700; margin-bottom: 1.5rem; }
-        .hero h1 { font-size: 3.5rem; font-weight: 800; line-height: 1.1; margin-bottom: 1.5rem; letter-spacing: -1.5px; }
+        header { background: var(--white); border-bottom: 1px solid #E5E7EB; position: sticky; top: 0; z-index: 1000; }
+        .nav-container { max-width: 1100px; margin: 0 auto; padding: 0.8rem 1.5rem; display: flex; justify-content: space-between; align-items: center; }
+        .brand-name { font-weight: 800; font-size: 1.25rem; color: var(--primary-dark); }
+        .nav-links { display: flex; align-items: center; gap: 1.5rem; }
+        .nav-links a { color: var(--text-muted); font-weight: 600; font-size: 0.9rem; cursor: pointer; text-decoration: none; }
+        .nav-btn { background: var(--primary); color: white !important; padding: 0.5rem 1rem; border-radius: 6px; font-weight: 700; }
+
+        /* HERO - Adjusted Font Sizes */
+        .hero { text-align: center; padding: 4rem 1rem; background: #fff; border-bottom: 1px solid #E5E7EB; }
+        .hero h1 { font-size: 2.5rem; font-weight: 800; letter-spacing: -1px; margin-bottom: 1rem; color: #111; }
         .hero h1 span { color: var(--primary); }
-        .cta-group { display: flex; justify-content: center; gap: 15px; margin-top: 2rem; }
-        .btn-lg { padding: 1.2rem 2.5rem; font-size: 1.1rem; border-radius: 10px; font-weight: 700; cursor: pointer; border: none; transition: 0.2s; }
-        .btn-primary { background: var(--primary); color: var(--white); }
-        .btn-lg:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(37, 99, 235, 0.2); }
+        .hero p { font-size: 1.1rem; color: var(--text-muted); max-width: 600px; margin: 0 auto 2rem; }
 
-        /* DASHBOARD */
-        #dashboardSection { display: none; max-width: 1200px; margin: 40px auto; padding: 0 20px; }
-        .dash-card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px; }
-        .stat-card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #eee; }
-        .stat-label { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; }
-        .stat-val { font-size: 2.2rem; font-weight: 800; color: var(--text-main); margin-top: 5px; }
+        /* FEATURES */
+        .features-grid { max-width: 1100px; margin: 40px auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; padding: 0 20px; }
+        .feat-card { background: white; padding: 30px; border-radius: 12px; border: 1px solid #eee; text-align: center; }
+        .feat-card i { font-size: 2rem; color: var(--primary); margin-bottom: 15px; display: block; }
+        .feat-card h3 { margin-bottom: 10px; font-size: 1.2rem; }
+        .feat-card p { font-size: 0.9rem; color: var(--text-muted); }
+
+        /* PRICING */
+        .pricing-section { padding: 60px 20px; background: #F9FAFB; text-align: center; }
+        .pricing-grid { max-width: 1000px; margin: 40px auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; }
+        .plan-card { background: white; padding: 40px 30px; border-radius: 16px; border: 1px solid #E5E7EB; display: flex; flex-direction: column; }
+        .plan-card.popular { border: 2px solid var(--primary); box-shadow: 0 10px 30px rgba(0,0,0,0.05); transform: scale(1.03); }
+        .price { font-size: 2.5rem; font-weight: 800; margin: 15px 0; }
+        .price span { font-size: 1rem; color: gray; }
+        .btn-buy { padding: 12px; border-radius: 8px; border: none; font-weight: 700; cursor: pointer; margin-top: auto; transition: 0.2s; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-outline { background: #eee; color: #333; }
+
+        /* DASHBOARD (DISTRIBUTOR) */
+        #dashboardSection { display: none; max-width: 1100px; margin: 40px auto; padding: 0 20px; }
+        .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: white; padding: 20px; border-radius: 10px; border: 1px solid #ddd; }
+        .stat-label { font-size: 0.8rem; color: gray; text-transform: uppercase; font-weight: bold; }
+        .stat-val { font-size: 1.8rem; font-weight: 800; margin-top: 5px; }
         
-        .dash-table { width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; margin-top: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        .dash-table th { background: #f9fafb; padding: 15px; text-align: left; font-size: 0.85rem; color: var(--text-muted); }
-        .dash-table td { padding: 15px; border-top: 1px solid #f3f4f6; font-size: 0.95rem; }
+        .dash-table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .dash-table th { background: #f8f9fa; padding: 12px; text-align: left; font-size: 0.85rem; color: #666; }
+        .dash-table td { padding: 12px; border-top: 1px solid #eee; font-size: 0.9rem; }
 
-        /* MODALS */
+        /* MODALS & TABS */
         .modal { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); }
-        .modal-content { background: white; margin: 10vh auto; padding: 30px; border-radius: 15px; width: 90%; max-width: 400px; position: relative; }
-        .close-btn { position: absolute; right: 20px; top: 15px; font-size: 28px; cursor: pointer; color: #ccc; }
+        .modal-content { background: white; margin: 10vh auto; padding: 0; border-radius: 12px; width: 90%; max-width: 400px; overflow: hidden; }
+        .tab-header { display: flex; background: #f3f4f6; }
+        .tab-btn { flex: 1; padding: 15px; border: none; font-weight: 700; cursor: pointer; color: #666; }
+        .tab-btn.active { background: white; color: var(--primary); border-bottom: 2px solid var(--primary); }
+        .tab-pane { display: none; padding: 25px; }
+        .tab-pane.active { display: block; }
         .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 5px; }
-        .form-group input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; }
+        .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; }
+        .form-group input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; }
 
-        @media (max-width: 768px) { .nav-links { display: none; } .hero h1 { font-size: 2.5rem; } }
+        @media (max-width: 768px) { .nav-links { display: none; } .stat-grid { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
 
     <div id="actionLoader">
         <div class="spinner"></div>
-        <div id="loaderText" style="font-weight:700; color:var(--primary-dark);">Initialising Zarqeen Alif...</div>
+        <p id="loaderText" style="margin-top:15px; font-weight:600;">Authenticating...</p>
     </div>
 
     <header>
         <div class="nav-container">
-            <div class="logo-area">
-                <img src="static/logo.png" style="height:40px;" alt="Logo">
-                <span class="brand-name">Zarqeen Alif</span>
-            </div>
+            <div class="brand-name">Zarqeen Alif</div>
             <nav class="nav-links">
-                <a onclick="openRegisterModal()">Join as Partner</a>
-                <a onclick="openLoginModal()">Login</a>
+                <a onclick="openModal('loginModal')">Partner Login</a>
                 <a id="navDownBtn" class="nav-btn" onclick="checkDownload(event)">Download</a>
             </nav>
         </div>
     </header>
 
-    <main id="mainContent">
+    <main id="mainPage">
         <section class="hero">
-            <div class="tagline">🇮🇳 MADE FOR INDIAN RETAIL</div>
-            <h1>The Simplest <span>Offline Billing</span><br>Software for PC</h1>
-            <p>Fast, reliable, and 100% private. Manage items, generate professional invoices, and track your business growth without internet.</p>
-            <div class="cta-group">
-                <a id="heroDownBtn" onclick="checkDownload(event)"><button class="btn-lg btn-primary">Download Free Trial</button></a>
-            </div>
-            <p id="vDisplay" style="margin-top:20px; font-weight:700; color:var(--text-muted); font-size:0.9rem;">Loading Version...</p>
+            <h1>India's Easiest <span>Offline Billing</span></h1>
+            <p>Built for speed. Designed for retail. Generate professional invoices in seconds without ever needing the internet.</p>
+            <a id="heroDownBtn" onclick="checkDownload(event)"><button class="btn-buy btn-primary" style="padding: 15px 40px; font-size: 1.1rem;">Download Free Trial</button></a>
+            <p id="vText" style="margin-top:20px; font-size:0.8rem; color:gray;">Checking version...</p>
         </section>
 
-        <!-- [Insert Features & Pricing Sections here - keep your original HTML structure] -->
+        <section class="features-grid">
+            <div class="feat-card"><h3>⚡ Offline Power</h3><p>Your data stays on your PC. No cloud, no lag, 100% private and secure.</p></div>
+            <div class="feat-card"><h3>🖨️ Thermal + A4</h3><p>Prints perfectly on 2-inch, 3-inch thermal receipts or standard A4/A5 paper.</p></div>
+            <div class="feat-card"><h3>📊 Business Intelligence</h3><p>Built-in analytics for sales, stock movement, and quarterly tax summaries.</p></div>
+        </section>
+
+        <section class="pricing-section">
+            <h2 style="margin-bottom:40px;">Simple Pricing</h2>
+            <div class="pricing-grid">
+                <div class="plan-card"><h3>Trial</h3><div class="price">Free</div><p>7-Day full access to all features.</p><button class="btn-buy btn-outline" onclick="checkDownload(event)">Get Started</button></div>
+                <div class="plan-card popular"><h3>Basic</h3><div class="price">₹299<span>/year</span></div><p>Standard support and updates.</p><button class="btn-buy btn-primary" onclick="buyPlan('basic')">Buy Now</button></div>
+                <div class="plan-card"><h3>Premium</h3><div class="price">₹599<span>/3 years</span></div><p>Best for established shops.</p><button class="btn-buy btn-primary" onclick="buyPlan('premium')">Buy Now</button></div>
+            </div>
+        </section>
     </main>
 
-    <!-- DISTRIBUTOR DASHBOARD -->
+    <!-- PARTNER DASHBOARD -->
     <div id="dashboardSection">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;">
-            <h2 id="welcomeName">Distributor Dashboard</h2>
-            <button onclick="logout()" style="background:var(--danger); color:white; border:none; padding:8px 20px; border-radius:6px; cursor:pointer; font-weight:700;">Logout</button>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:25px;">
+            <h2 id="partnerName">Partner Dashboard</h2>
+            <button onclick="logout()" class="btn-buy btn-outline" style="margin:0;">Logout</button>
         </div>
-
-        <div class="dash-card-grid">
+        <div class="stat-grid">
             <div class="stat-card"><div class="stat-label">Total Earned</div><div class="stat-val" id="d_earned">₹0</div></div>
-            <div class="stat-card"><div class="stat-label">Already Paid</div><div class="stat-val" style="color:var(--success);" id="d_paid">₹0</div></div>
-            <div class="stat-card"><div class="stat-label">Current Balance</div><div class="stat-val" style="color:var(--danger);" id="d_balance">₹0</div></div>
+            <div class="stat-card"><div class="stat-label">Paid to you</div><div class="stat-val" id="d_paid" style="color:var(--success);">₹0</div></div>
+            <div class="stat-card"><div class="stat-label">Pending Balance</div><div class="stat-val" id="d_balance" style="color:var(--danger);">₹0</div></div>
         </div>
-
-        <h3>Recent License Sales</h3>
-        <table class="dash-table">
-            <thead><tr><th>Date</th><th>Plan</th><th>Amount</th><th>Status</th><th>License Key</th></tr></thead>
-            <tbody id="dashHistory"></tbody>
-        </table>
+        <h3>Sales Records</h3>
+        <table class="dash-table"><thead id="histHead"><tr><th>Date</th><th>Plan</th><th>Earnings</th><th>Status</th><th>License Key</th></tr></thead><tbody id="histBody"></tbody></table>
     </div>
 
-    <!-- MODALS -->
+    <!-- LOGIN MODAL WITH TABS -->
     <div id="loginModal" class="modal">
         <div class="modal-content">
-            <span class="close-btn" onclick="closeModal('loginModal')">&times;</span>
-            <h2 style="text-align:center; margin-bottom:20px;">Partner Login</h2>
-            <form id="adminForm">
-                <div class="form-group"><label>Admin Username</label><input type="text" name="username" placeholder="Admin only"></div>
-                <div class="form-group"><label>Password</label><input type="password" name="password" required></div>
-                <button type="submit" class="btn-lg btn-primary" style="width:100%; margin-top:10px;">Login as Admin</button>
-            </form>
-            <hr style="margin:20px 0; opacity:0.2;">
-            <form id="distForm">
-                <div class="form-group"><label>Distributor Email</label><input type="email" name="email" required></div>
-                <div class="form-group"><label>Password</label><input type="password" name="password" required></div>
-                <button type="submit" class="btn-lg btn-primary" style="width:100%; background:#111827;">Login as Partner</button>
-            </form>
+            <div class="tab-header">
+                <button class="tab-btn active" onclick="switchTab(event, 'partnerTab')">Distributor</button>
+                <button class="tab-btn" onclick="switchTab(event, 'adminTab')">Admin</button>
+            </div>
+            
+            <div id="partnerTab" class="tab-pane active">
+                <form id="partnerForm">
+                    <div class="form-group"><label>Email</label><input type="email" name="email" required></div>
+                    <div class="form-group"><label>Password</label><input type="password" name="password" required></div>
+                    <button type="submit" class="btn-buy btn-primary" style="width:100%;">Login as Partner</button>
+                </form>
+            </div>
+
+            <div id="adminTab" class="tab-pane">
+                <form id="adminForm">
+                    <div class="form-group"><label>Username</label><input type="text" name="username" required></div>
+                    <div class="form-group"><label>Password</label><input type="password" name="password" required></div>
+                    <button type="submit" class="btn-buy btn-primary" style="width:100%; background:black;">Login to Admin Panel</button>
+                </form>
+            </div>
+            <p style="text-align:center; padding-bottom:20px;"><a onclick="closeModal('loginModal')" style="cursor:pointer; color:gray; font-size:0.8rem;">Cancel</a></p>
         </div>
     </div>
 
     <script>
-        // 1. OBFUSCATED HANDSHAKE (Hides backend from plain search)
-        // aHR0cHM6Ly96YXJxZWVuLWJhY2tlbmQub25yZW5kZXIuY29t = https://zarqeen-backend.onrender.com
-        const _0x1a2b = "aHR0cHM6Ly96YXJxZWVuLWJhY2tlbmQub25yZW5kZXIuY29t";
-        const BASE_URL = atob(_0x1a2b);
+        // 1. OBFUSCATED BACKEND URL (https://zarqeen-backend.onrender.com)
+        const _0x8892 = "aHR0cHM6Ly96YXJxZWVuLWJhY2tlbmQub25yZW5kZXIuY29t";
+        const BASE_URL = atob(_0x8892);
         let APP_CONFIG = {};
 
         async function initApp() {
-            showLoader("Securing Connection...");
             try {
                 const res = await fetch(`${BASE_URL}/api/v1/config`);
                 APP_CONFIG = await res.json();
-                
-                // Inject Render variables into UI
-                document.getElementById('vDisplay').innerText = `Software Version: v${APP_CONFIG.VERSION}`;
-                document.querySelectorAll('#navDownBtn, #heroDownBtn').forEach(el => {
-                    el.href = APP_CONFIG.DOWNLOAD_LINK;
-                });
-                
-                // Check if already logged in
+                document.getElementById('vText').innerText = `Current Stable Version: v${APP_CONFIG.VERSION}`;
+                document.querySelectorAll('#navDownBtn, #heroDownBtn').forEach(a => a.href = APP_CONFIG.DOWNLOAD_LINK);
                 if(localStorage.getItem('dist_token')) loadDashboard();
-
-            } catch(e) {
-                console.error("Link to security server failed.");
-            } finally {
-                hideLoader();
-            }
+            } catch(e) { console.error("Handshake failed."); }
         }
 
-        // 2. PROTECTED ADMIN LOGIN (Never exposes Backend URL on fail)
+        // 2. ADMIN LOGIN (Handled via fetch to hide backend on error)
         document.getElementById('adminForm').addEventListener('submit', async function(e) {
             e.preventDefault();
+            showLoader("Verifying Admin Access...");
             const data = Object.fromEntries(new FormData(this));
-            if(!data.username) return; // Ignore if user trying to use dist form
-
-            showLoader("Verifying Admin...");
             try {
                 const res = await fetch(`${BASE_URL}/admin/login`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify(data),
-                    credentials: 'include'
+                    method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data), credentials: 'include'
                 });
                 const result = await res.json();
-                if(result.success) window.location.href = result.redirect;
-                else throw new Error(result.message);
-            } catch(err) {
-                hideLoader();
-                Swal.fire('Access Denied', err.message || 'Incorrect Password', 'error');
-            }
+                if(result.success) window.location.href = result.redirect; // Redirects to Admin Panel on Render
+                else Swal.fire('Error', result.message, 'error');
+            } catch(err) { Swal.fire('Error', 'Connection failed', 'error'); }
+            finally { hideLoader(); }
         });
 
-        // 3. DISTRIBUTOR DASHBOARD
-        document.getElementById('distForm').addEventListener('submit', async function(e) {
+        // 3. PARTNER LOGIN & DASHBOARD
+        document.getElementById('partnerForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const data = Object.fromEntries(new FormData(this));
-            showLoader("Logging in Partner...");
+            showLoader("Logging in...");
             try {
                 const res = await fetch(`${BASE_URL}/api/distributor/login`, {
                     method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data)
                 });
                 const r = await res.json();
-                if(r.success) {
-                    localStorage.setItem('dist_token', r.token);
-                    closeModal('loginModal');
-                    loadDashboard();
-                } else alert(r.message || "Invalid Login");
-            } catch(e) { alert("Server error"); } finally { hideLoader(); }
+                if(r.success) { localStorage.setItem('dist_token', r.token); closeModal('loginModal'); loadDashboard(); }
+                else Swal.fire('Denied', r.message, 'error');
+            } catch(e) { Swal.fire('Error', 'Server error', 'error'); }
+            finally { hideLoader(); }
         });
 
         async function loadDashboard() {
             const token = localStorage.getItem('dist_token');
-            if(!token) return;
-            const res = await fetch(`${BASE_URL}/api/distributor/data`, {
-                headers: {'Authorization': `Bearer ${token}`}
-            });
+            const res = await fetch(`${BASE_URL}/api/distributor/data`, { headers: {'Authorization': `Bearer ${token}`} });
             if(res.status === 401) { logout(); return; }
             const d = await res.json();
-
-            document.getElementById('welcomeName').innerText = `Welcome, ${d.name}`;
+            document.getElementById('partnerName').innerText = d.name;
             document.getElementById('d_earned').innerText = `₹${d.earned}`;
             document.getElementById('d_paid').innerText = `₹${d.paid}`;
             document.getElementById('d_balance').innerText = `₹${d.balance}`;
-
-            let html = "";
+            let h = "";
             d.history.forEach(l => {
-                html += `<tr><td>${l.date}</td><td><b>${l.plan}</b></td><td>₹${l.amount}</td><td><span style="color:${l.status=='USED'?'green':'orange'}; font-weight:bold;">${l.status}</span></td><td style="font-family:monospace;">${l.key}</td></tr>`;
+                h += `<tr><td>${l.date}</td><td><b>${l.plan}</b></td><td>₹${l.amount}</td><td>${l.status}</td><td style="font-family:monospace">${l.key}</td></tr>`;
             });
-            document.getElementById('dashHistory').innerHTML = html;
-            
-            document.getElementById('mainContent').style.display = 'none';
+            document.getElementById('histBody').innerHTML = h;
+            document.getElementById('mainPage').style.display = 'none';
             document.getElementById('dashboardSection').style.display = 'block';
         }
 
-        // 4. DOWNLOAD PROTECTION
+        // 4. UTILS
         function checkDownload(event) {
-            const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
-            if (isMobile) {
+            if (/Android|iPhone|iPad/i.test(navigator.userAgent)) {
                 event.preventDefault();
-                Swal.fire({ title: 'Windows Required', text: 'Zarqeen Alif can only be installed on a Windows Computer.', icon: 'info', confirmButtonColor: '#2563EB' });
-            } else {
-                Swal.fire({ toast:true, position:'top-end', icon:'success', title:'Downloading Setup File...', showConfirmButton:false, timer:3000 });
+                Swal.fire({ title: 'Desktop Only', text: 'Zarqeen Alif is for Windows PC. Please open this site on your laptop.', icon: 'info' });
             }
         }
-
-        function logout() { localStorage.removeItem('dist_token'); location.reload(); }
-        function openLoginModal() { document.getElementById('loginModal').style.display='block'; }
-        function openRegisterModal() { alert("Please contact support to join as a distributor."); }
+        function switchTab(e, id) {
+            document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            e.target.classList.add('active');
+        }
+        function openModal(id) { document.getElementById(id).style.display='block'; }
         function closeModal(id) { document.getElementById(id).style.display='none'; }
+        function logout() { localStorage.removeItem('dist_token'); location.reload(); }
         function showLoader(t) { document.getElementById('actionLoader').style.display='flex'; document.getElementById('loaderText').innerText=t; }
         function hideLoader() { document.getElementById('actionLoader').style.display='none'; }
-
         window.onload = initApp;
     </script>
 </body>
