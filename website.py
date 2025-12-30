@@ -180,14 +180,57 @@ def dist_login():
         return jsonify({'success': True, 'token': dist.api_token})
     return jsonify({'success': False, 'message': 'Invalid Login or Account Disabled'}), 401
 
+# --- Update these routes in website.py ---
+
 @app.route('/api/distributor/data', methods=['GET'])
 def get_dist_data():
     token = request.headers.get('Authorization', '').replace('Bearer ', '')
     dist = Distributor.query.filter_by(api_token=token).first()
     if not dist or not dist.is_active: return jsonify({'error': 'Unauthorized'}), 401
+    
+    page = request.args.get('page', 1, type=int)
+    # Tier Logic (Example: 0-5 sales = Bronze, 5-20 = Silver, 20+ = Gold)
+    total_sales = len(dist.licenses)
+    if total_sales < 5: tier, comm_pct = "Bronze", 15
+    elif total_sales < 20: tier, comm_pct = "Silver", 25
+    else: tier, comm_pct = "Gold", 35
+
     earned = sum(l.commission_earned for l in dist.licenses)
-    sd = [{'date': l.created_at.strftime('%d-%b-%y'), 'plan': l.plan_type.upper(), 'amount': l.amount_paid, 'commission': round(l.commission_earned, 2), 'status': 'USED' if l.is_used else 'PENDING', 'key': l.license_key} for l in dist.licenses]
-    return jsonify({"name": dist.name, "code": dist.code, "earned": round(earned, 2), "paid": round(dist.commission_paid, 2), "balance": round(earned - dist.commission_paid, 2), "history": sd})
+    
+    # Pagination (10 per page)
+    pagination = License.query.filter_by(distributor_id=dist.id)\
+        .order_by(License.created_at.desc())\
+        .paginate(page=page, per_page=10, error_out=False)
+
+    history = [{
+        'date': l.created_at.strftime('%d-%b-%y'), 
+        'plan': l.plan_type.upper(), 
+        'commission': round(l.commission_earned, 2),
+        'status': 'USED' if l.is_used else 'PENDING', 
+        'key': l.license_key
+    } for l in pagination.items]
+    
+    return jsonify({
+        "name": dist.name, "code": dist.code, "tier": tier, "comm_pct": comm_pct,
+        "bank": {"name": dist.bank_name or "", "holder": dist.account_holder or "", "acc": dist.account_number or "", "ifsc": dist.ifsc_code or "", "upi": dist.upi_id or ""},
+        "financials": {"earned": round(earned, 2), "paid": round(dist.commission_paid, 2), "balance": round(earned - dist.commission_paid, 2)},
+        "history": history,
+        "pagination": {"total_pages": pagination.pages, "current_page": pagination.page}
+    })
+
+@app.route('/api/distributor/update-bank', methods=['POST'])
+def update_bank():
+    token = request.headers.get('Authorization', '').replace('Bearer ', '')
+    dist = Distributor.query.filter_by(api_token=token).first()
+    if not dist: return jsonify({'success': False}), 401
+    data = request.json
+    dist.bank_name = data.get('bank_name')
+    dist.account_holder = data.get('account_holder')
+    dist.account_number = data.get('account_number')
+    dist.ifsc_code = data.get('ifsc_code')
+    dist.upi_id = data.get('upi_id')
+    db.session.commit()
+    return jsonify({'success': True})
 
 @app.route('/download/license/<key>')
 def download_license(key):
