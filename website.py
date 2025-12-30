@@ -172,15 +172,19 @@ def delete_license(id):
     db.session.delete(db.session.get(License, id)); db.session.commit()
     return redirect(url_for('admin_dashboard'))
 
+
 @app.route('/api/distributor/login', methods=['POST'])
 def dist_login():
-    data = request.json; dist = Distributor.query.filter_by(email=data.get('email')).first()
-    if dist and dist.check_password(data.get('password')) and dist.is_active:
-        dist.api_token = secrets.token_hex(16); db.session.commit()
+    data = request.json or {}
+    dist = Distributor.query.filter_by(email=data.get('email', '').strip()).first()
+    if dist and dist.check_password(data.get('password')):
+        if not dist.is_active: 
+            return jsonify({'success': False, 'message': 'Account Disabled'}), 403
+        dist.api_token = secrets.token_hex(16)
+        db.session.commit()
         return jsonify({'success': True, 'token': dist.api_token})
-    return jsonify({'success': False, 'message': 'Invalid Login or Account Disabled'}), 401
+    return jsonify({'success': False, 'message': 'Invalid Credentials'}), 401
 
-# --- Update these routes in website.py ---
 
 @app.route('/api/distributor/data', methods=['GET'])
 def get_dist_data():
