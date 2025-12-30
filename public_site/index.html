@@ -774,12 +774,16 @@
         }
 
         document.getElementById('dashTotal').innerText = data.total_sales; 
-        document.getElementById('dashComm').innerHTML = `
-            <span style="color:#2563EB">Earned: ₹${Number(data.commission_earned).toFixed(2)}</span><br>
-            <span style="color:#059669;font-size:0.8em">Received: ₹${Number(data.commission_paid).toFixed(2)}</span><br>
-            <span style="color:#DC2626;font-size:0.9em;font-weight:800">Balance: ₹${Number(data.balance_due).toFixed(2)}</span>
-            ${bonusHtml}
-        `; 
+       // Inside loadDashboard, update the dashComm.innerHTML logic:
+document.getElementById('dashComm').innerHTML = `
+    <span style="color:#2563EB">Earned: ₹${Number(data.commission_earned).toFixed(2)}</span><br>
+    <span style="color:#059669;font-size:0.8em">Received: ₹${Number(data.commission_paid).toFixed(2)}</span><br>
+    <span style="color:#DC2626;font-size:0.9em;font-weight:800">Balance: ₹${Number(data.balance_due).toFixed(2)}</span>
+    ${bonusHtml}
+    <div style="margin-top: 8px; font-size: 0.7rem; color: #6B7280; font-style: italic;">
+        * Payout requires min. ₹500 balance.
+    </div>
+`;
 
         // Bank Info Update
         const b = data.bank_info; 
