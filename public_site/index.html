@@ -213,7 +213,16 @@
                 </div>
             </div>
             <h3 style="margin-bottom:15px; display:flex; justify-content:space-between;">Sales History <span id="pageInfo" style="font-size:0.9rem; color:gray"></span></h3>
-            <div style="overflow-x:auto;"><table class="dash-table"><thead><tr><th>Date</th><th>Plan</th><th>Amount</th><th>Status</th><th>Key</th><th>Ver</th><th>Last Active</th><th>Expiry</th><th>Action</th></tr></thead><tbody id="dashTableBody"></tbody></table></div>
+            <div style="overflow-x:auto;"><table class="dash-table"><thead>
+    <tr>
+        <th>Date</th>
+        <th>Plan</th>
+        <th>Amount</th>
+        <th>Status</th>
+        <th>Key</th>
+        <th>Action</th>
+    </tr>
+</thead><tbody id="dashTableBody"></tbody></table></div>
             <div style="display:flex; justify-content:center; gap:10px; margin-top:20px;">
                 <button id="prevBtn" onclick="changePage(-1)" class="nav-btn" style="background:gray; display:none;">Previous</button>
                 <button id="nextBtn" onclick="changePage(1)" class="nav-btn" style="background:#2563EB; display:none;">Next</button>
@@ -611,7 +620,17 @@
                 const b = data.bank_info; document.getElementById('in_bank').value = b.bank_name||''; document.getElementById('in_holder').value = b.account_holder||''; document.getElementById('in_acct').value = b.account_number||''; document.getElementById('in_ifsc').value = b.ifsc||''; document.getElementById('in_upi').value = b.upi||'';
                 document.getElementById('d_bank').innerText = b.bank_name||'-'; document.getElementById('d_holder').innerText = b.account_holder||'-'; document.getElementById('d_acct').innerText = b.account_number||'-'; document.getElementById('d_ifsc').innerText = b.ifsc||'-'; document.getElementById('d_upi').innerText = b.upi||'-';
                 const tbody = document.getElementById('dashTableBody'); tbody.innerHTML = "";
-                data.sales_history.forEach(row => { tbody.innerHTML += `<tr><td>${row.date}</td><td>${row.plan}</td><td>₹${row.amount}</td><td>${row.status}</td><td style="font-family:monospace">${row.key}</td><td>${row.version||'-'}</td><td>${row.last_login||'-'}</td><td>${row.expiry||'-'}</td><td><a href="${data.backend_url}download/license/${row.key}" class="nav-btn" style="padding:4px 8px;font-size:0.8rem;">⬇</a></td></tr>`; });
+                // Replace the inner loop logic inside loadDashboard
+data.sales_history.forEach(row => { 
+    tbody.innerHTML += `<tr>
+        <td>${row.date}</td>
+        <td>${row.plan}</td>
+        <td>₹${row.amount}</td>
+        <td>${row.status}</td>
+        <td style="font-family:monospace">${row.key}</td>
+        <td><a href="${data.backend_url}download/license/${row.key}" class="nav-btn" style="padding:4px 8px;font-size:0.8rem;">⬇</a></td>
+    </tr>`; 
+});
                 const prev = document.getElementById('prevBtn'); const next = document.getElementById('nextBtn'); document.getElementById('pageInfo').innerText = `Page ${page} of ${data.pagination.total_pages}`; prev.style.display = data.pagination.has_prev ? 'inline-block' : 'none'; next.style.display = data.pagination.has_next ? 'inline-block' : 'none';
                 document.querySelector('header').style.display='none'; document.querySelector('.hero').style.display='none'; document.getElementById('features').style.display='none'; document.getElementById('pricing').style.display='none'; document.querySelector('footer').style.display='none'; document.getElementById('dashboardSection').style.display='block'; hideLoader(); window.scrollTo(0,0);
             } catch(e) { hideLoader(); }
