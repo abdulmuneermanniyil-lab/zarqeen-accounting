@@ -1,4 +1,4 @@
-import os, random, string, secrets, csv, io, requests, razorpay
+import os, random, string, secrets, csv, io, requests, razorpay, sqlite3
 from datetime import datetime, timedelta, timezone
 from functools import wraps
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for, send_file
@@ -10,7 +10,6 @@ app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "SECURE_ZARQEEN_ALIF_7788")
 
 # RENDER ENVIRONMENT VARIABLES
-# Ensure these are set in your Render Dashboard
 BACKEND_URL = os.environ.get("BACKEND_URL", "").rstrip('/')
 DOWNLOAD_LINK = os.environ.get("DOWNLOAD_LINK", "https://zarqeen.in")
 VERSION = os.environ.get("VERSION", "1.2.0")
@@ -48,11 +47,12 @@ class Distributor(db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     phone = db.Column(db.String(20))
     password_hash = db.Column(db.String(256), nullable=False)
-    is_active = db.Column(db.Boolean, default=True) # Ability to Disable
+    is_active = db.Column(db.Boolean, default=True) 
     discount_percent = db.Column(db.Integer, default=10)
     commission_paid = db.Column(db.Float, default=0.0)
     api_token = db.Column(db.String(100))
-    upi_id = db.Column(db.String(100))
+    upi_id = db.Column(db.String(100)) # New Column
+    otp_code = db.Column(db.String(10)); otp_expiry = db.Column(db.DateTime)
     licenses = db.relationship('License', backref='distributor', lazy=True)
     
     def set_password(self, pwd): self.password_hash = generate_password_hash(pwd)
@@ -62,6 +62,7 @@ class License(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     license_key = db.Column(db.String(60), unique=True, nullable=False)
     plan_type = db.Column(db.String(20), nullable=False)
+    payment_id = db.Column(db.String(100))
     amount_paid = db.Column(db.Float, default=0.0)
     commission_earned = db.Column(db.Float, default=0.0)
     is_used = db.Column(db.Boolean, default=False)
@@ -74,8 +75,30 @@ class License(db.Model):
         if not self.used_at: return None
         return self.used_at + timedelta(days=(365 if self.plan_type == 'basic' else 1095))
 
-# --- DB INIT ---
+# --- AUTO-MIGRATION LOGIC (FIXES THE 500 ERROR) ---
+def migrate_db():
+    db_file = 'site.db'
+    if not os.path.exists(db_file): return
+    
+    conn = sqlite3.connect(db_file)
+    cursor = conn.cursor()
+    
+    # Check Distributor Table
+    cursor.execute("PRAGMA table_info(distributor)")
+    columns = [row[1] for row in cursor.fetchall()]
+    
+    if 'is_active' not in columns:
+        cursor.execute("ALTER TABLE distributor ADD COLUMN is_active BOOLEAN DEFAULT 1")
+    if 'upi_id' not in columns:
+        cursor.execute("ALTER TABLE distributor ADD COLUMN upi_id TEXT")
+    if 'discount_percent' not in columns:
+        cursor.execute("ALTER TABLE distributor ADD COLUMN discount_percent INTEGER DEFAULT 10")
+
+    conn.commit()
+    conn.close()
+
 with app.app_context():
+    migrate_db() # Run migration first
     db.create_all()
     if not db.session.get(Settings, 1): db.session.add(Settings(id=1)); db.session.commit()
 
@@ -113,7 +136,6 @@ def admin_login_api():
     data = request.json or {}
     if data.get("username") == ADMIN_USERNAME and data.get("password") == ADMIN_PASSWORD:
         session["admin_logged_in"] = True
-        # FIX: Added _external=True to return the full Render URL instead of relative path
         return jsonify({'success': True, 'redirect': url_for('admin_dashboard', _external=True)})
     return jsonify({'success': False, 'message': 'Invalid Admin Credentials'}), 401
 
@@ -161,22 +183,9 @@ def get_dist_data():
     token = request.headers.get('Authorization', '').replace('Bearer ', '')
     dist = Distributor.query.filter_by(api_token=token).first()
     if not dist or not dist.is_active: return jsonify({'error': 'Unauthorized'}), 401
-    
     earned = sum(l.commission_earned for l in dist.licenses)
-    sd = [{
-        'date': l.created_at.strftime('%d-%b-%y'), 
-        'plan': l.plan_type.upper(), 
-        'amount': l.amount_paid, 
-        'commission': round(l.commission_earned, 2),
-        'status': 'USED' if l.is_used else 'PENDING', 
-        'key': l.license_key
-    } for l in dist.licenses]
-    
-    return jsonify({
-        "name": dist.name, "code": dist.code,
-        "earned": round(earned, 2), "paid": round(dist.commission_paid, 2), "balance": round(earned - dist.commission_paid, 2),
-        "history": sd
-    })
+    sd = [{'date': l.created_at.strftime('%d-%b-%y'), 'plan': l.plan_type.upper(), 'amount': l.amount_paid, 'status': 'USED' if l.is_used else 'PENDING', 'key': l.license_key} for l in dist.licenses]
+    return jsonify({"name": dist.name, "code": dist.code, "earned": round(earned, 2), "paid": round(dist.commission_paid, 2), "balance": round(earned - dist.commission_paid, 2), "history": sd})
 
 @app.route('/api/check_distributor', methods=['POST'])
 def check_dist():
@@ -200,8 +209,6 @@ def verify_payment():
         plan = order['notes'].get('plan')
         dist_id = order['notes'].get('dist_id')
         dist = db.session.get(Distributor, int(dist_id)) if dist_id and dist_id != 'None' else None
-        
-        # Partner Commission (approx 25% for partners)
         comm = (order['amount'] / 100) * 0.25 if dist else 0.0
         new_key = generate_key(plan, dist.code if dist else None)
         lic = License(license_key=new_key, plan_type=plan, amount_paid=order['amount']/100, commission_earned=comm, distributor_id=dist.id if dist else None)
@@ -211,7 +218,6 @@ def verify_payment():
 
 @app.route('/download/license/<key>')
 def download_license(key):
-    # Generates a text file on the fly for the .zarqeen license
     return send_file(io.BytesIO(key.encode()), mimetype='text/plain', as_attachment=True, download_name='license.zarqeen')
 
 @app.route('/admin/logout')
