@@ -232,6 +232,45 @@ def update_bank():
     db.session.commit()
     return jsonify({'success': True})
 
+@app.route('/api/check_distributor', methods=['POST'])
+def check_dist():
+    # Looks for distributor by code and returns their discount percentage
+    code = request.json.get('code','').strip().upper()
+    d = Distributor.query.filter_by(code=code, is_active=True).first()
+    if d:
+        return jsonify({'valid': True, 'discount': d.discount_percent, 'name': d.name})
+    return jsonify({'valid': False})
+
+
+@app.route('/create_order', methods=['POST'])
+def create_order():
+    data = request.json
+    plan = data.get('plan')
+    code = data.get('distributor_code', '').strip().upper()
+    
+    # Standard pricing in Paise
+    amount = 29900 if plan == 'basic' else 59900
+    dist_id = 'None'
+
+    # Apply Discount if code is valid
+    if code:
+        dist = Distributor.query.filter_by(code=code, is_active=True).first()
+        if dist:
+            discount_val = int(amount * (dist.discount_percent / 100))
+            amount -= discount_val
+            dist_id = str(dist.id)
+
+    try:
+        order = razorpay_client.order.create({
+            'amount': amount,
+            'currency': 'INR',
+            'notes': {'plan': plan, 'dist_id': dist_id}
+        })
+        return jsonify(order)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 @app.route('/download/license/<key>')
 def download_license(key):
     return send_file(io.BytesIO(key.encode()), mimetype='text/plain', as_attachment=True, download_name='license.zarqeen')
