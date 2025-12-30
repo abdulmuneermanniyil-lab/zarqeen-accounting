@@ -75,7 +75,8 @@ class Distributor(db.Model):
     phone = db.Column(db.String(20), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
-    discount_percent = db.Column(db.Integer, default=10) 
+    discount_percent = db.Column(db.Integer, default=10)
+    commission_earned = db.Column(db.Float, default=0.0)
     
     bank_name = db.Column(db.String(100)); account_holder = db.Column(db.String(100))
     account_number = db.Column(db.String(50)); ifsc_code = db.Column(db.String(20)); upi_id = db.Column(db.String(100))
