@@ -416,6 +416,20 @@ def delete_license(id): db.session.delete(License.query.get_or_404(id)); db.sess
 @login_required
 def edit_license(id): l = License.query.get_or_404(id); l.is_used = (request.form.get("status") == "used"); db.session.commit(); return redirect(url_for("dashboard"))
 
+@app.route('/admin/edit_license/<int:license_id>', methods=['POST'])
+def edit_license(license_id):
+    # Get the status from the dropdown
+    new_status = request.form.get('status') 
+    license_obj = License.query.get(license_id)
+    
+    if license_obj:
+        # Update boolean based on dropdown selection
+        license_obj.is_used = True if new_status == 'used' else False
+        db.session.commit()
+        
+    return redirect('/admin/dashboard')
+
+
 @app.route("/admin/login", methods=["GET", "POST"])
 def login():
     if request.headers.get('X-Forwarded-For'): ip = request.headers.get('X-Forwarded-For').split(',')[0]
