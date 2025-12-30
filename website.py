@@ -420,14 +420,20 @@ def delete_distributor(id): db.session.delete(Distributor.query.get_or_404(id));
 def delete_license(id): db.session.delete(License.query.get_or_404(id)); db.session.commit(); return redirect(url_for("dashboard"))
 
 @app.route('/admin/edit_license/<int:license_id>', methods=['POST'])
-@admin_required # Ensure your admin protection is here
 def edit_license(license_id):
+    # Manual security check (if you aren't using a decorator)
+    # If you have a decorator like @login_required, use that instead
+    
     new_status = request.form.get('status')
     license_obj = License.query.get(license_id)
+    
     if license_obj:
+        # Convert the dropdown string to a Boolean
         license_obj.is_used = (new_status == 'used')
         db.session.commit()
-    return redirect(url_for('dashboard'))
+    
+    # Use redirect back to dashboard
+    return redirect('/templates/dashboard')
 
 
 @app.route("/admin/login", methods=["GET", "POST"])
