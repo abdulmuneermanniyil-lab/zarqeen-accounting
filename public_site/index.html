@@ -129,7 +129,7 @@
         <a onclick="openLoginModal()" style="color:var(--primary); cursor:pointer;">Login</a>
         <!-- Desktop Download Button -->
         <!-- Use your own domain link -->
- <a href="https://github.com/abdulmuneermanniyil-lab/zarqeen-accounting/releases/download/Version/Zarqeen_Alif_v110.exe" 
+ <a href="{{ download_link }}" 
    class="nav-btn" 
    onclick="checkDownload(event)">Download</a>
     </nav>
@@ -139,7 +139,7 @@
 <div class="mobile-nav" id="mobileNav">
     <a onclick="toggleMobileMenu(); openRegisterModal()">Join as Distributor</a>
     <a onclick="toggleMobileMenu(); openLoginModal()">Login</a>
-    <a href="https://github.com/abdulmuneermanniyil-lab/zarqeen-accounting/releases/download/Version/Zarqeen_Alif_v110.exe" 
+    <a href="{{ download_link }}"
        onclick="checkDownload(event)">Download Software</a>
 </div>
     </header>
@@ -149,7 +149,7 @@
         <h1>India's Best Value <br><span>Invoicing Software</span></h1>
         <p>The easiest offline billing software. Automatically calculates taxes. <strong>Specially designed for Retail Indian Businesses</strong> who want simplicity and speed.</p>
         <div class="cta-group">
-    <a href="https://github.com/abdulmuneermanniyil-lab/zarqeen-accounting/releases/download/Version/Zarqeen_Alif_v110.exe" 
+    <a href="{{ download_link }}"
        onclick="checkDownload(event)">
         <button class="btn-lg btn-primary">Download Free Trial</button>
     </a>
@@ -174,7 +174,7 @@
             <p id="codeMsg" style="font-size:0.9rem; margin-top:5px; min-height:20px;"></p>
         </div>
         <div class="pricing-grid">
-            <div class="plan-card"><div class="plan-name">Trial</div><div class="price">Free</div><p class="plan-desc">7 Days unlimited access</p><a href="https://github.com/abdulmuneermanniyil-lab/zarqeen-accounting/releases/download/Version/Zarqeen_Alif_v110.exe" target="_blank" style="margin-top:auto;"><button class="btn-buy secondary">Download Now</button></a></div>
+            <div class="plan-card"><div class="plan-name">Trial</div><div class="price">Free</div><p class="plan-desc">7 Days unlimited access</p><a href="{{ download_link }}" target="_blank" style="margin-top:auto;"><button class="btn-buy secondary">Download Now</button></a></div>
             <div class="plan-card"><div class="plan-name">Basic</div><div class="price">₹299<span>/year</span></div><p class="plan-desc">Ideal for new customers</p><button class="btn-buy primary" onclick="buyPlan('basic')">Buy Basic License</button></div>
             <div class="plan-card popular"><div class="badge">BEST VALUE</div><div class="plan-name">Premium</div><div class="price">₹599<span>/3 years</span></div><p class="plan-desc">For smart business owners</p><button class="btn-buy primary" onclick="buyPlan('premium')">Buy Premium License</button></div>
         </div>
@@ -285,7 +285,7 @@
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     
     // Path to the file hosted on your Render server
-    const localDownloadUrl = "/static/Zarqeen_Alif_Setup.exe";
+    const localDownloadUrl = "{{ download_link }}"; 
 
     if (isMobile) {
         event.preventDefault();
