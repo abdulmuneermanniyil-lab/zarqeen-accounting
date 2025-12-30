@@ -42,14 +42,23 @@
         <div class="card"><h3>Total Licenses</h3><p style="font-size: 2rem; font-weight: bold;">{{ licenses|length }}</p></div>
         <div class="card"><h3>Distributors</h3><p style="font-size: 2rem; font-weight: bold;">{{ distributors|length }}</p></div>
         <div class="card">
-            <h3>Global Settings</h3>
-            <form action="/admin/update_settings" method="POST" style="margin-top: 10px;">
-                <div class="form-row">
-                    <div><label>Bonus Commission %</label><input type="number" name="bonus" value="{{ settings.special_bonus_percent }}"></div>
-                    <button type="submit" class="btn">Update</button>
+    <h3>Global Settings & Bonus</h3>
+    <form action="/admin/update_settings" method="POST" style="margin-top: 10px;">
+        <div class="form-row" style="flex-direction: column; align-items: stretch; gap: 10px;">
+            <div>
+                <label style="font-size: 0.8rem;">Bonus Event Name (Message)</label>
+                <input type="text" name="bonus_name" value="{{ settings.special_message }}" placeholder="e.g. New Year Bonus" style="width: 100%;">
+            </div>
+            <div style="display: flex; gap: 10px; align-items: flex-end;">
+                <div style="flex: 1;">
+                    <label style="font-size: 0.8rem;">Extra Commission %</label>
+                    <input type="number" name="bonus" value="{{ settings.special_bonus_percent }}" style="width: 100%;">
                 </div>
-            </form>
+                <button type="submit" class="btn">Update</button>
+            </div>
         </div>
+    </form>
+</div>
     </div>
 
     <div class="tabs">
