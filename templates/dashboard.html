@@ -185,6 +185,8 @@
         <td>{{ l.plan_type }}</td>
         <td>₹{{ l.amount_paid }}</td>
         <td>{{ l.distributor.name if l.distributor else 'Direct' }}</td>
+        
+        <!-- Status Column -->
         <td>
             {% if l.is_used %}
                 <span class="badge badge-green">INSTALLED</span>
@@ -192,18 +194,21 @@
                 <span class="badge badge-red">PENDING</span>
             {% endif %}
         </td>
+        
         <td>{{ l.software_version or '-' }}</td>
         <td>{{ l.expiry_date.strftime('%Y-%m-%d') if l.expiry_date else '-' }}</td>
+        
+        <!-- Actions Column -->
         <td>
-            <div style="display: flex; gap: 5px;">
-                <form action="/admin/edit_license/{{ l.id }}" method="POST" style="display:flex; gap:2px;">
-                    <select name="status" style="font-size:0.7rem;">
+            <div style="display: flex; gap: 5px; align-items: center;">
+                <form action="/admin/edit_license/{{ l.id }}" method="POST" style="display:inline-flex; gap:4px;">
+                    <select name="status" style="padding: 2px; border-radius: 4px; font-size: 0.75rem;">
                         <option value="pending" {{ 'selected' if not l.is_used }}>Pending</option>
                         <option value="used" {{ 'selected' if l.is_used }}>Installed</option>
                     </select>
-                    <button type="submit" class="btn btn-sm">OK</button>
+                    <button type="submit" class="btn btn-sm">Update</button>
                 </form>
-                <form action="/admin/delete_license/{{ l.id }}" method="POST" onsubmit="return confirm('Delete?');">
+                <form action="/admin/delete_license/{{ l.id }}" method="POST" style="display:inline;" onsubmit="return confirm('Delete?');">
                     <button type="submit" class="btn btn-sm btn-red">X</button>
                 </form>
             </div>
