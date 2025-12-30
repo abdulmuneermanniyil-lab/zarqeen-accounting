@@ -20,17 +20,12 @@ ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "admin")
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD")
 
 # Session & CORS Security
-app.config.update(
-    SESSION_COOKIE_SAMESITE='None',
-    SESSION_COOKIE_SECURE=True,
-    SESSION_COOKIE_HTTPONLY=True
-)
+app.config.update(SESSION_COOKIE_SAMESITE='None', SESSION_COOKIE_SECURE=True, SESSION_COOKIE_HTTPONLY=True)
 CORS(app, resources={r"/*": {"origins": ["https://zarqeen.in", "https://www.zarqeen.in"]}}, supports_credentials=True)
 
-# Database Setup (Postgres logic for Render)
+# Database Setup
 raw_db_url = os.environ.get("DATABASE_URL", "sqlite:///site.db")
-if raw_db_url.startswith("postgres://"): 
-    raw_db_url = raw_db_url.replace("postgres://", "postgresql://", 1)
+if raw_db_url.startswith("postgres://"): raw_db_url = raw_db_url.replace("postgres://", "postgresql://", 1)
 app.config["SQLALCHEMY_DATABASE_URI"] = raw_db_url
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
@@ -54,10 +49,8 @@ class Distributor(db.Model):
     commission_paid = db.Column(db.Float, default=0.0)
     api_token = db.Column(db.String(100))
     upi_id = db.Column(db.String(100))
-    otp_code = db.Column(db.String(10))
-    otp_expiry = db.Column(db.DateTime)
+    otp_code = db.Column(db.String(10)); otp_expiry = db.Column(db.DateTime)
     licenses = db.relationship('License', backref='distributor', lazy=True)
-    
     def set_password(self, pwd): self.password_hash = generate_password_hash(pwd)
     def check_password(self, pwd): return check_password_hash(self.password_hash, pwd)
 
@@ -65,39 +58,28 @@ class License(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     license_key = db.Column(db.String(60), unique=True, nullable=False)
     plan_type = db.Column(db.String(20), nullable=False)
-    payment_id = db.Column(db.String(100))
     amount_paid = db.Column(db.Float, default=0.0)
     commission_earned = db.Column(db.Float, default=0.0)
     is_used = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
-    used_at = db.Column(db.DateTime)
-    software_version = db.Column(db.String(20))
+    used_at = db.Column(db.DateTime); software_version = db.Column(db.String(20))
     distributor_id = db.Column(db.Integer, db.ForeignKey('distributor.id'))
     @property
     def expiry_date(self):
         if not self.used_at: return None
         return self.used_at + timedelta(days=(365 if self.plan_type == 'basic' else 1095))
 
-# --- POSTGRES AUTO-MIGRATION ---
+# --- AUTO-MIGRATION ---
 def migrate_database():
     with app.app_context():
         db.create_all()
         inspector = inspect(db.engine)
         cols = [c['name'] for c in inspector.get_columns('distributor')]
-        migrations = [
-            ('is_active', 'BOOLEAN DEFAULT TRUE'),
-            ('upi_id', 'TEXT'),
-            ('discount_percent', 'INTEGER DEFAULT 10'),
-            ('otp_code', 'VARCHAR(10)'),
-            ('otp_expiry', 'TIMESTAMP')
-        ]
-        for col_name, col_type in migrations:
-            if col_name not in cols:
-                try:
-                    db.session.execute(text(f'ALTER TABLE distributor ADD COLUMN {col_name} {col_type}'))
-                    db.session.commit()
+        migrations = [('is_active', 'BOOLEAN DEFAULT TRUE'),('upi_id', 'TEXT'),('discount_percent', 'INTEGER DEFAULT 10')]
+        for col, dtype in migrations:
+            if col not in cols:
+                try: db.session.execute(text(f'ALTER TABLE distributor ADD COLUMN {col} {dtype}')); db.session.commit()
                 except: db.session.rollback()
-
 migrate_database()
 
 # --- DECORATORS & HELPERS ---
@@ -112,33 +94,19 @@ def generate_key(plan_type, dist_code=None):
     prefix = "ALBA" if plan_type == 'basic' else "ALPR"
     code = dist_code.upper() if dist_code else "ALIF"
     rand = "".join(random.choices(string.ascii_uppercase + string.digits, k=8))
-    key = f"{prefix}-{code}-{rand[:4]}-{rand[4:]}"
-    return key if not License.query.filter_by(license_key=key).first() else generate_key(plan_type, dist_code)
+    return f"{prefix}-{code}-{rand[:4]}-{rand[4:]}"
 
 # --- ROUTES ---
-
 @app.route('/')
-def index():
-    return f"Zarqeen Security Server {VERSION} is Online.", 200
+def index(): return f"Zarqeen Security Server {VERSION} is Online.", 200
 
-# NEW: Update Check route for the software
-@app.route('/api/version_check', methods=['GET'])
+@app.route('/api/version_check')
 def version_check():
-    return jsonify({
-        "version": VERSION,
-        "download_url": DOWNLOAD_LINK,
-        "message": f"🚀 Update v{VERSION} is now available! Includes new templates and bug fixes.",
-        "features": ["New Invoice Templates (A5 & Thermal)", "Faster Search", "Split Address Support"]
-    })
+    return jsonify({"version": VERSION, "download_url": DOWNLOAD_LINK, "message": f"🚀 Update v{VERSION} is live!"})
 
 @app.route('/api/v1/config')
 def get_public_config():
-    return jsonify({
-        "BACKEND_URL": BACKEND_URL or request.host_url.rstrip('/'), 
-        "DOWNLOAD_LINK": DOWNLOAD_LINK, 
-        "VERSION": VERSION, 
-        "RAZORPAY_KEY_ID": RAZORPAY_KEY_ID
-    })
+    return jsonify({"BACKEND_URL": BACKEND_URL or request.host_url.rstrip('/'), "DOWNLOAD_LINK": DOWNLOAD_LINK, "VERSION": VERSION, "RAZORPAY_KEY_ID": RAZORPAY_KEY_ID})
 
 @app.route("/admin/login", methods=["POST"])
 def admin_login_api():
@@ -155,23 +123,62 @@ def admin_dashboard():
     distributors = Distributor.query.all()
     settings = db.session.get(Settings, 1) or Settings(id=1)
     if not db.session.get(Settings, 1): db.session.add(settings); db.session.commit()
-    
     dist_list = []
     for d in distributors:
         earned = sum(l.commission_earned for l in d.licenses)
         dist_list.append({"obj": d, "earned": round(earned, 2), "balance": round(earned - d.commission_paid, 2)})
     return render_template("admin_dashboard.html", licenses=licenses, distributors=dist_list, settings=settings)
 
+@app.route("/admin/update_settings", methods=["POST"])
+@admin_login_required
+def update_settings():
+    s = db.session.get(Settings, 1)
+    s.special_bonus_percent = int(request.form.get('bonus', 0)); db.session.commit()
+    return redirect(url_for('admin_dashboard'))
+
+@app.route("/admin/add_distributor", methods=["POST"])
+@admin_login_required
+def add_distributor():
+    code = request.form.get("code", "").upper(); email = request.form.get("email")
+    if Distributor.query.filter_by(code=code).first(): return "Code Exists", 400
+    d = Distributor(code=code, name=request.form.get("name"), email=email, phone=request.form.get("phone"), discount_percent=int(request.form.get("discount", 10)))
+    d.set_password(request.form.get("password")); db.session.add(d); db.session.commit()
+    return redirect(url_for('admin_dashboard'))
+
+@app.route("/admin/edit_distributor/<int:id>", methods=["POST"])
+@admin_login_required
+def edit_distributor(id):
+    d = db.session.get(Distributor, id)
+    if request.form.get("name"): d.name = request.form.get("name")
+    if "is_active" in request.form: d.is_active = (request.form.get("is_active") == "1")
+    if request.form.get("manual_paid_total"): d.commission_paid = float(request.form.get("manual_paid_total"))
+    db.session.commit(); return redirect(url_for('admin_dashboard'))
+
+@app.route("/admin/delete_distributor/<int:id>", methods=["POST"])
+@admin_login_required
+def delete_distributor(id):
+    db.session.delete(db.session.get(Distributor, id)); db.session.commit()
+    return redirect(url_for('admin_dashboard'))
+
+@app.route("/admin/edit_license/<int:id>", methods=["POST"])
+@admin_login_required
+def edit_license(id):
+    l = db.session.get(License, id); l.is_used = (request.form.get("status") == "used"); db.session.commit()
+    return redirect(url_for('admin_dashboard'))
+
+@app.route("/admin/delete_license/<int:id>", methods=["POST"])
+@admin_login_required
+def delete_license(id):
+    db.session.delete(db.session.get(License, id)); db.session.commit()
+    return redirect(url_for('admin_dashboard'))
+
 @app.route('/api/distributor/login', methods=['POST'])
 def dist_login():
-    data = request.json or {}
-    dist = Distributor.query.filter_by(email=data.get('email')).first()
-    if dist and dist.check_password(data.get('password')):
-        if not dist.is_active: return jsonify({'success': False, 'message': 'Account Disabled'}), 403
-        dist.api_token = secrets.token_hex(16)
-        db.session.commit()
+    data = request.json; dist = Distributor.query.filter_by(email=data.get('email')).first()
+    if dist and dist.check_password(data.get('password')) and dist.is_active:
+        dist.api_token = secrets.token_hex(16); db.session.commit()
         return jsonify({'success': True, 'token': dist.api_token})
-    return jsonify({'success': False, 'message': 'Invalid Credentials'}), 401
+    return jsonify({'success': False, 'message': 'Invalid Login or Account Disabled'}), 401
 
 @app.route('/api/distributor/data', methods=['GET'])
 def get_dist_data():
@@ -183,26 +190,11 @@ def get_dist_data():
     return jsonify({"name": dist.name, "code": dist.code, "earned": round(earned, 2), "paid": round(dist.commission_paid, 2), "balance": round(earned - dist.commission_paid, 2), "history": sd})
 
 @app.route('/download/license/<key>')
-def download_license_file(key):
+def download_license(key):
     return send_file(io.BytesIO(key.encode()), mimetype='text/plain', as_attachment=True, download_name='license.zarqeen')
 
-@app.route('/api/validate_license', methods=['POST'])
-def validate_license():
-    d = request.json or {}
-    lic = License.query.filter_by(license_key=d.get('license_key', '').strip()).first()
-    if not lic: return jsonify({'valid': False, 'message': 'Invalid Key'}), 404
-    lic.software_version = d.get('version', '1.0.0')
-    lic.last_login_date = datetime.now(timezone.utc)
-    if not lic.is_used:
-        lic.is_used = True
-        lic.used_at = datetime.now(timezone.utc)
-    db.session.commit()
-    return jsonify({'valid': True, 'plan': lic.plan_type, 'dist_phone': lic.distributor.phone if lic.distributor else "N/A"})
-
 @app.route('/admin/logout')
-def admin_logout():
-    session.pop('admin_logged_in', None)
-    return redirect("https://zarqeen.in")
+def admin_logout(): session.pop('admin_logged_in', None); return redirect("https://zarqeen.in")
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 10000)))
