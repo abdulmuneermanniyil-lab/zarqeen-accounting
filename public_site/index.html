@@ -690,7 +690,7 @@ data.sales_history.forEach(row => {
     </tr>`; 
 });
                 const prev = document.getElementById('prevBtn'); const next = document.getElementById('nextBtn'); document.getElementById('pageInfo').innerText = `Page ${page} of ${data.pagination.total_pages}`; prev.style.display = data.pagination.has_prev ? 'inline-block' : 'none'; next.style.display = data.pagination.has_next ? 'inline-block' : 'none';
-                document.querySelector('header').style.display='none'; document.querySelector('.hero').style.display='none'; document.getElementById('features').style.display='none'; document.getElementById('pricing').style.display='none'; document.querySelector('footer').style.display='none'; document.getElementById('dashboardSection').style.display='block'; hideLoader(); window.scrollTo(0,0);
+                document.querySelector('header').style.display='none'; document.querySelector('.hero').style.display='none'; document.getElementById('features').style.display='none'; document.getElementById('target-businesses').style.display='none'; document.getElementById('pricing').style.display='none'; document.querySelector('footer').style.display='none'; document.getElementById('dashboardSection').style.display='block'; hideLoader(); window.scrollTo(0,0);
             } catch(e) { hideLoader(); }
         }
         function changePage(dir) { loadDashboard(CURRENT_PAGE + dir); }
