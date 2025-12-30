@@ -78,16 +78,12 @@ class License(db.Model):
         if not self.used_at: return None
         return self.used_at + timedelta(days=(365 if self.plan_type == 'basic' else 1095))
 
-# --- NEW POSTGRES-SAFE AUTO-MIGRATION ---
+# --- POSTGRES AUTO-MIGRATION ---
 def migrate_database():
     with app.app_context():
-        # Tables must exist first
         db.create_all()
         inspector = inspect(db.engine)
-        
-        # Add columns to Distributor if missing
         cols = [c['name'] for c in inspector.get_columns('distributor')]
-        
         migrations = [
             ('is_active', 'BOOLEAN DEFAULT TRUE'),
             ('upi_id', 'TEXT'),
@@ -95,21 +91,16 @@ def migrate_database():
             ('otp_code', 'VARCHAR(10)'),
             ('otp_expiry', 'TIMESTAMP')
         ]
-        
         for col_name, col_type in migrations:
             if col_name not in cols:
                 try:
                     db.session.execute(text(f'ALTER TABLE distributor ADD COLUMN {col_name} {col_type}'))
                     db.session.commit()
-                    print(f"Migration: Added {col_name} to distributor table.")
-                except Exception as e:
-                    db.session.rollback()
-                    print(f"Migration Error on {col_name}: {e}")
+                except: db.session.rollback()
 
-# Run migration on start
 migrate_database()
 
-# --- HELPERS ---
+# --- DECORATORS & HELPERS ---
 def admin_login_required(f):
     @wraps(f)
     def wrap(*args, **kwargs):
@@ -127,7 +118,18 @@ def generate_key(plan_type, dist_code=None):
 # --- ROUTES ---
 
 @app.route('/')
-def index(): return f"Zarqeen Security Server {VERSION} is Online.", 200
+def index():
+    return f"Zarqeen Security Server {VERSION} is Online.", 200
+
+# NEW: Update Check route for the software
+@app.route('/api/version_check', methods=['GET'])
+def version_check():
+    return jsonify({
+        "version": VERSION,
+        "download_url": DOWNLOAD_LINK,
+        "message": f"🚀 Update v{VERSION} is now available! Includes new templates and bug fixes.",
+        "features": ["New Invoice Templates (A5 & Thermal)", "Faster Search", "Split Address Support"]
+    })
 
 @app.route('/api/v1/config')
 def get_public_config():
@@ -152,9 +154,7 @@ def admin_dashboard():
     licenses = License.query.order_by(License.created_at.desc()).all()
     distributors = Distributor.query.all()
     settings = db.session.get(Settings, 1) or Settings(id=1)
-    if not db.session.get(Settings, 1):
-        db.session.add(settings)
-        db.session.commit()
+    if not db.session.get(Settings, 1): db.session.add(settings); db.session.commit()
     
     dist_list = []
     for d in distributors:
@@ -162,35 +162,16 @@ def admin_dashboard():
         dist_list.append({"obj": d, "earned": round(earned, 2), "balance": round(earned - d.commission_paid, 2)})
     return render_template("admin_dashboard.html", licenses=licenses, distributors=dist_list, settings=settings)
 
-@app.route("/admin/edit_distributor/<int:id>", methods=["POST"])
-@admin_login_required
-def edit_distributor(id):
-    d = db.session.get(Distributor, id)
-    if not d: return redirect(url_for('admin_dashboard'))
-    if request.form.get("name"): d.name = request.form.get("name")
-    if "is_active" in request.form: d.is_active = (request.form.get("is_active") == "1")
-    if request.form.get("manual_paid_total"): d.commission_paid = float(request.form.get("manual_paid_total"))
-    db.session.commit()
-    return redirect(url_for('admin_dashboard'))
-
-@app.route("/admin/delete_license/<int:id>", methods=["POST"])
-@admin_login_required
-def delete_license(id):
-    l = db.session.get(License, id)
-    if l:
-        db.session.delete(l); db.session.commit()
-    return redirect(url_for('admin_dashboard'))
-
 @app.route('/api/distributor/login', methods=['POST'])
 def dist_login():
     data = request.json or {}
     dist = Distributor.query.filter_by(email=data.get('email')).first()
     if dist and dist.check_password(data.get('password')):
-        if not dist.is_active: return jsonify({'success': False, 'message': 'Account Disabled. Contact Admin.'}), 403
+        if not dist.is_active: return jsonify({'success': False, 'message': 'Account Disabled'}), 403
         dist.api_token = secrets.token_hex(16)
         db.session.commit()
         return jsonify({'success': True, 'token': dist.api_token})
-    return jsonify({'success': False, 'message': 'Invalid Email or Password'}), 401
+    return jsonify({'success': False, 'message': 'Invalid Credentials'}), 401
 
 @app.route('/api/distributor/data', methods=['GET'])
 def get_dist_data():
@@ -202,8 +183,21 @@ def get_dist_data():
     return jsonify({"name": dist.name, "code": dist.code, "earned": round(earned, 2), "paid": round(dist.commission_paid, 2), "balance": round(earned - dist.commission_paid, 2), "history": sd})
 
 @app.route('/download/license/<key>')
-def download_license(key):
+def download_license_file(key):
     return send_file(io.BytesIO(key.encode()), mimetype='text/plain', as_attachment=True, download_name='license.zarqeen')
+
+@app.route('/api/validate_license', methods=['POST'])
+def validate_license():
+    d = request.json or {}
+    lic = License.query.filter_by(license_key=d.get('license_key', '').strip()).first()
+    if not lic: return jsonify({'valid': False, 'message': 'Invalid Key'}), 404
+    lic.software_version = d.get('version', '1.0.0')
+    lic.last_login_date = datetime.now(timezone.utc)
+    if not lic.is_used:
+        lic.is_used = True
+        lic.used_at = datetime.now(timezone.utc)
+    db.session.commit()
+    return jsonify({'valid': True, 'plan': lic.plan_type, 'dist_phone': lic.distributor.phone if lic.distributor else "N/A"})
 
 @app.route('/admin/logout')
 def admin_logout():
