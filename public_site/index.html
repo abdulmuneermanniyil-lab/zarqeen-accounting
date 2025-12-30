@@ -638,32 +638,36 @@
         });
 
         document.getElementById('adminForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            showLoader("Verifying Admin...");
-            const data = Object.fromEntries(new FormData(this));
-            try {
-                const res = await fetch(`${BACKEND_URL}/admin/login`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify(data),
-                    credentials: 'include'
-                });
-                const result = await res.json();
-                hideLoader();
-                if(result.success) {
-                    if (result.redirect && result.redirect.startsWith('http')) {
-                        window.location.href = result.redirect;
-                    } else {
-                        window.location.href = `${BACKEND_URL}/admin/dashboard`;
-                    }
-                } else {
-                    alert(result.message || "Invalid Credentials");
-                }
-            } catch(e) {
-                hideLoader();
-                alert("Connection Error");
-            }
+    e.preventDefault();
+    showLoader("Verifying Admin...");
+    const data = Object.fromEntries(new FormData(this));
+    try {
+        const res = await fetch(`${BACKEND_URL}/admin/login`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data),
+            credentials: 'include' // This is critical for cross-domain cookies
         });
+        const result = await res.json();
+        hideLoader();
+        
+        if(result.success) {
+            // Force a slight delay to ensure cookie is saved on mobile before redirect
+            setTimeout(() => {
+                if (result.redirect) {
+                    window.location.href = result.redirect.startsWith('http') 
+                        ? result.redirect 
+                        : `${BACKEND_URL}${result.redirect}`;
+                }
+            }, 500);
+        } else {
+            alert(result.message || "Invalid Credentials");
+        }
+    } catch(e) {
+        hideLoader();
+        alert("Connection Error");
+    }
+});
 
         let CURRENT_PAGE = 1;
         async function loadDashboard(page) {
