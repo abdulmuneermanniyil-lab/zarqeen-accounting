@@ -252,70 +252,7 @@ def create_order():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/verify_payment', methods=['POST'])
-def verify_payment():
-    data = request.json
-    try:
-        # 1. Verify Razorpay Signature
-        params_dict = {
-            'razorpay_order_id': str(data['razorpay_order_id']),
-            'razorpay_payment_id': str(data['razorpay_payment_id']),
-            'razorpay_signature': str(data['razorpay_signature'])
-        }
-        razorpay_client.utility.verify_payment_signature(params_dict)
-        
-        # 2. Extract Plan and Distributor Info
-        plan_type = data.get('plan_type')
-        dist_id = None
-        amount_collected = 0.0
-
-        try:
-            order_data = razorpay_client.order.fetch(data['razorpay_order_id'])
-            notes = order_data.get('notes', {})
-            dist_id = notes.get('distributor_id')
-            amount_collected = float(order_data.get('amount', 0)) / 100.0
-            # Ensure plan_type is accurate from notes if available
-            if notes.get('plan'): plan_type = notes.get('plan')
-        except Exception as e:
-            print(f"Order Fetch Error: {e}")
-            amount_collected = 299.0 if plan_type == 'basic' else 599.0
-
-        # 3. Commission Calculation (BASED ON MRP)
-        dist_obj = None
-        comm_earned = 0.0
-        
-        if dist_id and str(dist_id) != "None":
-            dist_obj = Distributor.query.get(int(dist_id))
-            if dist_obj:
-                # FIXED MRP Values
-                mrp = 299.0 if plan_type == 'basic' else 599.0
-                
-                # Get Global Bonus & Base Commission
-                st = Settings.query.first()
-                bonus_pct = st.special_bonus_percent if st else 0
-                base_comm_pct = LEVELS[dist_obj.level]['commission']
-                
-                # CALCULATION: MRP * (Base% + Bonus%)
-                total_pct = base_comm_pct + bonus_pct
-                comm_earned = (mrp * total_pct) / 100
-
-        # 4. Generate Key & Save
-        new_key = generate_unique_key(plan_type, dist_obj.code if dist_obj else None)
-        
-        new_lic = License(
-            license_key=new_key, 
-            plan_type=plan_type, 
-            payment_id=data['razorpay_payment_id'], 
-            amount_paid=amount_collected, # Actual money you received
-            commission_earned=round(comm_earned, 2), # Money dist earned based on MRP
-            distributor_id=dist_obj.id if dist_obj else None,
-            created_at=datetime.utcnow()
-        )
-        
-        db.session.add(new_lic)
-        db.session.commit()
-        
-        return jsonify({'success': True, 'license_key': new_key})
+@app.route('/verify_payme
         
     except Exception as e:
         db.session.rollback()
@@ -585,7 +522,7 @@ def api_distributor_login():
 def api_get_distributor_data():
     t = request.headers.get('Authorization', '').replace('Bearer ', ''); dist = Distributor.query.filter_by(api_token=t).first()
     if not dist: return jsonify({'error': 'Invalid'}), 401
-    
+    refresh_distributor_level(dist)
     page = request.args.get('page', 1, type=int)
     q = License.query.filter_by(distributor_id=dist.id).order_by(License.created_at.desc())
     pg = q.paginate(page=page, per_page=10, error_out=False)
