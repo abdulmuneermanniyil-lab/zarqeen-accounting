@@ -166,9 +166,9 @@ def check_level_update(dist):
 # --- ROUTES ---
 @app.route('/')
 def index():
-    # Fetch the link from environment variables, with a fallback link
-    download_url = os.environ.get('DOWNLOAD_LINK')
-def home(): return redirect(FRONTEND_URL, download_link=download_url)
+    download_url = os.environ.get('DOWNLOAD_LINK', 'https://github.com/abdulmuneermanniyil-lab/zarqeen-accounting/releases/download/Version/Zarqeen_Alif_v110.exe')
+    # Make sure this RETURN line exists and is indented inside the function:
+    return render_template("index.html", download_link=download_url)
 
 @app.route('/api/get-config')
 def get_config(): return jsonify({'key_id': RAZORPAY_KEY_ID})
