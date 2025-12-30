@@ -556,6 +556,20 @@ def api_get_distributor_data():
         "progress": {"current_level": LEVELS[cur]['name'], "month_sales": msales, "target": tgt, "next_level": LEVELS[min(cur+1, 3)]['name'], "is_max": cur==3}
     })
 
+@app.route('/admin/update_settings', methods=['POST'])
+def update_settings():
+    
+    bonus_percent = request.form.get('bonus', 0)
+    bonus_name = request.form.get('bonus_name', '')
+    
+    settings = Settings.query.first()
+    if settings:
+        settings.special_bonus_percent = int(bonus_percent)
+        settings.special_message = bonus_name  
+        db.session.commit()
+    return redirect('/admin/dashboard')
+
+    
 @app.route('/api/distributor/update-bank', methods=['POST'])
 def update_bank():
     t = request.headers.get('Authorization', '').replace('Bearer ', ''); dist = Distributor.query.filter_by(api_token=t).first()
