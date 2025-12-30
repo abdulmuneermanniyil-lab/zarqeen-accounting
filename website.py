@@ -145,6 +145,40 @@ def generate_unique_key(plan_type, dist_code=None):
     
     return key
 
+def refresh_distributor_level(dist):
+    """
+    Checks if a new month has started since the last check.
+    If yes, updates the distributor level based on previous month's sales.
+    """
+    now = datetime.utcnow()
+    
+    # If this is the first time or a new month has started
+    if not dist.last_level_check or dist.last_level_check.month != now.month or dist.last_level_check.year != now.year:
+        
+        # Calculate start and end of the PREVIOUS month
+        first_day_current_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        last_day_prev_month = first_day_current_month - timedelta(days=1)
+        first_day_prev_month = last_day_prev_month.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+
+        # Count sales in the previous month
+        prev_month_sales = License.query.filter(
+            License.distributor_id == dist.id,
+            License.created_at >= first_day_prev_month,
+            License.created_at <= last_day_prev_month
+        ).count()
+
+        # Determine New Level for the Current Month
+        new_level = 1 # Default Bronze
+        if prev_month_sales >= LEVELS[3]['target']:
+            new_level = 3 # Gold
+        elif prev_month_sales >= LEVELS[2]['target']:
+            new_level = 2 # Silver
+        
+        # Update distributor
+        dist.level = new_level
+        dist.last_level_check = now
+        db.session.commit()
+
 def send_brevo_email(to_email, subject, html_content):
     if not BREVO_API_KEY: return False
     url = "https://api.brevo.com/v3/smtp/email"
