@@ -421,12 +421,15 @@ def delete_license(id): db.session.delete(License.query.get_or_404(id)); db.sess
 
 @app.route('/admin/edit_license/<int:license_id>', methods=['POST'])
 def edit_license(license_id):
-    # If you have a working decorator like @login_required, put it above the function
-    new_status = request.form.get('status')
+    # This matches the 'status' name in the dashboard.html dropdown
+    new_status = request.form.get('status') 
     license_obj = License.query.get(license_id)
+    
     if license_obj:
+        # If dropdown is 'used', set is_used to True, else False
         license_obj.is_used = (new_status == 'used')
         db.session.commit()
+        
     return redirect('/admin/dashboard')
 
 
