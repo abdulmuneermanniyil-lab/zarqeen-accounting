@@ -219,8 +219,14 @@
             <p id="codeMsg" style="font-size:0.9rem; margin-top:5px; min-height:20px;"></p>
         </div>
         <div class="pricing-grid">
-            <div class="plan-card"><div class="plan-name">Trial</div><div class="price">Free</div><p class="plan-desc">7 Days unlimited access</p><a href="{{ download_link }}"
-       onclick="checkDownload(event)"><button class="btn-buy secondary">Download Now</button></a></div>
+            <div class="plan-card">
+    <div class="plan-name">Trial</div>
+    <div class="price">Free</div>
+    <p class="plan-desc">7 Days unlimited access</p>
+    <a href="#" onclick="checkDownload(event)" style="margin-top:auto;" class="dynamic-dl-trial">
+        <button class="btn-buy secondary">Download Now</button>
+    </a>
+</div>
             <div class="plan-card"><div class="plan-name">Basic</div><div class="price">₹299<span>/year</span></div><p class="plan-desc">Ideal for new customers</p><button class="btn-buy primary" onclick="buyPlan('basic')">Buy Basic License</button></div>
             <div class="plan-card popular"><div class="badge">BEST VALUE</div><div class="plan-name">Premium</div><div class="price">₹599<span>/3 years</span></div><p class="plan-desc">For smart business owners</p><button class="btn-buy primary" onclick="buyPlan('premium')">Buy Premium License</button></div>
         </div>
@@ -374,18 +380,23 @@
 
     async function syncDownloadLink() {
         try {
-            const res = await fetch('https://zarqeen-backend.onrender.com/api/download-link');
-            const data = await res.json();
+            const response = await fetch('https://zarqeen-backend.onrender.com/api/download-link');
+            const data = await response.json();
             if (data.download_url) {
-                // Selects all download buttons/links on your page
-                const links = document.querySelectorAll('a[href*="github.com"], a[onclick*="checkDownload"]');
-                links.forEach(link => {
-                    link.href = data.download_url;
+                // Targets nav links, hero button, and the trial button
+                const targets = document.querySelectorAll('a[onclick*="checkDownload"], .dynamic-dl-trial');
+                targets.forEach(el => {
+                    // Update the href of the <a> tag
+                    if (el.tagName === 'A') {
+                        el.href = data.download_url;
+                        // Ensure it doesn't try to open in new tab if you want direct download
+                        el.removeAttribute('target'); 
+                    }
                 });
             }
-        } catch (e) { console.log("Link sync failed", e); }
+        } catch (e) { console.error("Link sync failed"); }
     }
-    window.addEventListener('DOMContentLoaded', syncDownloadLink);
+    window.addEventListener('load', syncDownloadLink);
 
         
         function closeLicenseModal() { document.getElementById('licenseModal').style.display = 'none'; location.reload(); }
