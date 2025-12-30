@@ -685,32 +685,108 @@
 
         let CURRENT_PAGE = 1;
         async function loadDashboard(page) {
-            CURRENT_PAGE = page; const token = localStorage.getItem('dist_token'); if(!token) return; showLoader("Loading Dashboard...");
-            try {
-                const res = await fetch(`${BACKEND_URL}/api/distributor/data?page=${page}`, { method: 'GET', headers: {'Authorization': `Bearer ${token}`} });
-                if(res.status === 401) { doLogout(); return; }
-                const data = await res.json();
-                document.getElementById('dashName').innerText = data.name; document.getElementById('dashCode').innerText = data.code;
-                const p = data.progress; if(p) { document.getElementById('lvlName').innerText = p.current_level; document.getElementById('lvlDisc').innerText = `${data.discount}% OFF`; if (p.is_max) { document.getElementById('lvlMsg').innerText = "Max Level Reached! 🏆"; document.getElementById('lvlBar').style.width = "100%"; document.getElementById('lvlBar').style.background = "#10B981"; } else { const percent = Math.min((p.month_sales / p.target) * 100, 100); document.getElementById('lvlMsg').innerText = `${p.month_sales} / ${p.target} Sales to ${p.next_level}`; document.getElementById('lvlBar').style.width = `${percent}%`; } }
-                document.getElementById('dashTotal').innerText = data.total_sales; document.getElementById('dashComm').innerHTML = `<span style="color:#2563EB">Earned: ₹${Number(data.commission_earned).toFixed(2)}</span><br><span style="color:#059669;font-size:0.8em">Received: ₹${Number(data.commission_paid).toFixed(2)}</span><br><span style="color:#DC2626;font-size:0.9em;font-weight:800">Balance: ₹${Number(data.balance_due).toFixed(2)}</span>`; 
-                const b = data.bank_info; document.getElementById('in_bank').value = b.bank_name||''; document.getElementById('in_holder').value = b.account_holder||''; document.getElementById('in_acct').value = b.account_number||''; document.getElementById('in_ifsc').value = b.ifsc||''; document.getElementById('in_upi').value = b.upi||'';
-                document.getElementById('d_bank').innerText = b.bank_name||'-'; document.getElementById('d_holder').innerText = b.account_holder||'-'; document.getElementById('d_acct').innerText = b.account_number||'-'; document.getElementById('d_ifsc').innerText = b.ifsc||'-'; document.getElementById('d_upi').innerText = b.upi||'-';
-                const tbody = document.getElementById('dashTableBody'); tbody.innerHTML = "";
-                // Replace the inner loop logic inside loadDashboard
-data.sales_history.forEach(row => { 
-    tbody.innerHTML += `<tr>
-        <td>${row.date}</td>
-        <td>${row.plan}</td>
-        <td>₹${row.amount}</td>
-        <td>${row.status}</td>
-        <td style="font-family:monospace">${row.key}</td>
-        <td><a href="${data.backend_url}download/license/${row.key}" class="nav-btn" style="padding:4px 8px;font-size:0.8rem;">⬇</a></td>
-    </tr>`; 
-});
-                const prev = document.getElementById('prevBtn'); const next = document.getElementById('nextBtn'); document.getElementById('pageInfo').innerText = `Page ${page} of ${data.pagination.total_pages}`; prev.style.display = data.pagination.has_prev ? 'inline-block' : 'none'; next.style.display = data.pagination.has_next ? 'inline-block' : 'none';
-                document.querySelector('header').style.display='none'; document.querySelector('.hero').style.display='none'; document.getElementById('features').style.display='none'; document.getElementById('target-businesses').style.display='none'; document.getElementById('pricing').style.display='none'; document.querySelector('footer').style.display='none'; document.getElementById('dashboardSection').style.display='block'; hideLoader(); window.scrollTo(0,0);
-            } catch(e) { hideLoader(); }
+    CURRENT_PAGE = page; 
+    const token = localStorage.getItem('dist_token'); 
+    if(!token) return; 
+    
+    showLoader("Loading Dashboard...");
+    
+    try {
+        const res = await fetch(`${BACKEND_URL}/api/distributor/data?page=${page}`, { 
+            method: 'GET', 
+            headers: {'Authorization': `Bearer ${token}`} 
+        });
+        
+        if(res.status === 401) { doLogout(); return; }
+        const data = await res.json();
+        
+        // Update Name and Code
+        document.getElementById('dashName').innerText = data.name; 
+        document.getElementById('dashCode').innerText = data.code;
+        
+        // Level Progress Logic
+        const p = data.progress; 
+        if(p) { 
+            document.getElementById('lvlName').innerText = p.current_level; 
+            document.getElementById('lvlDisc').innerText = `${data.discount}% OFF`; 
+            if (p.is_max) { 
+                document.getElementById('lvlMsg').innerText = "Max Level Reached! 🏆"; 
+                document.getElementById('lvlBar').style.width = "100%"; 
+                document.getElementById('lvlBar').style.background = "#10B981"; 
+            } else { 
+                const percent = Math.min((p.month_sales / p.target) * 100, 100); 
+                document.getElementById('lvlMsg').innerText = `${p.month_sales} / ${p.target} Sales to ${p.next_level}`; 
+                document.getElementById('lvlBar').style.width = `${percent}%`; 
+            } 
         }
+
+        // Bonus and Financials Logic
+        let bonusHtml = "";
+        if (data.bonus_percent > 0) {
+            bonusHtml = `
+                <div style="margin-top:10px; padding:8px; background:#ECFDF5; border-radius:6px; font-size:0.75rem; color:#065F46; border:1px solid #A7F3D0;">
+                    ✨ <strong>${data.bonus_name || 'Special Bonus'}:</strong> +${data.bonus_percent}% Extra Commission Active!
+                </div>`;
+        }
+
+        document.getElementById('dashTotal').innerText = data.total_sales; 
+        document.getElementById('dashComm').innerHTML = `
+            <span style="color:#2563EB">Earned: ₹${Number(data.commission_earned).toFixed(2)}</span><br>
+            <span style="color:#059669;font-size:0.8em">Received: ₹${Number(data.commission_paid).toFixed(2)}</span><br>
+            <span style="color:#DC2626;font-size:0.9em;font-weight:800">Balance: ₹${Number(data.balance_due).toFixed(2)}</span>
+            ${bonusHtml}
+        `; 
+
+        // Bank Info Update
+        const b = data.bank_info; 
+        document.getElementById('in_bank').value = b.bank_name||''; 
+        document.getElementById('in_holder').value = b.account_holder||''; 
+        document.getElementById('in_acct').value = b.account_number||''; 
+        document.getElementById('in_ifsc').value = b.ifsc||''; 
+        document.getElementById('in_upi').value = b.upi||'';
+        document.getElementById('d_bank').innerText = b.bank_name||'-'; 
+        document.getElementById('d_holder').innerText = b.account_holder||'-'; 
+        document.getElementById('d_acct').innerText = b.account_number||'-'; 
+        document.getElementById('d_ifsc').innerText = b.ifsc||'-'; 
+        document.getElementById('d_upi').innerText = b.upi||'-';
+
+        // Reduced Table History (Date, Plan, Amount, Status, Key, Action)
+        const tbody = document.getElementById('dashTableBody'); 
+        tbody.innerHTML = "";
+        data.sales_history.forEach(row => { 
+            tbody.innerHTML += `<tr>
+                <td>${row.date}</td>
+                <td>${row.plan}</td>
+                <td>₹${row.amount}</td>
+                <td>${row.status}</td>
+                <td style="font-family:monospace">${row.key}</td>
+                <td><a href="${data.backend_url}download/license/${row.key}" class="nav-btn" style="padding:4px 8px;font-size:0.8rem;">⬇</a></td>
+            </tr>`; 
+        });
+
+        // Pagination
+        const prev = document.getElementById('prevBtn'); 
+        const next = document.getElementById('nextBtn'); 
+        document.getElementById('pageInfo').innerText = `Page ${page} of ${data.pagination.total_pages}`; 
+        prev.style.display = data.pagination.has_prev ? 'inline-block' : 'none'; 
+        next.style.display = data.pagination.has_next ? 'inline-block' : 'none';
+
+        // UI Toggles
+        document.querySelector('header').style.display='none'; 
+        document.querySelector('.hero').style.display='none'; 
+        document.getElementById('features').style.display='none'; 
+        document.getElementById('target-businesses').style.display='none'; 
+        document.getElementById('pricing').style.display='none'; 
+        document.querySelector('footer').style.display='none'; 
+        document.getElementById('dashboardSection').style.display='block'; 
+        
+        hideLoader(); 
+        window.scrollTo(0,0);
+    } catch(e) { 
+        console.error(e);
+        hideLoader(); 
+    }
+}
         function changePage(dir) { loadDashboard(CURRENT_PAGE + dir); }
         function doLogout() { localStorage.removeItem('dist_token'); location.reload(); }
         window.addEventListener('load', function() { if(localStorage.getItem('dist_token')) loadDashboard(1); });
