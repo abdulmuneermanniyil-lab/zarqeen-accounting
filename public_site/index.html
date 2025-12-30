@@ -371,6 +371,24 @@
             }
         }
 
+      async function updateDownloadLinks() {
+        try {
+            const response = await fetch('https://zarqeen-backend.onrender.com/api/download-link');
+            const data = await response.json();
+            if (data.download_url) {
+                // Find all links that point to the software download and update them
+                const links = document.querySelectorAll('a[href*="Zarqeen_Alif_v110.exe"], a[onclick*="checkDownload"]');
+                links.forEach(link => link.href = data.download_url);
+            }
+        } catch (error) {
+            console.error('Error fetching download link:', error);
+        }
+    }
+    window.addEventListener('load', updateDownloadLinks);
+
+
+
+        
         async function verifyRegOtp() {
             const otp = document.getElementById('regOtp').value; 
             if(!otp) return alert("Enter Code");
