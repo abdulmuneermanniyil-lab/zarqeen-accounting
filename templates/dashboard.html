@@ -178,34 +178,44 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for l in licenses %}
-                    <tr>
-                        <td>{{ l.created_at.strftime('%Y-%m-%d') }}</td>
-                        <td style="font-family: monospace;">{{ l.license_key }}</td>
-                        <td>{{ l.plan_type }}</td>
-                        <td>₹{{ l.amount_paid }}</td>
-                        <td>{{ l.distributor.name if l.distributor else 'Direct' }}</td>
-                        <td>
-                            {% if l.is_used %}
-                                <span class="badge badge-green">INSTALLED</span>
-                            {% else %}
-                                <span class="badge badge-red">PENDING</span>
-                            {% endif %}
-                        </td>
-                        <td>{{ l.software_version }}</td>
-                        <td>{{ l.expiry_date.strftime('%Y-%m-%d') if l.expiry_date else '-' }}</td>
-                        <td>
-                            <form action="/admin/edit_license/{{ l.id }}" method="POST" style="display:inline;">
-                                <input type="hidden" name="status" value="{{ 'pending' if l.is_used else 'used' }}">
-                                <button type="submit" class="btn btn-sm">Toggle</button>
-                            </form>
-                            <form action="/admin/delete_license/{{ l.id }}" method="POST" style="display:inline;" onsubmit="return confirm('Delete?');">
-                                <button type="submit" class="btn btn-sm btn-red">X</button>
-                            </form>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
+    {% for l in licenses %}
+    <tr>
+        <td>{{ l.created_at.strftime('%Y-%m-%d') }}</td>
+        <td style="font-family: monospace;">{{ l.license_key }}</td>
+        <td>{{ l.plan_type }}</td>
+        <td>₹{{ l.amount_paid }}</td>
+        <td>{{ l.distributor.name if l.distributor else 'Direct' }}</td>
+        
+        <!-- STATUS COLUMN -->
+        <td>
+            {% if l.is_used %}
+                <span class="badge badge-green">INSTALLED</span>
+            {% else %}
+                <span class="badge badge-red">PENDING</span>
+            {% endif %}
+        </td>
+        
+        <td>{{ l.software_version }}</td>
+        <td>{{ l.expiry_date.strftime('%Y-%m-%d') if l.expiry_date else '-' }}</td>
+        
+        <!-- ACTIONS COLUMN -->
+        <td>
+            <div style="display: flex; gap: 5px; align-items: center;">
+                <form action="/admin/edit_license/{{ l.id }}" method="POST" style="display:inline-flex; gap:4px;">
+                    <select name="status" style="padding: 4px; border-radius: 4px; font-size: 0.8rem;">
+                        <option value="pending" {{ 'selected' if not l.is_used }}>Set Pending</option>
+                        <option value="used" {{ 'selected' if l.is_used }}>Set Installed</option>
+                    </select>
+                    <button type="submit" class="btn btn-sm">Update</button>
+                </form>
+                <form action="/admin/delete_license/{{ l.id }}" method="POST" style="display:inline;" onsubmit="return confirm('Delete?');">
+                    <button type="submit" class="btn btn-sm btn-red">X</button>
+                </form>
+            </div>
+        </td>
+    </tr>
+    {% endfor %}
+</tbody>
             </table>
         </div>
     </div>
