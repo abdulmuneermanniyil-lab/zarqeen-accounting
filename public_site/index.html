@@ -4,61 +4,84 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Zarqeen Alif - Smart Billing</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <title>Zarqeen Alif - Premium Invoicing Software for India</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="icon" type="image/png" href="static/header.png">
+    
     <style>
-        :root { --primary: #2563EB; --primary-dark: #1E40AF; --bg: #F8FAFC; --text: #1E293B; --white: #fff; --success: #10B981; --danger: #EF4444; }
+        :root { --primary: #2563EB; --primary-dark: #1E40AF; --accent: #F59E0B; --bg: #F8FAFC; --text: #1E293B; --text-light: #64748B; --white: #fff; --success: #10B981; --danger: #EF4444; }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
-        body { background-color: var(--bg); color: var(--text); line-height: 1.5; }
+        body { background-color: var(--bg); color: var(--text); line-height: 1.6; }
         
-        /* Fixed Header */
-        header { background: var(--white); border-bottom: 1px solid #E5E7EB; position: sticky; top: 0; z-index: 1000; }
-        .nav-container { max-width: 1100px; margin: 0 auto; padding: 0.8rem 1.5rem; display: flex; justify-content: space-between; align-items: center; }
-        .logo-area { display: flex; align-items: center; gap: 10px; }
-        .nav-links a { color: #4B5563; font-weight: 600; font-size: 0.9rem; margin-right: 1.5rem; cursor: pointer; text-decoration: none; }
-        .nav-btn { background: var(--primary); color: white !important; padding: 0.5rem 1.2rem; border-radius: 8px; font-weight: 700; }
+        #actionLoader { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.98); z-index: 99999; flex-direction: column; align-items: center; justify-content: center; }
+        .spinner { width: 35px; height: 35px; border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        header { background: var(--white); border-bottom: 1px solid #E2E8F0; position: sticky; top: 0; z-index: 1000; }
+        .nav-container { max-width: 1100px; margin: 0 auto; padding: 0.7rem 1.5rem; display: flex; justify-content: space-between; align-items: center; }
+        .brand-name { font-weight: 800; font-size: 1.2rem; color: var(--primary-dark); }
+        .nav-links a { color: var(--text-light); font-weight: 600; font-size: 0.85rem; margin-right: 1.5rem; cursor: pointer; text-decoration: none; }
+        .nav-btn { background: var(--primary); color: white !important; padding: 0.5rem 1rem; border-radius: 6px; font-weight: 700; }
 
-        /* Fixed Hero Layout */
-        .hero { text-align: center; padding: 6rem 1.5rem; background: #fff; border-bottom: 1px solid #E5E7EB; }
-        .hero h1 { font-size: 2.8rem; font-weight: 800; margin-bottom: 1.5rem; line-height: 1.2; }
-        .hero p { max-width: 600px; margin: 0 auto 2.5rem; color: #64748B; font-size: 1.1rem; }
-        .hero-btns { display: flex; justify-content: center; gap: 15px; }
+        /* HERO Section */
+        .hero { text-align: center; padding: 5rem 1.5rem; background: #fff; border-bottom: 1px solid #E2E8F0; }
+        .hero h1 { font-size: 2.6rem; font-weight: 800; letter-spacing: -1px; margin-bottom: 1rem; line-height: 1.2; }
+        .hero h1 span { color: var(--primary); }
+        .hero p { font-size: 1.1rem; color: var(--text-light); max-width: 650px; margin: 0 auto 2.5rem; }
+        .hero-btns { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; }
 
-        /* Dashboard Styles */
+        /* FEATURES Section */
+        .features-grid { max-width: 1100px; margin: 50px auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; padding: 0 20px; }
+        .feat-card { background: white; padding: 30px; border-radius: 12px; border: 1px solid #E2E8F0; transition: 0.3s; }
+        .feat-card:hover { transform: translateY(-5px); border-color: var(--primary); }
+        .feat-card h3 { font-size: 1.2rem; margin-bottom: 12px; color: #0F172A; }
+        .feat-card p { font-size: 0.9rem; color: var(--text-light); }
+
+        /* PRICING Section */
+        .pricing-section { padding: 80px 20px; text-align: center; background: #F1F5F9; }
+        .pricing-grid { max-width: 1000px; margin: 40px auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; }
+        .plan-card { background: white; padding: 40px 30px; border-radius: 16px; border: 1px solid #E2E8F0; display: flex; flex-direction: column; position: relative; }
+        .plan-card.popular { border: 2px solid var(--primary); box-shadow: 0 20px 40px rgba(0,0,0,0.05); transform: scale(1.05); }
+        .pop-tag { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: var(--primary); color: white; padding: 4px 15px; border-radius: 50px; font-size: 0.7rem; font-weight: 800; }
+        .price { font-size: 2.5rem; font-weight: 800; margin: 15px 0; color: #111; }
+        .price span { font-size: 1rem; color: gray; font-weight: 500; }
+        .btn-buy { padding: 12px; border-radius: 8px; border: none; font-weight: 700; cursor: pointer; transition: 0.2s; text-decoration: none; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-outline { background: white; color: var(--primary); border: 1px solid var(--primary); }
+
+        /* PARTNER DASHBOARD */
         #dashboardSection { display: none; max-width: 1100px; margin: 40px auto; padding: 0 20px; }
-        .dash-card { background: white; padding: 20px; border-radius: 12px; border: 1px solid #E2E8F0; margin-bottom: 20px; }
-        .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px; }
-        .stat-box { background: #f1f5f9; padding: 15px; border-radius: 10px; text-align: center; }
-        .stat-box small { text-transform: uppercase; font-size: 0.7rem; font-weight: bold; color: #64748B; }
-        .stat-box p { font-size: 1.4rem; font-weight: 800; color: var(--primary-dark); }
-        
-        .bank-details { background: #fffbeb; border: 1px solid #fef3c7; padding: 20px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
-        
-        .dash-table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; margin-bottom: 20px; }
-        .dash-table th, .dash-table td { padding: 12px; text-align: left; font-size: 0.85rem; border-bottom: 1px solid #eee; }
-        
-        .pagination { display: flex; justify-content: center; gap: 10px; align-items: center; }
-        
-        footer { background: white; padding: 40px 20px; border-top: 1px solid #E5E7EB; text-align: center; margin-top: 60px; }
-        
-        /* Modals */
+        .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px; }
+        .stat-card { background: white; padding: 20px; border-radius: 10px; border: 1px solid #E2E8F0; border-top: 4px solid var(--primary); }
+        .stat-label { font-size: 0.7rem; color: gray; text-transform: uppercase; font-weight: bold; }
+        .stat-val { font-size: 1.4rem; font-weight: 800; margin-top: 5px; }
+        .bank-box { background: #FFFBEB; padding: 20px; border-radius: 12px; border: 1px solid #FEF3C7; display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .dash-table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; }
+        .dash-table th, .dash-table td { padding: 12px; text-align: left; font-size: 0.85rem; border-bottom: 1px solid #F1F5F9; }
+
+        /* MODALS */
         .modal { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); }
-        .modal-content { background: white; margin: 8vh auto; border-radius: 12px; width: 90%; max-width: 400px; overflow: hidden; position: relative; }
-        .tab-btn.active { border-bottom: 3px solid var(--primary); color: var(--primary); }
+        .modal-content { background: white; margin: 10vh auto; border-radius: 15px; width: 90%; max-width: 400px; overflow: hidden; position: relative; }
+        .tab-header { display: flex; background: #F1F5F9; }
+        .tab-btn { flex: 1; padding: 15px; border: none; font-weight: 700; cursor: pointer; color: #64748B; }
+        .tab-btn.active { background: white; color: var(--primary); border-bottom: 3px solid var(--primary); }
+        .form-group { padding: 20px 25px 0; }
+        .form-group input { width: 100%; padding: 12px; border: 1px solid #CBD5E1; border-radius: 8px; }
+
+        footer { text-align: center; padding: 50px 20px; background: white; border-top: 1px solid #E2E8F0; }
     </style>
 </head>
 <body>
-    <div id="actionLoader" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.98); z-index:99999; flex-direction:column; align-items:center; justify-content:center;">
-        <div class="spinner"></div><p style="margin-top:10px;">Loading...</p>
-    </div>
+
+    <div id="actionLoader"><div class="spinner"></div><p style="margin-top:15px; font-weight:600;">Authenticating...</p></div>
 
     <header id="mainHeader">
         <div class="nav-container">
             <div class="logo-area">
-                <img src="static/logo.png" style="height:40px;" alt="Logo">
-                <span style="font-weight:800; font-size:1.2rem; color:var(--primary-dark)">Zarqeen Alif</span>
+                <img src="static/logo.png" style="height:45px;" alt="Zarqeen Logo">
+                <span class="brand-name">Zarqeen Alif</span>
             </div>
             <nav class="nav-links">
                 <a onclick="openModal('loginModal')">Partner Login</a>
@@ -69,118 +92,214 @@
 
     <main id="mainPage">
         <section class="hero">
-            <h1>India's Most Trusted <span>Offline Billing</span></h1>
-            <p>High-speed invoicing, inventory, and reports for retail businesses. 100% Private.</p>
+            <h1>The Safest <span>Offline Billing</span> Solution</h1>
+            <p>Fast, reliable invoicing and inventory for Indian retail. Works 100% without internet. Your data never leaves your computer.</p>
             <div class="hero-btns">
-                <a id="heroDownBtn" onclick="checkDownload(event)" class="nav-btn" style="padding:15px 40px; font-size:1.1rem; text-decoration:none;">Download Free Trial</a>
+                <a id="heroDownBtn" onclick="checkDownload(event)" class="nav-btn" style="padding:15px 45px; font-size:1.1rem; text-decoration:none;">Download Free Trial</a>
             </div>
-            <p id="vText" style="margin-top:20px; font-size:0.8rem; color:gray">v1.2.0</p>
+            <p id="vText" style="margin-top:20px; font-size:0.8rem; color:gray">Loading Version...</p>
         </section>
 
-        <!-- Features -->
-        <section style="max-width:1100px; margin: 40px auto; display:grid; grid-template-columns: repeat(auto-fit, minmax(300px,1fr)); gap:20px; padding:0 20px;">
-            <div class="dash-card"><h3>⚡ Ultra Fast</h3><p>Generate bills in <5 seconds without internet.</p></div>
-            <div class="dash-card"><h3>🖨️ Multi-Printer</h3><p>Supports A4, A5, and all thermal printers.</p></div>
-            <div class="dash-card"><h3>📊 Analytics</h3><p>Track top items and quarterly GST liability.</p></div>
+        <!-- Feature List -->
+        <section class="features-grid">
+            <div class="feat-card"><h3>⚡ High Speed</h3><p>Generate professional GST-ready bills in under 5 seconds. No lag, no downtime.</p></div>
+            <div class="feat-card"><h3>🖨️ Format Support</h3><p>Perfect prints for A4, A5, and all 2-inch & 3-inch thermal receipt printers.</p></div>
+            <div class="feat-card"><h3>🏢 Inventory</h3><p>Manage thousands of products with SKU search, sorting, and transaction history.</p></div>
+            <div class="feat-card"><h3>📊 Analysis</h3><p>Review top selling products, staff sales, and quarterly composition scheme summaries.</p></div>
+            <div class="feat-card"><h3>🔒 100% Privacy</h3><p>Your business records are stored on your local hard drive. Zarqeen has zero access to your data.</p></div>
+            <div class="feat-card"><h3>🇮🇳 Made for India</h3><p>Pre-configured with Indian State codes and currency logic for hassle-free billing.</p></div>
+        </section>
+
+        <!-- Pricing with Discount -->
+        <section id="pricing" class="pricing-section">
+            <h2 style="font-size:2rem; margin-bottom:30px;">Choose a License Plan</h2>
+            
+            <div style="margin-bottom:40px; background:#fff; padding:20px; border-radius:12px; display:inline-block; border:1px dashed var(--primary)">
+                <label style="font-size:0.85rem; font-weight:600; color:#64748B;">Distributor / Partner Code:</label>
+                <div style="display:flex; gap:10px; margin-top:10px;">
+                    <input type="text" id="distCodeInput" style="padding:10px; border:1px solid #CBD5E1; border-radius:6px; text-transform:uppercase; font-weight:700;">
+                    <button onclick="applyDiscount()" class="btn-primary" style="padding:10px 20px; border-radius:6px; border:none; cursor:pointer; font-weight:700;">Apply</button>
+                </div>
+                <p id="distMsg" style="font-size:0.75rem; margin-top:8px; min-height:15px;"></p>
+            </div>
+
+            <div class="pricing-grid">
+                <div class="plan-card">
+                    <h3>Free Trial</h3>
+                    <div class="price">Free</div>
+                    <p style="color:gray; margin-bottom:20px;">7 Days full access to all features</p>
+                    <button class="btn-buy btn-outline" onclick="checkDownload(event)">Get Started</button>
+                </div>
+                <div class="plan-card popular">
+                    <div class="pop-tag">MOST POPULAR</div>
+                    <h3>Standard</h3>
+                    <div class="price" id="p_basic">₹299<span>/year</span></div>
+                    <p style="color:gray; margin-bottom:20px;">1 Year Professional License</p>
+                    <button class="btn-buy btn-primary" onclick="buyPlan('basic')">Activate Plan</button>
+                </div>
+                <div class="plan-card">
+                    <h3>Professional</h3>
+                    <div class="price" id="p_premium">₹599<span>/3 years</span></div>
+                    <p style="color:gray; margin-bottom:20px;">3 Year Smart-Business License</p>
+                    <button class="btn-buy btn-primary" onclick="buyPlan('premium')">Activate Plan</button>
+                </div>
+            </div>
         </section>
     </main>
 
-    <!-- PARTNER DASHBOARD (No Zarqeen Header) -->
+    <!-- PARTNER DASHBOARD (No header) -->
     <div id="dashboardSection">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:2px solid #ddd; padding-bottom:15px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:25px; border-bottom:2px solid #ddd; padding-bottom:15px;">
             <div>
-                <h2 id="pName">Partner</h2>
-                <span id="pCodeTier" style="font-size:0.8rem; color:gray"></span>
+                <h2 id="pName" style="font-weight:800;">Welcome</h2>
+                <span id="pDetails" style="font-size:0.8rem; color:gray;">Partner Portal</span>
             </div>
-            <button onclick="logout()" class="nav-btn" style="background:var(--danger); border:none;">Exit Dashboard</button>
+            <button onclick="logout()" class="nav-btn" style="background:var(--danger); border:none;">Log Out</button>
         </div>
 
-        <div class="info-grid">
-            <div class="stat-box"><small>Comm. Rate</small><p id="d_rate">0%</p></div>
-            <div class="stat-box"><small>Total Earned</small><p id="d_earned">₹0</p></div>
-            <div class="stat-box"><small>Already Paid</small><p id="d_paid" style="color:var(--success)">₹0</p></div>
-            <div class="stat-box"><small>Balance</small><p id="d_balance" style="color:var(--danger)">₹0</p></div>
+        <div class="stat-grid">
+            <div class="stat-card"><small class="stat-label">Comm. Rate</small><p class="stat-val" id="d_rate">0%</p></div>
+            <div class="stat-card"><small class="stat-label">Total Earned</small><p class="stat-val" id="d_earned">₹0</p></div>
+            <div class="stat-card"><small class="stat-label">Received</small><p class="stat-val" id="d_paid" style="color:var(--success);">₹0</p></div>
+            <div class="stat-card"><small class="stat-label">Balance</small><p class="stat-val" id="d_balance" style="color:var(--danger);">₹0</p></div>
         </div>
 
-        <div class="bank-details">
+        <div class="bank-box">
             <div>
-                <h4 style="margin-bottom:5px;">Settlement Details</h4>
-                <p id="bankSummary" style="font-size:0.85rem; color:#444;">No bank details provided.</p>
+                <h4 style="margin-bottom:4px;">Payout Bank Account</h4>
+                <p id="bankSummary" style="font-size:0.85rem; color:#444;">Updating info...</p>
             </div>
             <button onclick="openModal('bankModal')" class="nav-btn" style="background:#000; font-size:0.75rem;">Edit Bank Info</button>
         </div>
 
+        <h3 style="margin-bottom:15px; font-size:1.1rem;">Latest Activations</h3>
         <table class="dash-table">
-            <thead><tr><th>Date</th><th>Plan</th><th>Earnings</th><th>Status</th><th>Key</th></tr></thead>
+            <thead><tr><th>Date</th><th>Plan</th><th>My Earnings</th><th>Status</th><th>Key</th></tr></thead>
             <tbody id="hBody"></tbody>
         </table>
         
-        <div class="pagination">
+        <div style="margin-top:20px; display:flex; justify-content:center; align-items:center; gap:15px;">
             <button id="prevBtn" onclick="changePage(-1)" class="nav-btn" style="background:gray;">Prev</button>
-            <span id="pageText">Page 1</span>
+            <span id="pageText" style="font-weight:600; font-size:0.9rem;">Page 1</span>
             <button id="nextBtn" onclick="changePage(1)" class="nav-btn">Next</button>
         </div>
     </div>
 
     <footer>
-        <p style="font-weight:700;">Zarqeen Accounting Solutions</p>
-        <p style="font-size:0.8rem; color:gray; margin-top:5px;">&copy; 2025 India. Support: zarqeen.in</p>
+        <p style="font-weight:800; color:var(--primary-dark);">Zarqeen Accounting Solutions</p>
+        <p style="font-size:0.8rem; color:gray; margin-top:5px;">&copy; 2025. Fast Billing. Made in India. | zarqeen.in</p>
     </footer>
 
-    <!-- Bank Modal -->
+    <!-- Modals -->
     <div id="bankModal" class="modal">
-        <div class="modal-content" style="padding:25px;">
-            <h3>Update Bank Info</h3>
+        <div class="modal-content" style="padding:30px;">
+            <h3>Settlement Bank Details</h3>
             <form id="bankForm" style="margin-top:15px;">
-                <input type="text" name="bank_name" placeholder="Bank Name" required style="width:100%; padding:10px; margin-bottom:10px;">
-                <input type="text" name="account_holder" placeholder="Account Holder" required style="width:100%; padding:10px; margin-bottom:10px;">
-                <input type="text" name="account_number" placeholder="Account Number" required style="width:100%; padding:10px; margin-bottom:10px;">
-                <input type="text" name="ifsc_code" placeholder="IFSC Code" required style="width:100%; padding:10px; margin-bottom:10px;">
-                <input type="text" name="upi_id" placeholder="UPI ID (e.g. name@okicici)" required style="width:100%; padding:10px; margin-bottom:15px;">
-                <button type="submit" class="nav-btn" style="width:100%; border:none;">Save Details</button>
-                <p style="text-align:center; margin-top:10px;"><a onclick="closeModal('bankModal')" style="cursor:pointer; font-size:0.8rem;">Cancel</a></p>
+                <div class="form-group" style="padding:0; margin-bottom:10px;"><input type="text" name="bank_name" placeholder="Bank Name" required></div>
+                <div class="form-group" style="padding:0; margin-bottom:10px;"><input type="text" name="account_holder" placeholder="Account Holder Name" required></div>
+                <div class="form-group" style="padding:0; margin-bottom:10px;"><input type="text" name="account_number" placeholder="Account Number" required></div>
+                <div class="form-group" style="padding:0; margin-bottom:10px;"><input type="text" name="ifsc_code" placeholder="IFSC Code" required></div>
+                <div class="form-group" style="padding:0; margin-bottom:20px;"><input type="text" name="upi_id" placeholder="UPI ID (for quick payment)" required></div>
+                <button type="submit" class="nav-btn" style="width:100%; border:none; padding:12px;">Save Bank Info</button>
+                <p style="text-align:center; margin-top:10px;"><a onclick="closeModal('bankModal')" style="cursor:pointer; font-size:0.8rem; color:gray;">Close</a></p>
             </form>
         </div>
     </div>
 
-    <!-- Login Modal -->
     <div id="loginModal" class="modal">
         <div class="modal-content">
-            <div class="tab-header" style="display:flex;">
-                <button id="btnP" class="tab-btn active" style="flex:1; padding:15px; border:none; cursor:pointer;" onclick="switchTab('p')">Partner</button>
-                <button id="btnA" class="tab-btn" style="flex:1; padding:15px; border:none; cursor:pointer;" onclick="switchTab('a')">Admin</button>
+            <div class="tab-header">
+                <button id="btnP" class="tab-btn active" onclick="switchTab('p')">Distributor</button>
+                <button id="btnA" class="tab-btn" onclick="switchTab('a')">Admin</button>
             </div>
-            <div id="pTab" style="padding:20px;">
+            <div id="pTab" class="tab-pane active">
                 <form id="pForm">
-                    <input type="email" name="email" placeholder="Email" required style="width:100%; padding:10px; margin-bottom:10px;">
-                    <input type="password" name="password" placeholder="Password" required style="width:100%; padding:10px; margin-bottom:15px;">
-                    <button type="submit" class="nav-btn" style="width:100%; border:none;">Login as Partner</button>
+                    <div class="form-group"><input type="email" name="email" placeholder="Email Address" required></div>
+                    <div class="form-group"><input type="password" name="password" placeholder="Password" required></div>
+                    <button type="submit" class="btn-buy btn-primary" style="width:100%; margin-top:15px;">Partner Login</button>
                 </form>
             </div>
-            <div id="aTab" style="padding:20px; display:none;">
+            <div id="aTab" class="tab-pane">
                 <form id="aForm">
-                    <input type="text" name="username" placeholder="Admin User" required style="width:100%; padding:10px; margin-bottom:10px;">
-                    <input type="password" name="password" placeholder="Password" required style="width:100%; padding:10px; margin-bottom:15px;">
-                    <button type="submit" class="nav-btn" style="width:100%; border:none; background:#000;">Admin Login</button>
+                    <div class="form-group"><input type="text" name="username" placeholder="Admin Username" required></div>
+                    <div class="form-group"><input type="password" name="password" placeholder="Password" required></div>
+                    <button type="submit" class="btn-buy btn-primary" style="width:100%; background:black; margin-top:15px;">Admin Login</button>
                 </form>
             </div>
-            <p style="text-align:center; padding-bottom:15px;"><a onclick="closeModal('loginModal')" style="cursor:pointer; font-size:0.8rem; color:gray;">Cancel</a></p>
+            <p style="text-align:center; padding:15px;"><a onclick="closeModal('loginModal')" style="cursor:pointer; font-size:0.8rem; color:gray;">Cancel</a></p>
         </div>
     </div>
 
     <script>
         const _0x1a = "aHR0cHM6Ly96YXJxZWVuLWJhY2tlbmQub25yZW5kZXIuY29t";
         const BASE_URL = atob(_0x1a);
-        let CUR_PAGE = 1;
+        let CONFIG = {}; let DIST_CODE = null; let CUR_PAGE = 1;
 
         async function initApp() {
             try {
                 const res = await fetch(`${BASE_URL}/api/v1/config`);
-                const data = await res.json();
-                document.querySelectorAll('#navDownBtn, #heroDownBtn').forEach(a => a.href = data.DOWNLOAD_LINK);
+                CONFIG = await res.json();
+                document.getElementById('vText').innerText = `Current Stable Version: v${CONFIG.VERSION}`;
+                document.querySelectorAll('#navDownBtn, #heroDownBtn').forEach(a => a.href = CONFIG.DOWNLOAD_LINK);
                 if(localStorage.getItem('dist_token')) loadDashboard(1);
-            } catch(e) {}
+            } catch(e) { document.getElementById('vText').innerText = "System online. Link active."; }
         }
+
+        async function applyDiscount() {
+            const code = document.getElementById('distCodeInput').value.trim();
+            const res = await fetch(`${BASE_URL}/api/check_distributor`, { 
+                method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({code}) 
+            });
+            const data = await res.json();
+            if(data.valid) { 
+                DIST_CODE = code; 
+                document.getElementById('distMsg').innerText=`✅ ${data.discount}% Discount Applied!`;
+                document.getElementById('distMsg').style.color="green";
+                document.getElementById('p_basic').innerText = `₹${Math.floor(299 * (1 - data.discount/100))}`;
+                document.getElementById('p_premium').innerText = `₹${Math.floor(599 * (1 - data.discount/100))}`;
+            } else { 
+                DIST_CODE = null; 
+                document.getElementById('distMsg').innerText="❌ Invalid Partner Code";
+                document.getElementById('distMsg').style.color="red";
+            }
+        }
+
+        async function buyPlan(plan) {
+            showLoader("Contacting Payment Gateway...");
+            const res = await fetch(`${BASE_URL}/create_order`, { 
+                method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({plan, distributor_code: DIST_CODE}) 
+            });
+            const order = await res.json(); hideLoader();
+            const options = { "key": CONFIG.RAZORPAY_KEY_ID, "amount": order.amount, "currency": "INR", "name": "Zarqeen Alif", "order_id": order.id, "handler": async function(resp) {
+                showLoader("Activating...");
+                const vRes = await fetch(`${BASE_URL}/verify_payment`, { 
+                    method:'POST', headers:{'Content-Type':'application/json'}, 
+                    body:JSON.stringify({razorpay_payment_id: resp.razorpay_payment_id, razorpay_order_id: resp.razorpay_order_id, razorpay_signature: resp.razorpay_signature}) 
+                });
+                const vData = await vRes.json(); hideLoader();
+                if(vData.success) Swal.fire('License Activated!', `Your Key: ${vData.license_key}\nSave this code securely.`, 'success');
+            }};
+            const rzp = new Razorpay(options); rzp.open();
+        }
+
+        document.getElementById('aForm').addEventListener('submit', async (e) => {
+            e.preventDefault(); showLoader("Checking Admin...");
+            const res = await fetch(`${BASE_URL}/admin/login`, { 
+                method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(Object.fromEntries(new FormData(e.target))), credentials:'include' 
+            });
+            const r = await res.json(); hideLoader();
+            if(r.success) window.location.href = r.redirect; else Swal.fire('Error', r.message, 'error');
+        });
+
+        document.getElementById('pForm').addEventListener('submit', async (e) => {
+            e.preventDefault(); showLoader("Signing in...");
+            const res = await fetch(`${BASE_URL}/api/distributor/login`, { 
+                method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(Object.fromEntries(new FormData(e.target))) 
+            });
+            const r = await res.json(); hideLoader();
+            if(r.success) { localStorage.setItem('dist_token', r.token); closeModal('loginModal'); loadDashboard(1); } 
+            else { Swal.fire('Denied', r.message, 'error'); }
+        });
 
         async function loadDashboard(page) {
             CUR_PAGE = page;
@@ -189,21 +308,18 @@
             });
             if(res.status === 401) { logout(); return; }
             const d = await res.json();
-
             document.getElementById('pName').innerText = d.name;
-            document.getElementById('pCodeTier').innerText = `Code: ${d.code} | Level: ${d.tier}`;
+            document.getElementById('pDetails').innerText = `Code: ${d.code} | Tier: ${d.tier}`;
             document.getElementById('d_rate').innerText = `${d.comm_pct}%`;
             document.getElementById('d_earned').innerText = `₹${d.financials.earned}`;
             document.getElementById('d_paid').innerText = `₹${d.financials.paid}`;
             document.getElementById('d_balance').innerText = `₹${d.financials.balance}`;
-            document.getElementById('bankSummary').innerText = d.bank.acc ? `${d.bank.name} (${d.bank.acc}) - UPI: ${d.bank.upi}` : "Please update bank details.";
-            
+            document.getElementById('bankSummary').innerText = d.bank.acc ? `${d.bank.name} (${d.bank.acc}) - UPI: ${d.bank.upi}` : "Update details to receive payouts.";
             let h = ""; d.history.forEach(l => {
-                h += `<tr><td>${l.date}</td><td>${l.plan}</td><td>₹${l.commission}</td><td><b style="color:${l.status=='USED'?'green':'#f59e0b'}">${l.status}</b></td><td style="font-family:monospace">${l.key}</td></tr>`;
+                h += `<tr><td>${l.date}</td><td><b>${l.plan}</b></td><td>₹${l.commission}</td><td><b style="color:${l.status=='USED'?'green':'#f59e0b'}">${l.status}</b></td><td style="font-family:monospace">${l.key}</td></tr>`;
             });
             document.getElementById('hBody').innerHTML = h;
             document.getElementById('pageText').innerText = `Page ${d.pagination.current_page} of ${d.pagination.total_pages}`;
-            
             document.getElementById('mainHeader').style.display = 'none';
             document.getElementById('mainPage').style.display = 'none';
             document.getElementById('dashboardSection').style.display = 'block';
@@ -216,9 +332,10 @@
                 method: 'POST', headers: {'Content-Type':'application/json', 'Authorization': `Bearer ${localStorage.getItem('dist_token')}`},
                 body: JSON.stringify(data)
             });
-            if(res.ok) { Swal.fire('Saved','Details updated','success'); loadDashboard(CUR_PAGE); closeModal('bankModal'); }
+            if(res.ok) { Swal.fire('Saved','Bank info updated.','success'); loadDashboard(CUR_PAGE); closeModal('bankModal'); }
         };
 
+        function checkDownload(e) { if(/Android|iPhone|iPad/i.test(navigator.userAgent)) { e.preventDefault(); Swal.fire('PC Only','Zarqeen is for Windows. Please open on a laptop.','info'); } }
         function switchTab(t) {
             document.getElementById('pTab').style.display = t=='p'?'block':'none';
             document.getElementById('aTab').style.display = t=='a'?'block':'none';
