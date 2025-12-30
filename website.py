@@ -165,7 +165,11 @@ def check_level_update(dist):
 
 # --- ROUTES ---
 @app.route('/')
-def home(): return redirect(FRONTEND_URL)
+@app.route('/')
+def index():
+    # Fetch the link from environment variables, with a fallback link
+    download_url = os.environ.get('DOWNLOAD_LINK', 'https://github.com/fallback-link.exe')
+def home(): return redirect(FRONTEND_URL,download_url)
 
 @app.route('/api/get-config')
 def get_config(): return jsonify({'key_id': RAZORPAY_KEY_ID})
