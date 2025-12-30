@@ -317,6 +317,22 @@
         async function fetchConfig() { try { const res = await fetch(`${BACKEND_URL}/api/get-config`); const data = await res.json(); RAZORPAY_KEY_ID = data.key_id; } catch(e) { console.error(e); } }
         fetchConfig();
 
+    async function syncDownloadLink() {
+        try {
+            const res = await fetch('https://zarqeen-backend.onrender.com/api/download-link');
+            const data = await res.json();
+            if (data.download_url) {
+                // Selects all download buttons/links on your page
+                const links = document.querySelectorAll('a[href*="github.com"], a[onclick*="checkDownload"]');
+                links.forEach(link => {
+                    link.href = data.download_url;
+                });
+            }
+        } catch (e) { console.log("Link sync failed", e); }
+    }
+    window.addEventListener('DOMContentLoaded', syncDownloadLink);
+
+        
         function closeLicenseModal() { document.getElementById('licenseModal').style.display = 'none'; location.reload(); }
         function openLoginModal() { document.getElementById('loginModal').style.display = 'block'; }
         function openRegisterModal() { document.getElementById('registerModal').style.display = 'block'; }
