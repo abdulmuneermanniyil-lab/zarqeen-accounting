@@ -409,12 +409,10 @@ def edit_distributor(id):
 @app.route("/admin/delete_distributor/<int:id>", methods=["POST"])
 @login_required
 def delete_distributor(id): db.session.delete(Distributor.query.get_or_404(id)); db.session.commit(); return redirect(url_for("dashboard"))
+    
 @app.route("/admin/delete_license/<int:id>", methods=["POST"])
 @login_required
 def delete_license(id): db.session.delete(License.query.get_or_404(id)); db.session.commit(); return redirect(url_for("dashboard"))
-@app.route("/admin/edit_license/<int:id>", methods=["POST"])
-@login_required
-def edit_license(id): l = License.query.get_or_404(id); l.is_used = (request.form.get("status") == "used"); db.session.commit(); return redirect(url_for("dashboard"))
 
 @app.route('/admin/edit_license/<int:license_id>', methods=['POST'])
 def edit_license(license_id):
