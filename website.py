@@ -252,12 +252,69 @@ def create_order():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/verify_payme
+@app.route('/verify_payment', methods=['POST'])
+def verify_payment():
+    data = request.json
+    try:
+        # Signature Verification
+        params_dict = {
+            'razorpay_order_id': str(data['razorpay_order_id']),
+            'razorpay_payment_id': str(data['razorpay_payment_id']),
+            'razorpay_signature': str(data['razorpay_signature'])
+        }
+        razorpay_client.utility.verify_payment_signature(params_dict)
+        
+        # Fetch Plan and Distributor Info
+        plan_type = data.get('plan_type')
+        dist_id = None
+        amount_collected = 0.0
+
+        try:
+            order_data = razorpay_client.order.fetch(data['razorpay_order_id'])
+            notes = order_data.get('notes', {})
+            dist_id = notes.get('distributor_id')
+            amount_collected = float(order_data.get('amount', 0)) / 100.0
+        except:
+            amount_collected = 299.0 if plan_type == 'basic' else 599.0
+
+        dist_obj = None
+        comm_earned = 0.0
+        
+        if dist_id and str(dist_id) != "None":
+            dist_obj = Distributor.query.get(int(dist_id))
+            if dist_obj:
+                # Always calculate based on MRP as requested
+                mrp = 299.0 if plan_type == 'basic' else 599.0
+                
+                # Level Refresh (Ensures they are at the correct level for this month)
+                refresh_distributor_level(dist_obj)
+                
+                # Calculation: MRP * (Level_Comm + Bonus%)
+                st = Settings.query.first()
+                bonus_pct = st.special_bonus_percent if st else 0
+                base_comm_pct = LEVELS[dist_obj.level]['commission']
+                
+                comm_earned = (mrp * (base_comm_pct + bonus_pct)) / 100
+
+        # Generate Key & Save
+        new_key = generate_unique_key(plan_type, dist_obj.code if dist_obj else None)
+        new_lic = License(
+            license_key=new_key, 
+            plan_type=plan_type, 
+            payment_id=data['razorpay_payment_id'], 
+            amount_paid=amount_collected, 
+            commission_earned=round(comm_earned, 2), 
+            distributor_id=dist_obj.id if dist_obj else None,
+            created_at=datetime.utcnow()
+        )
+        
+        db.session.add(new_lic)
+        db.session.commit()
+        return jsonify({'success': True, 'license_key': new_key})
         
     except Exception as e:
         db.session.rollback()
-        print(f"VERIFY ERROR: {str(e)}") 
-        return jsonify({'success': False, 'message': "Verification failed"})
+        return jsonify({'success': False, 'message': str(e)})
 
 @app.route('/download/license/<key>')
 def download_license_file(key): return send_file(io.BytesIO(key.encode()), mimetype='text/plain', as_attachment=True, download_name='license.zarqeen')
