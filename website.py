@@ -166,9 +166,7 @@ def check_level_update(dist):
 # --- ROUTES ---
 @app.route('/')
 def index():
-    download_url = os.environ.get('DOWNLOAD_LINK', 'https://github.com/abdulmuneermanniyil-lab/zarqeen-accounting/releases/download/Version/Zarqeen_Alif_v110.exe')
-    # Make sure this RETURN line exists and is indented inside the function:
-    return render_template("index.html", download_link=download_url)
+    return "Zarqeen Backend is Running", 200
 
 @app.route('/api/get-config')
 def get_config(): return jsonify({'key_id': RAZORPAY_KEY_ID})
@@ -345,6 +343,10 @@ def version_check():
     return jsonify(update_data)
 
 
+@app.route('/api/download-link')
+def get_download_link():
+    url = os.environ.get('DOWNLOAD_LINK', 'https://github.com/abdulmuneermanniyil-lab/zarqeen-accounting/releases/download/Version/Zarqeen_Alif_v110.exe')
+    return jsonify({"download_url": url})
 
 
 
@@ -418,17 +420,14 @@ def delete_distributor(id): db.session.delete(Distributor.query.get_or_404(id));
 def delete_license(id): db.session.delete(License.query.get_or_404(id)); db.session.commit(); return redirect(url_for("dashboard"))
 
 @app.route('/admin/edit_license/<int:license_id>', methods=['POST'])
+@admin_required # Ensure your admin protection is here
 def edit_license(license_id):
-    # Get the status from the dropdown
-    new_status = request.form.get('status') 
+    new_status = request.form.get('status')
     license_obj = License.query.get(license_id)
-    
     if license_obj:
-        # Update boolean based on dropdown selection
-        license_obj.is_used = True if new_status == 'used' else False
+        license_obj.is_used = (new_status == 'used')
         db.session.commit()
-        
-    return redirect('/admin/dashboard')
+    return redirect(url_for('dashboard'))
 
 
 @app.route("/admin/login", methods=["GET", "POST"])
