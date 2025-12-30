@@ -1,9 +1,10 @@
-import os, random, string, secrets, csv, io, requests, razorpay, sqlite3
+import os, random, string, secrets, csv, io, requests, razorpay
 from datetime import datetime, timedelta, timezone
 from functools import wraps
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for, send_file
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
+from sqlalchemy import text, inspect
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
@@ -26,9 +27,10 @@ app.config.update(
 )
 CORS(app, resources={r"/*": {"origins": ["https://zarqeen.in", "https://www.zarqeen.in"]}}, supports_credentials=True)
 
-# Database Setup
+# Database Setup (Postgres logic for Render)
 raw_db_url = os.environ.get("DATABASE_URL", "sqlite:///site.db")
-if raw_db_url.startswith("postgres://"): raw_db_url = raw_db_url.replace("postgres://", "postgresql://", 1)
+if raw_db_url.startswith("postgres://"): 
+    raw_db_url = raw_db_url.replace("postgres://", "postgresql://", 1)
 app.config["SQLALCHEMY_DATABASE_URI"] = raw_db_url
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
@@ -51,8 +53,9 @@ class Distributor(db.Model):
     discount_percent = db.Column(db.Integer, default=10)
     commission_paid = db.Column(db.Float, default=0.0)
     api_token = db.Column(db.String(100))
-    upi_id = db.Column(db.String(100)) # New Column
-    otp_code = db.Column(db.String(10)); otp_expiry = db.Column(db.DateTime)
+    upi_id = db.Column(db.String(100))
+    otp_code = db.Column(db.String(10))
+    otp_expiry = db.Column(db.DateTime)
     licenses = db.relationship('License', backref='distributor', lazy=True)
     
     def set_password(self, pwd): self.password_hash = generate_password_hash(pwd)
@@ -75,32 +78,36 @@ class License(db.Model):
         if not self.used_at: return None
         return self.used_at + timedelta(days=(365 if self.plan_type == 'basic' else 1095))
 
-# --- AUTO-MIGRATION LOGIC (FIXES THE 500 ERROR) ---
-def migrate_db():
-    db_file = 'site.db'
-    if not os.path.exists(db_file): return
-    
-    conn = sqlite3.connect(db_file)
-    cursor = conn.cursor()
-    
-    # Check Distributor Table
-    cursor.execute("PRAGMA table_info(distributor)")
-    columns = [row[1] for row in cursor.fetchall()]
-    
-    if 'is_active' not in columns:
-        cursor.execute("ALTER TABLE distributor ADD COLUMN is_active BOOLEAN DEFAULT 1")
-    if 'upi_id' not in columns:
-        cursor.execute("ALTER TABLE distributor ADD COLUMN upi_id TEXT")
-    if 'discount_percent' not in columns:
-        cursor.execute("ALTER TABLE distributor ADD COLUMN discount_percent INTEGER DEFAULT 10")
+# --- NEW POSTGRES-SAFE AUTO-MIGRATION ---
+def migrate_database():
+    with app.app_context():
+        # Tables must exist first
+        db.create_all()
+        inspector = inspect(db.engine)
+        
+        # Add columns to Distributor if missing
+        cols = [c['name'] for c in inspector.get_columns('distributor')]
+        
+        migrations = [
+            ('is_active', 'BOOLEAN DEFAULT TRUE'),
+            ('upi_id', 'TEXT'),
+            ('discount_percent', 'INTEGER DEFAULT 10'),
+            ('otp_code', 'VARCHAR(10)'),
+            ('otp_expiry', 'TIMESTAMP')
+        ]
+        
+        for col_name, col_type in migrations:
+            if col_name not in cols:
+                try:
+                    db.session.execute(text(f'ALTER TABLE distributor ADD COLUMN {col_name} {col_type}'))
+                    db.session.commit()
+                    print(f"Migration: Added {col_name} to distributor table.")
+                except Exception as e:
+                    db.session.rollback()
+                    print(f"Migration Error on {col_name}: {e}")
 
-    conn.commit()
-    conn.close()
-
-with app.app_context():
-    migrate_db() # Run migration first
-    db.create_all()
-    if not db.session.get(Settings, 1): db.session.add(Settings(id=1)); db.session.commit()
+# Run migration on start
+migrate_database()
 
 # --- HELPERS ---
 def admin_login_required(f):
@@ -144,9 +151,15 @@ def admin_login_api():
 def admin_dashboard():
     licenses = License.query.order_by(License.created_at.desc()).all()
     distributors = Distributor.query.all()
-    settings = db.session.get(Settings, 1)
-    dist_list = [{"obj": d, "earned": round(sum(l.commission_earned for l in d.licenses), 2)} for d in distributors]
-    for item in dist_list: item['balance'] = round(item['earned'] - item['obj'].commission_paid, 2)
+    settings = db.session.get(Settings, 1) or Settings(id=1)
+    if not db.session.get(Settings, 1):
+        db.session.add(settings)
+        db.session.commit()
+    
+    dist_list = []
+    for d in distributors:
+        earned = sum(l.commission_earned for l in d.licenses)
+        dist_list.append({"obj": d, "earned": round(earned, 2), "balance": round(earned - d.commission_paid, 2)})
     return render_template("admin_dashboard.html", licenses=licenses, distributors=dist_list, settings=settings)
 
 @app.route("/admin/edit_distributor/<int:id>", methods=["POST"])
@@ -155,19 +168,9 @@ def edit_distributor(id):
     d = db.session.get(Distributor, id)
     if not d: return redirect(url_for('admin_dashboard'))
     if request.form.get("name"): d.name = request.form.get("name")
-    if request.form.get("email"): d.email = request.form.get("email")
     if "is_active" in request.form: d.is_active = (request.form.get("is_active") == "1")
     if request.form.get("manual_paid_total"): d.commission_paid = float(request.form.get("manual_paid_total"))
     db.session.commit()
-    return redirect(url_for('admin_dashboard'))
-
-@app.route("/admin/edit_license/<int:id>", methods=["POST"])
-@admin_login_required
-def edit_license(id):
-    l = db.session.get(License, id)
-    if l:
-        l.is_used = (request.form.get("status") == "used")
-        db.session.commit()
     return redirect(url_for('admin_dashboard'))
 
 @app.route("/admin/delete_license/<int:id>", methods=["POST"])
@@ -178,43 +181,25 @@ def delete_license(id):
         db.session.delete(l); db.session.commit()
     return redirect(url_for('admin_dashboard'))
 
+@app.route('/api/distributor/login', methods=['POST'])
+def dist_login():
+    data = request.json or {}
+    dist = Distributor.query.filter_by(email=data.get('email')).first()
+    if dist and dist.check_password(data.get('password')):
+        if not dist.is_active: return jsonify({'success': False, 'message': 'Account Disabled. Contact Admin.'}), 403
+        dist.api_token = secrets.token_hex(16)
+        db.session.commit()
+        return jsonify({'success': True, 'token': dist.api_token})
+    return jsonify({'success': False, 'message': 'Invalid Email or Password'}), 401
+
 @app.route('/api/distributor/data', methods=['GET'])
 def get_dist_data():
     token = request.headers.get('Authorization', '').replace('Bearer ', '')
     dist = Distributor.query.filter_by(api_token=token).first()
     if not dist or not dist.is_active: return jsonify({'error': 'Unauthorized'}), 401
     earned = sum(l.commission_earned for l in dist.licenses)
-    sd = [{'date': l.created_at.strftime('%d-%b-%y'), 'plan': l.plan_type.upper(), 'amount': l.amount_paid, 'status': 'USED' if l.is_used else 'PENDING', 'key': l.license_key} for l in dist.licenses]
+    sd = [{'date': l.created_at.strftime('%d-%b-%y'), 'plan': l.plan_type.upper(), 'amount': l.amount_paid, 'commission': round(l.commission_earned, 2), 'status': 'USED' if l.is_used else 'PENDING', 'key': l.license_key} for l in dist.licenses]
     return jsonify({"name": dist.name, "code": dist.code, "earned": round(earned, 2), "paid": round(dist.commission_paid, 2), "balance": round(earned - dist.commission_paid, 2), "history": sd})
-
-@app.route('/api/check_distributor', methods=['POST'])
-def check_dist():
-    d = Distributor.query.filter_by(code=request.json.get('code','').upper(), is_active=True).first()
-    return jsonify({'valid': True, 'discount': d.discount_percent, 'name': d.name}) if d else jsonify({'valid': False})
-
-@app.route('/create_order', methods=['POST'])
-def create_order():
-    data = request.json; amount = 29900 if data.get('plan') == 'basic' else 59900
-    dist = Distributor.query.filter_by(code=data.get('distributor_code','').upper(), is_active=True).first()
-    if dist: amount -= int(amount * (dist.discount_percent / 100))
-    order = razorpay_client.order.create({'amount': amount, 'currency': 'INR', 'notes': {'plan': data.get('plan'), 'dist_id': dist.id if dist else 'None'}})
-    return jsonify(order)
-
-@app.route('/verify_payment', methods=['POST'])
-def verify_payment():
-    d = request.json
-    try:
-        razorpay_client.utility.verify_payment_signature(d)
-        order = razorpay_client.order.fetch(d['razorpay_order_id'])
-        plan = order['notes'].get('plan')
-        dist_id = order['notes'].get('dist_id')
-        dist = db.session.get(Distributor, int(dist_id)) if dist_id and dist_id != 'None' else None
-        comm = (order['amount'] / 100) * 0.25 if dist else 0.0
-        new_key = generate_key(plan, dist.code if dist else None)
-        lic = License(license_key=new_key, plan_type=plan, amount_paid=order['amount']/100, commission_earned=comm, distributor_id=dist.id if dist else None)
-        db.session.add(lic); db.session.commit()
-        return jsonify({'success': True, 'license_key': new_key})
-    except: return jsonify({'success': False})
 
 @app.route('/download/license/<key>')
 def download_license(key):
