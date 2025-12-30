@@ -258,13 +258,27 @@
                     <div style="font-size:0.75rem; color:#9CA3AF; margin-top:5px;">Based on this month's performance</div>
                 </div>
             </div>
-            <div class="dash-header" style="margin-top:-10px;">
-                <div style="display:flex; justify-content:space-between; width:100%;"><h3>My Banking Details</h3><button onclick="openBankModal()" class="nav-btn" style="padding:5px 10px; font-size:0.8rem;">Edit Details</button></div>
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; font-size:0.95rem; margin-top:10px;">
-                    <div><p>Bank: <strong id="d_bank"></strong></p><p>Holder: <strong id="d_holder"></strong></p></div>
-                    <div><p>Acct: <strong id="d_acct"></strong></p><p>IFSC: <strong id="d_ifsc"></strong></p><p>UPI: <strong id="d_upi"></strong></p></div>
-                </div>
-            </div>
+            <!-- UPDATED BANKING DETAILS SECTION -->
+<div class="dash-header" style="margin-top:-10px; flex-direction: column; align-items: stretch;">
+    <div style="display:flex; justify-content:space-between; align-items: center; width:100%; margin-bottom: 15px;">
+        <h3 style="margin:0;">My Banking Details</h3>
+        <button onclick="openBankModal()" class="nav-btn" style="padding:6px 14px; font-size:0.8rem; margin:0;">Edit Details</button>
+    </div>
+    
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; font-size:0.95rem; background: #f9fafb; padding: 15px; border-radius: 8px;">
+        <div>
+            <p style="color:var(--text-muted); font-size:0.8rem; margin-bottom:2px;">Bank & Holder</p>
+            <p style="margin-bottom:8px;"><strong id="d_bank"></strong></p>
+            <p><strong><span id="d_holder"></span></strong></p>
+        </div>
+        <div>
+            <p style="color:var(--text-muted); font-size:0.8rem; margin-bottom:2px;">Account & UPI</p>
+            <p style="margin-bottom:4px;">Acct: <strong id="d_acct"></strong></p>
+            <p style="margin-bottom:4px;">IFSC: <strong id="d_ifsc"></strong></p>
+            <p>UPI: <strong id="d_upi" style="color:var(--primary);"></strong></p>
+        </div>
+    </div>
+</div>
             <h3 style="margin-bottom:15px; display:flex; justify-content:space-between;">Sales History <span id="pageInfo" style="font-size:0.9rem; color:gray"></span></h3>
             <div style="overflow-x:auto;"><table class="dash-table"><thead>
     <tr>
