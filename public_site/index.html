@@ -24,864 +24,483 @@
         header { background: var(--white); box-shadow: 0 1px 3px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 1000; }
         .nav-container { max-width: 1200px; margin: 0 auto; padding: 1rem 1.5rem; display: flex; justify-content: space-between; align-items: center; }
         .logo-area { display: flex; align-items: center; gap: 12px; }
-        .logo-img { height: 45px; width: auto; }
-        .brand-name { font-weight: 800; font-size: 1.35rem; color: var(--primary-dark); tracking: -0.5px; }
+        .brand-name { font-weight: 800; font-size: 1.35rem; color: var(--primary-dark); }
         .nav-links { display: flex; align-items: center; gap: 2rem; }
-        .nav-links a { color: var(--text-muted); font-weight: 600; font-size: 0.95rem; transition: color 0.2s; cursor: pointer; }
-        .nav-links a:hover { color: var(--primary); }
-        .nav-btn { background: var(--primary); color: var(--white) !important; padding: 0.6rem 1.2rem; border-radius: 8px; transition: background 0.2s; }
+        .nav-links a { color: var(--text-muted); font-weight: 600; font-size: 0.95rem; cursor: pointer; }
+        .nav-btn { background: var(--primary); color: var(--white) !important; padding: 0.6rem 1.2rem; border-radius: 8px; font-weight: 600; }
         
-        /* MOBILE NAV */
-        .mobile-menu-btn { display: none; background: none; border: none; font-size: 1.8rem; cursor: pointer; color: var(--text-main); }
-        .mobile-nav { display: none; position: absolute; top: 100%; left: 0; width: 100%; background: white; border-bottom: 1px solid #eee; padding: 1rem; flex-direction: column; gap: 1rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); z-index: 999; }
-        .mobile-nav a { display: block; padding: 10px 0; border-bottom: 1px solid #f3f4f6; color: var(--text-main); font-weight: 600; }
-        @media (max-width: 768px) { .nav-links { display: none; } .mobile-menu-btn { display: block; } .mobile-nav.active { display: flex; } }
-        
-        .hero { text-align: center; padding: 5rem 1rem 4rem; background: linear-gradient(180deg, #FFFFFF 0%, #EFF6FF 100%); border-bottom: 1px solid #DBEAFE; }
-        .tagline { display: inline-block; background: #DBEAFE; color: var(--primary-dark); padding: 6px 16px; border-radius: 50px; font-size: 0.85rem; font-weight: 700; margin-bottom: 1.5rem; border: 1px solid #BFDBFE; }
-        .hero h1 { font-size: 3rem; font-weight: 800; color: #111827; line-height: 1.2; margin-bottom: 1.5rem; letter-spacing: -1px; }
+        .mobile-menu-btn { display: none; background: none; border: none; font-size: 1.8rem; cursor: pointer; }
+        .mobile-nav { display: none; position: absolute; top: 100%; left: 0; width: 100%; background: white; padding: 1rem; flex-direction: column; gap: 1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 999; }
+        .mobile-nav.active { display: flex; }
+
+        .hero { text-align: center; padding: 5rem 1rem; background: linear-gradient(180deg, #FFFFFF 0%, #EFF6FF 100%); border-bottom: 1px solid #DBEAFE; }
+        .hero h1 { font-size: 3rem; font-weight: 800; margin-bottom: 1.5rem; }
         .hero h1 span { color: var(--primary); }
         .hero p { font-size: 1.2rem; color: var(--text-muted); max-width: 700px; margin: 0 auto 2.5rem; }
-        .cta-group { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; }
         
         .btn-lg { padding: 1rem 2rem; font-size: 1.1rem; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; transition: transform 0.2s; }
-        .btn-lg:hover { transform: translateY(-2px); }
         .btn-primary { background: var(--primary); color: var(--white); }
-        .btn-outline { background: var(--white); color: var(--text-main); border: 1px solid #D1D5DB; }
-        .specs { font-size: 0.85rem; color: var(--text-muted); margin-top: 1.5rem; opacity: 0.8; }
-        .features { max-width: 1200px; margin: -3rem auto 3rem; padding: 0 1.5rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 2rem; position: relative; z-index: 10; }
-        .feature-card { background: var(--white); padding: 2rem; border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); border: 1px solid #E5E7EB; transition: transform 0.2s; }
+        
+        .features { max-width: 1200px; margin: 2rem auto; padding: 0 1.5rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem; }
+        .feature-card { background: var(--white); padding: 2rem; border-radius: 12px; border: 1px solid #E5E7EB; text-align: center; transition: 0.3s; }
         .feature-card:hover { transform: translateY(-5px); border-color: var(--primary); }
-        .icon-box { font-size: 2rem; margin-bottom: 1rem; background: #EFF6FF; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; border-radius: 12px; }
-        .feature-card h3 { font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem; color: #1F2937; }
         
         .pricing-section { padding: 4rem 1rem; text-align: center; }
         .section-title { font-size: 2.25rem; font-weight: 800; margin-bottom: 0.5rem; }
-        .section-subtitle { color: var(--text-muted); margin-bottom: 3rem; font-size: 1.1rem; }
-        .dist-input-container { max-width: 400px; margin: 0 auto 2rem; text-align: center; }
-        .dist-input-box { display: flex; gap: 10px; justify-content: center; margin-top: 5px; }
-        .dist-input { padding: 10px; border: 1px solid #ccc; border-radius: 6px; width: 60%; text-transform: uppercase; font-weight: bold; }
-        .pricing-grid { max-width: 1000px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; align-items: start; }
-        .plan-card { background: var(--white); padding: 2.5rem; border-radius: 16px; border: 1px solid #E5E7EB; position: relative; display: flex; flex-direction: column; height: 100%; transition: 0.3s; }
-        .plan-card.popular { border: 2px solid var(--primary); box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); transform: scale(1.05); z-index: 2; }
-        .badge { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: var(--accent); color: #78350F; padding: 6px 16px; border-radius: 20px; font-size: 0.8rem; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase; }
-        .plan-name { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem; color: #1F2937; }
-        .price { font-size: 3rem; font-weight: 800; color: #111827; }
-        .price span { font-size: 1rem; color: var(--text-muted); font-weight: 500; }
-        .plan-desc { color: var(--text-muted); margin-bottom: 2rem; font-size: 0.95rem; border-bottom: 1px solid #E5E7EB; padding-bottom: 1.5rem; }
-        .features-list { list-style: none; text-align: left; margin-bottom: 2rem; }
-        .features-list li { margin-bottom: 0.8rem; color: #374151; display: flex; align-items: center; gap: 10px; font-size: 0.95rem; }
-        .features-list li::before { content: "✓"; color: var(--success); font-weight: 800; }
-        
-        .btn-buy { width: 100%; padding: 1rem; border-radius: 8px; font-weight: 700; font-size: 1rem; cursor: pointer; border: none; transition: 0.2s; margin-top: auto; }
-        .btn-buy.primary { background: var(--primary); color: var(--white); box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2); }
-        .btn-buy.primary:hover { background: var(--primary-dark); box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3); }
+        .section-subtitle { color: var(--text-muted); margin-bottom: 3rem; }
+        .pricing-grid { max-width: 1000px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; }
+        .plan-card { background: var(--white); padding: 2.5rem; border-radius: 16px; border: 1px solid #E5E7EB; display: flex; flex-direction: column; }
+        .plan-card.popular { border: 2px solid var(--primary); transform: scale(1.05); }
+        .price { font-size: 3rem; font-weight: 800; margin: 1rem 0; }
+
+        .btn-buy { width: 100%; padding: 1rem; border-radius: 8px; font-weight: 700; cursor: pointer; border: none; margin-top: auto; }
+        .btn-buy.primary { background: var(--primary); color: var(--white); }
         .btn-buy.secondary { background: #E5E7EB; color: #374151; }
-        .btn-buy.secondary:hover { background: #D1D5DB; }
-        .btn-disabled { background: #E5E7EB !important; color: #9CA3AF !important; cursor: not-allowed; box-shadow: none !important; }
-        footer { margin-top: 4rem; padding: 3rem 1rem; background: var(--white); border-top: 1px solid #E5E7EB; text-align: center; }
+
+        /* DASHBOARD */
+        #dashboardSection { display: none; padding: 2rem; max-width: 1200px; margin: 0 auto; }
+        .dash-header { background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 20px; }
+        .dash-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .dash-val { font-size: 2rem; font-weight: 700; color: var(--primary); }
+        .dash-table { width: 100%; background: white; border-collapse: collapse; border-radius: 12px; overflow: hidden; }
+        .dash-table th, .dash-table td { padding: 15px; text-align: left; border-bottom: 1px solid #E5E7EB; }
 
         /* MODALS */
-        .modal { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); backdrop-filter: blur(4px); overflow-y: auto; padding: 10px; align-items: flex-start; }
-        .modal-content { background-color: var(--white); margin: 5vh auto; padding: 2rem; border-radius: 12px; width: 100%; max-width: 450px; position: relative; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); max-height: 85vh; overflow-y: auto; }
-        .close-icon { position: absolute; right: 20px; top: 20px; font-size: 24px; cursor: pointer; color: #aaa; }
-        .key-box { background: #F3F4F6; padding: 1rem; border: 2px dashed #D1D5DB; border-radius: 8px; margin: 1.5rem 0; font-family: monospace; font-size: 1.1rem; color: var(--primary-dark); word-break: break-all; }
-        
-        .login-tabs { display: flex; margin-bottom: 20px; border-bottom: 1px solid #E5E7EB; }
-        /* Add this to your <style> block */
-.tab-btn { 
-    border-bottom: 2px solid transparent; 
-    transition: all 0.2s; 
-}
-.tab-btn.active { 
-    color: #2563EB !important; 
-    border-bottom: 2px solid #2563EB !important; 
-    opacity: 1 !important;
-}
+        .modal { display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); overflow-y: auto; padding: 20px; }
+        .modal-content { background: white; margin: 5vh auto; padding: 2rem; border-radius: 12px; width: 100%; max-width: 450px; position: relative; }
+        .close-icon { position: absolute; right: 20px; top: 20px; font-size: 24px; cursor: pointer; }
+
+        .tab-btn { flex: 1; padding: 10px; border: none; background: none; font-weight: 600; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; transition: 0.3s; }
+        .tab-btn.active { color: var(--primary) !important; border-bottom: 2px solid var(--primary) !important; opacity: 1 !important; }
+        .login-tabs { display: flex; margin-bottom: 20px; border-bottom: 1px solid #EEE; }
         .login-form { display: none; }
-        .login-form.active { display: block; }
-        .form-group { margin-bottom: 15px; text-align: left; }
+        .form-group { margin-bottom: 15px; }
         .form-group label { display: block; font-size: 0.9rem; margin-bottom: 5px; font-weight: 600; }
         .form-group input { width: 100%; padding: 10px; border: 1px solid #D1D5DB; border-radius: 6px; }
 
-        #dashboardSection { display: none; padding: 2rem; background: #F3F4F6; min-height: 100vh; }
-        .dash-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
-        .dash-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); position: relative; overflow: hidden; }
-        .dash-val { font-size: 2rem; font-weight: 700; color: var(--primary); }
-        .dash-table { width: 100%; background: white; border-radius: 12px; border-collapse: collapse; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .dash-table th, .dash-table td { padding: 15px; text-align: left; border-bottom: 1px solid #E5E7EB; }
-        .dash-table th { background: #F9FAFB; font-weight: 600; }
-        .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 700; }
-        .status-installed { background: #D1FAE5; color: #065F46; }
-        .status-pending { background: #FEE2E2; color: #991B1B; }
-        .level-badge { background: gold; color: black; padding: 2px 8px; border-radius: 20px; font-size: 0.8rem; margin-left: 10px; border: 1px solid #eab308; }
-        .login-form { display: none !important; }
-.login-form.active { display: block !important; }
-#adminForm { text-align: left; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @media (max-width: 768px) { .nav-links { display: none; } .mobile-menu-btn { display: block; } .mobile-nav.active { display: flex; } .hero h1 { font-size: 2.25rem; } }
-        
+        @media (max-width: 768px) { .nav-links { display: none; } .mobile-menu-btn { display: block; } .hero h1 { font-size: 2.2rem; } .plan-card.popular { transform: none; } }
     </style>
 </head>
 <body>
-    <div id="actionLoader" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.9); z-index: 999999; flex-direction: column; align-items: center; justify-content: center;">
+
+    <div id="actionLoader">
         <div class="spinner"></div>
-        <div id="loaderText" style="font-weight:600; margin-bottom:5px;">Loading...</div>
-        <div id="loaderSubText" style="font-size:0.9rem; color:gray">Waking up server... please wait.</div>
+        <div id="loaderText" style="font-weight:600;">Loading...</div>
     </div>
 
     <header>
         <div class="nav-container">
-    <div class="logo-area">
-        <img src="static/logo.png" style="height:45px;">
-        <span class="brand-name" style="margin-left:10px;font-size:1.3rem;font-weight:800;color:#1E40AF;">Zarqeen Alif</span>
-    </div>
-    <nav class="nav-links">
-        <a onclick="openRegisterModal()" style="color:var(--primary); cursor:pointer;">Join as Distributor</a>
-        <a onclick="openLoginModal()" style="color:var(--primary); cursor:pointer;">Login</a>
-        <!-- Desktop Download Button -->
-        <!-- Use your own domain link -->
- <a href="#" class="download-link" onclick="checkDownload(event)">Download</a>
-    </nav>
-    <button class="mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
-</div>
-
-<div class="mobile-nav" id="mobileNav">
-    <a onclick="toggleMobileMenu(); openRegisterModal()">Join as Distributor</a>
-    <a onclick="toggleMobileMenu(); openLoginModal()">Login</a>
-    <a href="#" class="download-link" onclick="checkDownload(event)">Download Software</a>
-</div>
+            <div class="logo-area">
+                <img src="static/logo.png" style="height:40px;">
+                <span class="brand-name">Zarqeen Alif</span>
+            </div>
+            <nav class="nav-links">
+                <a onclick="openRegisterModal()">Join as Distributor</a>
+                <a onclick="openLoginModal()">Login</a>
+                <a href="#" class="nav-btn dynamic-dl" onclick="checkDownload(event)">Download</a>
+            </nav>
+            <button class="mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
+        </div>
+        <div class="mobile-nav" id="mobileNav">
+            <a onclick="toggleMobileMenu(); openRegisterModal()">Join as Distributor</a>
+            <a onclick="toggleMobileMenu(); openLoginModal()">Login</a>
+            <a href="#" class="dynamic-dl" onclick="checkDownload(event)">Download Software</a>
+        </div>
     </header>
 
     <section class="hero">
-        <div class="tagline"><img src="https://flagcdn.com/w40/in.png" alt="India" style="height:14px; margin-right:5px;"> MADE FOR INDIA</div>
+        <div style="background:#DBEAFE; color:#1E40AF; padding:6px 16px; border-radius:50px; display:inline-block; font-size:0.8rem; font-weight:700; margin-bottom:1rem;">🇮🇳 MADE FOR INDIA</div>
         <h1>India's Best Value <br><span>Invoicing Software</span></h1>
-        <p>The easiest offline billing software. Automatically calculates taxes. <strong>Specially designed for Retail Indian Businesses</strong> who want simplicity and speed.</p>
+        <p>The easiest offline billing software for Retail Indian Businesses who want simplicity, speed, and zero recurring fees.</p>
         <div class="cta-group">
-    <a href="#" class="download-link" onclick="checkDownload(event)">Download Free Trial</button>
-    </a>
-</div>
-        <div class="specs">v1.1.0 • Supports A4, A5, Thermal 2" & 3" • 52MB • No Internet Required</div>
+            <a href="#" class="dynamic-dl" onclick="checkDownload(event)">
+                <button class="btn-lg btn-primary">Download Free Trial</button>
+            </a>
+        </div>
+        <div style="font-size:0.85rem; color:gray; margin-top:1.5rem;">v1.1.0 • A4, A5 & Thermal Support • 52MB • 100% Offline</div>
     </section>
 
-    <section id="features" class="features">
-        <div class="feature-card"><div class="icon-box">⚡</div><h3>Lightning Fast & Offline</h3><p>Generates bills in seconds. Works 100% offline so your data stays safe on your own computer. No cloud fees.</p></div>
-        <div class="feature-card"><div class="icon-box">🖨️</div><h3>All Paper Sizes</h3><p>Supports A4, A5, and Thermal Printers (2-inch & 3-inch). Print perfectly on any device.</p></div>
-        <div class="feature-card"><div class="icon-box"><img src="https://flagcdn.com/w80/in.png" style="width:35px;"></div><h3>Exclusively for India</h3><p>Built specifically for the Indian market. Pre-loaded with Indian State codes and currency formats.</p></div>
+    <section id="features" class="features" style="margin-top:-3rem; position:relative; z-index:10;">
+        <div class="feature-card"><h3>⚡ Fast & Offline</h3><p>Generates bills in seconds without internet. Your data stays safe on your PC.</p></div>
+        <div class="feature-card"><h3>🖨️ All Paper Sizes</h3><p>Print on A4, A5, or 2"/3" Thermal Printers with professional layouts.</p></div>
+        <div class="feature-card"><h3>🇮🇳 Indian GST Ready</h3><p>Pre-loaded with State codes and currency formats specific to the Indian market.</p></div>
     </section>
-<section id="target-businesses" class="pricing-section" style="background: #fff; padding-top: 2rem;">
-    <h2 class="section-title">Perfect for Your Business</h2>
-    <p class="section-subtitle">Tailored to meet the needs of diverse Indian retail sectors</p>
-    
-    <div class="features" style="margin-top: 0; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));">
-        <div class="feature-card" style="padding: 1.5rem; text-align: center;">
-            <div style="font-size: 2.5rem; margin-bottom: 10px;">👕</div>
-            <h3>Textile & Garments</h3>
-            <p style="font-size: 0.9rem; color: var(--text-muted);">Quick billing for clothing stores, boutiques, and saree centers with A4/A5 support.</p>
+
+    <section id="target-businesses" class="pricing-section" style="background: #fff; padding-top: 2rem;">
+        <h2 class="section-title">Perfect for Your Business</h2>
+        <p class="section-subtitle">Tailored billing for every retail sector</p>
+        <div class="features" style="margin-top: 0;">
+            <div class="feature-card"><div>👕</div><h3>Textile & Garments</h3><p>Quick A4/A5 billing for boutiques and clothing stores.</p></div>
+            <div class="feature-card"><div>🛒</div><h3>Grocery & Kirana</h3><p>Lightning checkout for thermal printers.</p></div>
+            <div class="feature-card"><div>📱</div><h3>Electronics</h3><p>Professional GST invoices for mobile shops.</p></div>
+            <div class="feature-card"><div>🔧</div><h3>Hardware</h3><p>Manage thousands of items with zero lag.</p></div>
+            <div class="feature-card"><div>👟</div><h3>Footwear</h3><p>Ideal for shoe stores and bag shops.</p></div>
+            <div class="feature-card"><div>🎨</div><h3>Paints & Decor</h3><p>Easy unit management for home decor.</p></div>
+            <div class="feature-card"><div>🍰</div><h3>Bakeries</h3><p>Fast thermal bills for sweet stalls and cafes.</p></div>
+            <div class="feature-card"><div>📚</div><h3>Stationery</h3><p>Efficient billing for school and gift items.</p></div>
         </div>
-        <div class="feature-card" style="padding: 1.5rem; text-align: center;">
-            <div style="font-size: 2.5rem; margin-bottom: 10px;">🛒</div>
-            <h3>Grocery & Kirana</h3>
-            <p style="font-size: 0.9rem; color: var(--text-muted);">Lightning-fast checkout for daily essentials using 2" or 3" thermal printers.</p>
-        </div>
-        <div class="feature-card" style="padding: 1.5rem; text-align: center;">
-            <div style="font-size: 2.5rem; margin-bottom: 10px;">📱</div>
-            <h3>Mobile & Electronics</h3>
-            <p style="font-size: 0.9rem; color: var(--text-muted);">Generate GST-ready invoices for mobile shops and electronic showrooms.</p>
-        </div>
-        <div class="feature-card" style="padding: 1.5rem; text-align: center;">
-            <div style="font-size: 2.5rem; margin-bottom: 10px;">🔧</div>
-            <h3>Hardware & Electrical</h3>
-            <p style="font-size: 0.9rem; color: var(--text-muted);">Handle thousands of small items and varied tax rates with zero lag.</p>
-        </div>
-        <div class="feature-card" style="padding: 1.5rem; text-align: center;">
-            <div style="font-size: 2.5rem; margin-bottom: 10px;">👟</div>
-            <h3>Footwear Stores</h3>
-            <p style="font-size: 0.9rem; color: var(--text-muted);">Ideal for shoe stores and bag shops looking for professional billing.</p>
-        </div>
-        <div class="feature-card" style="padding: 1.5rem; text-align: center;">
-            <div style="font-size: 2.5rem; margin-bottom: 10px;">🎨</div>
-            <h3>Paints & Decor</h3>
-            <p style="font-size: 0.9rem; color: var(--text-muted);">Easily manage different units and quantities for home decor shops.</p>
-        </div>
-        <div class="feature-card" style="padding: 1.5rem; text-align: center;">
-            <div style="font-size: 2.5rem; margin-bottom: 10px;">🍰</div>
-            <h3>Bakeries & Sweets</h3>
-            <p style="font-size: 0.9rem; color: var(--text-muted);">Speedy thermal billing for sweet stalls, cafes, and bakeries during rush hours.</p>
-        </div>
-        <div class="feature-card" style="padding: 1.5rem; text-align: center;">
-            <div style="font-size: 2.5rem; margin-bottom: 10px;">📚</div>
-            <h3>Stationery & Books</h3>
-            <p style="font-size: 0.9rem; color: var(--text-muted);">Efficiently manage billing for school supplies, books, and gift item stores.</p>
-        </div>
-    </div>
-</section>
+    </section>
+
     <section id="pricing" class="pricing-section">
         <h2 class="section-title">Unbeatable Pricing</h2>
-        <div class="dist-input-container">
-            <p style="margin-bottom:10px; font-weight:600;">Have a Distributor Code?</p>
-            <div class="dist-input-box">
-                <input type="text" id="distCode" class="dist-input" placeholder="Enter Code (e.g. ZARQEEN10)">
-                <button onclick="applyCode()" class="nav-btn" style="cursor:pointer;">Apply</button>
+        <div style="max-width:400px; margin: 0 auto 2rem;">
+            <p style="font-weight:600;">Have a Distributor Code?</p>
+            <div style="display:flex; gap:10px; margin-top:10px;">
+                <input type="text" id="distCode" placeholder="Enter Code" style="flex:1; padding:10px; border-radius:6px; border:1px solid #CCC; text-transform:uppercase;">
+                <button onclick="applyCode()" class="nav-btn">Apply</button>
             </div>
-            <p id="codeMsg" style="font-size:0.9rem; margin-top:5px; min-height:20px;"></p>
+            <p id="codeMsg" style="font-size:0.9rem; margin-top:5px;"></p>
         </div>
         <div class="pricing-grid">
             <div class="plan-card">
-    <div class="plan-name">Trial</div>
-    <div class="price">Free</div>
-    <p class="plan-desc">7 Days unlimited access</p>
-    <a href="#" onclick="checkDownload(event)" style="margin-top:auto;" class="dynamic-dl-trial">
-        <button class="btn-buy secondary">Download Now</button>
-    </a>
-</div>
-            <div class="plan-card"><div class="plan-name">Basic</div><div class="price">₹299<span>/year</span></div><p class="plan-desc">Ideal for new customers</p><button class="btn-buy primary" onclick="buyPlan('basic')">Buy Basic License</button></div>
-            <div class="plan-card popular"><div class="badge">BEST VALUE</div><div class="plan-name">Premium</div><div class="price">₹599<span>/3 years</span></div><p class="plan-desc">For smart business owners</p><button class="btn-buy primary" onclick="buyPlan('premium')">Buy Premium License</button></div>
+                <h3>Trial</h3><div class="price">Free</div><p>7 Days Unlimited Access</p>
+                <a href="#" class="dynamic-dl" onclick="checkDownload(event)" style="margin-top:auto;"><button class="btn-buy secondary">Download Now</button></a>
+            </div>
+            <div class="plan-card">
+                <h3>Basic</h3><div class="price">₹299<span>/year</span></div><p>Ideal for new shops</p>
+                <button class="btn-buy primary" onclick="buyPlan('basic')">Buy Basic License</button>
+            </div>
+            <div class="plan-card popular">
+                <div style="background:var(--accent); color:brown; padding:4px; font-size:0.7rem; font-weight:800; border-radius:4px; margin-bottom:10px;">BEST VALUE</div>
+                <h3>Premium</h3><div class="price">₹599<span>/3 yrs</span></div><p>For smart owners</p>
+                <button class="btn-buy primary" onclick="buyPlan('premium')">Buy Premium License</button>
+            </div>
         </div>
     </section>
 
-    <footer>
+    <footer style="text-align:center; padding:3rem; border-top:1px solid #EEE; background:white;">
         <p>&copy; <span id="year"></span> Zarqeen Accounting Solutions.</p>
-        <div class="footer-admin"><a onclick="openLoginModal()" style="cursor:pointer;">Admin / Distributor Login</a></div>
+        <a onclick="openLoginModal()" style="cursor:pointer; color:var(--primary); font-size:0.9rem;">Admin / Partner Login</a>
     </footer>
 
     <!-- DISTRIBUTOR DASHBOARD -->
     <div id="dashboardSection">
-        <div style="max-width:1200px; margin:0 auto;">
-            <div class="dash-header">
-                <div><h2 id="dashName">Distributor</h2><p style="color:#6B7280;">Code: <strong id="dashCode"></strong></p></div>
-                <button onclick="doLogout()" class="btn-buy secondary" style="width:auto; margin:0; background:#EF4444; color:white;">Logout</button>
+        <div class="dash-header">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div><h2 id="dashName">Distributor</h2><p style="color:gray;">Code: <strong id="dashCode"></strong></p></div>
+                <button onclick="doLogout()" class="btn-buy secondary" style="width:auto; background:#EF4444; color:white; padding:10px 20px;">Logout</button>
             </div>
-            <div class="dash-grid">
-                <div class="dash-card"><div class="dash-val" id="dashTotal">0</div><div style="font-size:0.9rem" id="dashTargetMsg">Total Sales</div></div>
-                <div class="dash-card"><div class="dash-val">₹<span id="dashComm">0.00</span></div><div>Financials</div></div>
-                <div class="dash-card" style="position:relative; overflow:hidden;">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <div class="dash-val" style="font-size:1.5rem; color:#d97706;" id="lvlName">Bronze</div>
-                        <span style="font-size:0.8rem; background:#FEF3C7; color:#92400E; padding:2px 6px; border-radius:4px;" id="lvlDisc">10% Off</span>
-                    </div>
-                    <div style="margin-top:10px; font-size:0.85rem; color:#6B7280;"><span id="lvlMsg">0 / 5 to Silver</span></div>
-                    <div style="background:#E5E7EB; height:6px; width:100%; border-radius:10px; margin-top:5px;"><div id="lvlBar" style="background:#d97706; height:100%; width:0%; border-radius:10px; transition:width 0.5s;"></div></div>
-                    <div style="font-size:0.75rem; color:#9CA3AF; margin-top:5px;">Based on this month's performance</div>
+        </div>
+        
+        <div class="dash-grid">
+            <div class="dash-card">
+                <div class="dash-val" id="dashTotal">0</div>
+                <div>Total Sales</div>
+            </div>
+            <div class="dash-card">
+                <div id="dashComm">Financials</div>
+            </div>
+            <div class="dash-card">
+                <div style="display:flex; justify-content:space-between;">
+                    <div class="dash-val" id="lvlName" style="font-size:1.5rem;">Bronze</div>
+                    <span id="lvlDisc" style="background:#FEF3C7; padding:4px 8px; border-radius:4px; font-size:0.8rem;">10% Off</span>
                 </div>
-                <!-- Inside <div class="dash-grid"> -->
-<div class="dash-card" style="grid-column: span 1; background: #FFFBEB; border: 1px solid #FEF3C7;">
-    <h4 style="color: #92400E; margin-bottom: 10px; font-size: 0.9rem;">📢 Payment & Payout Rules</h4>
-    <ul style="font-size: 0.75rem; color: #92400E; padding-left: 15px; list-style: disc;">
-        <li>Minimum payout threshold is <strong>₹500</strong>.</li>
-        <li>Valid Bank/UPI details are mandatory for processing.</li>
-        <li>Commission is calculated on <strong>MRP (₹299/₹599)</strong>.</li>
-        <li>Levels are updated monthly based on previous month's sales.</li>
-        <li>Terms & Levels are subject to change per company policy.</li>
-    </ul>
-    <button onclick="document.getElementById('fullTermsModal').style.display='block'" 
-            style="margin-top: 10px; background: none; border: none; color: #D97706; text-decoration: underline; font-size: 0.75rem; cursor: pointer; padding: 0;">
-        Read Full Terms & Level Policy
-    </button>
-</div>
+                <div id="lvlMsg" style="font-size:0.8rem; margin:10px 0;">0/5 to Next Level</div>
+                <div style="background:#EEE; height:8px; border-radius:10px;"><div id="lvlBar" style="background:orange; height:100%; width:0%; border-radius:10px; transition:0.5s;"></div></div>
             </div>
-            <!-- UPDATED BANKING DETAILS SECTION -->
-<div class="dash-header" style="margin-top:-10px; flex-direction: column; align-items: stretch;">
-    <div style="display:flex; justify-content:space-between; align-items: center; width:100%; margin-bottom: 15px;">
-        <h3 style="margin:0;">My Banking Details</h3>
-        <button onclick="openBankModal()" class="nav-btn" style="padding:6px 14px; font-size:0.8rem; margin:0;">Edit Details</button>
-    </div>
-    
-    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; font-size:0.95rem; background: #f9fafb; padding: 15px; border-radius: 8px;">
-        <div>
-            <p style="color:var(--text-muted); font-size:0.8rem; margin-bottom:2px;">Bank & Holder</p>
-            <p style="margin-bottom:8px;"><strong id="d_bank"></strong></p>
-            <p><strong><span id="d_holder"></span></strong></p>
-        </div>
-        <div>
-            <p style="color:var(--text-muted); font-size:0.8rem; margin-bottom:2px;">Account & UPI</p>
-            <p style="margin-bottom:4px;">Acct: <strong id="d_acct"></strong></p>
-            <p style="margin-bottom:4px;">IFSC: <strong id="d_ifsc"></strong></p>
-            <p>UPI: <strong id="d_upi" style="color:var(--primary);"></strong></p>
-        </div>
-    </div>
-</div>
-            <h3 style="margin-bottom:15px; display:flex; justify-content:space-between;">Sales History <span id="pageInfo" style="font-size:0.9rem; color:gray"></span></h3>
-            <div style="overflow-x:auto;"><table class="dash-table"><thead>
-    <tr>
-        <th>Date</th>
-        <th>Plan</th>
-        <th>Amount</th>
-        <th>Status</th>
-        <th>Key</th>
-        <th>Action</th>
-    </tr>
-</thead><tbody id="dashTableBody"></tbody></table></div>
-            <div style="display:flex; justify-content:center; gap:10px; margin-top:20px;">
-                <button id="prevBtn" onclick="changePage(-1)" class="nav-btn" style="background:gray; display:none;">Previous</button>
-                <button id="nextBtn" onclick="changePage(1)" class="nav-btn" style="background:#2563EB; display:none;">Next</button>
+            
+            <div class="dash-card" style="background: #FFFBEB; border: 1px solid #FEF3C7;">
+                <h4 style="color: #92400E; margin-bottom: 8px;">📢 Payout Rules</h4>
+                <ul style="font-size: 0.75rem; color: #92400E; list-style: disc; padding-left: 15px;">
+                    <li>Minimum payout is <strong>₹500</strong>.</li>
+                    <li>Valid Bank/UPI details are mandatory.</li>
+                    <li>Commission on <strong>MRP (299/599)</strong>.</li>
+                </ul>
+                <button onclick="document.getElementById('fullTermsModal').style.display='block'" style="margin-top: 10px; background: none; border: none; color: #D97706; text-decoration: underline; font-size: 0.75rem; cursor: pointer;">Read Full Policy</button>
             </div>
+        </div>
+
+        <div class="dash-header" style="flex-direction: column; align-items: stretch;">
+            <div style="display:flex; justify-content:space-between; align-items: center; width:100%; margin-bottom: 15px;">
+                <h3 style="margin:0;">My Banking Details</h3>
+                <button onclick="openBankModal()" class="nav-btn" style="padding:6px 14px; font-size:0.8rem;">Edit Details</button>
+            </div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; font-size:0.9rem; background: #f9fafb; padding: 15px; border-radius: 8px;">
+                <div><p style="color:gray; font-size:0.75rem;">Bank & Holder</p><strong><span id="d_bank"></span></strong><br><strong id="d_holder"></strong></div>
+                <div><p style="color:gray; font-size:0.75rem;">Account & UPI</p>Acct: <strong id="d_acct"></strong><br>IFSC: <strong id="d_ifsc"></strong><br>UPI: <strong id="d_upi"></strong></div>
+            </div>
+        </div>
+
+        <h3>Sales History <span id="pageInfo" style="font-size:0.8rem; color:gray;"></span></h3>
+        <div style="overflow-x:auto; margin-top:1rem;">
+            <table class="dash-table">
+                <thead><tr><th>Date</th><th>Plan</th><th>Amount</th><th>Status</th><th>Key</th><th>Action</th></tr></thead>
+                <tbody id="dashTableBody"></tbody>
+            </table>
+        </div>
+        <div style="display:flex; justify-content:center; gap:10px; margin-top:20px;">
+            <button id="prevBtn" onclick="changePage(-1)" class="nav-btn" style="background:gray;">Previous</button>
+            <button id="nextBtn" onclick="changePage(1)" class="nav-btn">Next</button>
         </div>
     </div>
 
     <!-- MODALS -->
-    <div id="licenseModal" class="modal"><div class="modal-content" style="text-align:center;"><div style="font-size:3.5rem;">🎉</div><h2 style="color:#059669;">Payment Successful!</h2><p>Download your license below.</p><div id="licenseKeyArea" class="key-box"></div><button class="btn-buy secondary" onclick="closeLicenseModal()">Close</button></div></div>
-
-    <div id="bankModal" class="modal"><div class="modal-content"><span class="close-icon" onclick="document.getElementById('bankModal').style.display='none'">&times;</span><h2 style="text-align:center; margin-bottom:20px;">Update Banking Details</h2><form id="bankForm" class="login-form active" style="display:block;"><div class="form-group"><label>Bank Name</label><input type="text" name="bank_name" id="in_bank"></div><div class="form-group"><label>Account Holder Name</label><input type="text" name="account_holder" id="in_holder"></div><div class="form-group"><label>Account Number</label><input type="text" name="account_number" id="in_acct"></div><div class="form-group"><label>IFSC Code</label><input type="text" name="ifsc_code" id="in_ifsc"></div><div class="form-group"><label>UPI ID</label><input type="text" name="upi_id" id="in_upi"></div><button type="submit" class="btn-buy primary">Save Details</button></form></div></div>
-<!-- FULL TERMS MODAL -->
-<div id="fullTermsModal" class="modal">
-    <div class="modal-content" style="max-width: 600px;">
-        <span class="close-icon" onclick="document.getElementById('fullTermsModal').style.display='none'">&times;</span>
-        <h2 style="text-align:center; margin-bottom:20px;">Partner Terms & Conditions</h2>
-        <div style="font-size: 0.9rem; line-height: 1.6; color: #374151; max-height: 60vh; overflow-y: auto; padding-right: 10px;">
-            <p><strong>1. Payout Policy:</strong></p>
-            <ul>
-                <li>Commission is credited to your "Balance Due" immediately after a successful payment.</li>
-                <li>Payouts are triggered only when the balance exceeds <strong>₹500</strong>.</li>
-                <li>Ensure Bank/UPI details are updated; Zarqeen is not liable for transfers to incorrect accounts.</li>
-            </ul>
-            
-            <p style="margin-top:15px;"><strong>2. Level Progression:</strong></p>
-            <ul>
-                <li><strong>Bronze:</strong> 15% Comm. (Base Level)</li>
-                <li><strong>Silver:</strong> 25% Comm. (Requires 5 sales in previous month)</li>
-                <li><strong>Gold:</strong> 35% Comm. (Requires 20 sales in previous month)</li>
-            </ul>
-            
-            <p style="margin-top:15px;"><strong>3. Important Notes:</strong></p>
-            <ul>
-                <li>Commission is always calculated on the software <strong>MRP</strong> (Basic: ₹299 | Premium: ₹599).</li>
-                <li>Company reserves the right to modify commission rates, levels, or targets at any time to maintain service quality.</li>
-                <li>Self-purchasing through own distributor codes to exploit discounts is strictly prohibited.</li>
-            </ul>
-        </div>
-        <button class="btn-buy primary" style="margin-top:20px;" onclick="document.getElementById('fullTermsModal').style.display='none'">I Understand</button>
-    </div>
-</div>
-    <div id="registerModal" class="modal">
-        <div class="modal-content">
-            <span class="close-icon" onclick="document.getElementById('registerModal').style.display='none'">&times;</span>
-            <h2 style="text-align:center; margin-bottom:20px;">Join as Partner</h2>
-            <form id="regForm" onsubmit="return false;">
-                <div class="form-group"><label>Full Name</label><input type="text" name="name" required></div>
-                <div class="form-group"><label>Phone Number</label><input type="text" name="phone" required></div>
-                
-                <div class="form-group"><label>Email Address</label>
-                    <div style="display:flex; gap:10px;">
-                        <input type="email" name="email" id="regEmail" required style="flex:1; margin-bottom:0;">
-                        <button type="button" onclick="sendRegOtp()" class="nav-btn" style="font-size:0.8rem; height:45px; margin-top:5px;">Get OTP</button>
-                    </div>
-                </div>
-                
-                <div id="otpInputSection" style="display:none; background:#F3F4F6; padding:15px; border-radius:8px; margin-bottom:15px;">
-                    <label>Enter Verification Code</label>
-                    <div style="display:flex; gap:10px;">
-                        <input type="text" id="regOtp" placeholder="6-Digit OTP" style="flex:1; margin-bottom:0; letter-spacing:3px; text-align:center;">
-                        <button type="button" onclick="verifyRegOtp()" class="nav-btn" style="background:#059669; border-color:#059669; height:45px; margin-top:5px;">Verify</button>
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <label>Password</label>
-                    <input type="password" name="password" id="regPass" required disabled placeholder="Verify OTP first to enable">
-                </div>
-                
-                <button type="submit" id="finalRegBtn" class="btn-buy primary btn-disabled" disabled>Complete Registration</button>
-            </form>
-        </div>
-    </div>
-
     <div id="loginModal" class="modal">
         <div class="modal-content">
             <span class="close-icon" onclick="closeLoginModal()">&times;</span>
             <h2 style="text-align:center; margin-bottom:20px;">Portal Login</h2>
-            <div class="login-tabs"><button class="tab-btn active" onclick="switchTab('distributor')">Distributor</button><button class="tab-btn" onclick="switchTab('admin')">Admin</button></div>
-            <form id="distForm" class="login-form active"><div class="form-group"><label>Email</label><input type="email" name="email" required></div><div class="form-group"><label>Password</label><input type="password" name="password" required></div><div style="text-align:right;"><a onclick="showForgot()" style="color:blue; cursor:pointer; font-size:0.8rem;">Forgot Password?</a></div><button type="submit" class="btn-buy primary">Login</button></form>
-            <div id="forgotFlow" style="display:none;"><div id="step1"><h3>Reset Password</h3><div class="form-group"><label>Enter Email</label><input type="email" id="resetEmail"></div><button onclick="sendOtp()" class="btn-buy primary">Send OTP</button></div><div id="step2" style="display:none;"><h3>Verify OTP</h3><div class="form-group"><label>Enter 6-digit Code</label><input type="text" id="otpCode"></div><div class="form-group"><label>New Password</label><input type="password" id="newPass"></div><button onclick="resetWithOtp()" class="btn-buy primary">Change Password</button></div><p style="text-align:center; margin-top:10px;"><a onclick="hideForgot()" style="cursor:pointer; color:gray;">Back</a></p></div>
-            
+            <div class="login-tabs">
+                <button class="tab-btn active" onclick="switchTab('distributor')">Distributor</button>
+                <button class="tab-btn" onclick="switchTab('admin')">Admin</button>
+            </div>
+            <form id="distForm" class="login-form" style="display:block;">
+                <div class="form-group"><label>Email</label><input type="email" name="email" required></div>
+                <div class="form-group"><label>Password</label><input type="password" name="password" required></div>
+                <button type="submit" class="btn-buy primary">Login</button>
+            </form>
             <form id="adminForm" class="login-form">
-    <div class="form-group">
-        <label>Admin Username</label>
-        <input type="text" name="username" required placeholder="Admin Username">
-    </div>
-    <div class="form-group">
-        <label>Password</label>
-        <input type="password" name="password" required placeholder="Password">
-    </div>
-    <button type="submit" class="btn-buy primary" style="background:#111827;">Login Admin</button>
-</form>
+                <div class="form-group"><label>Admin Username</label><input type="text" name="username" required></div>
+                <div class="form-group"><label>Password</label><input type="password" name="password" required></div>
+                <button type="submit" class="btn-buy primary" style="background:#111827;">Login Admin</button>
+            </form>
         </div>
     </div>
 
+    <div id="fullTermsModal" class="modal">
+        <div class="modal-content" style="max-width: 550px;">
+            <span class="close-icon" onclick="document.getElementById('fullTermsModal').style.display='none'">&times;</span>
+            <h2 style="text-align:center;">Partner & Payout Policy</h2>
+            <div style="font-size: 0.85rem; line-height: 1.6; margin-top:15px; max-height: 60vh; overflow-y: auto;">
+                <p><strong>1. Payouts:</strong> Minimum threshold is <strong>₹500</strong>. Balance is updated immediately after sale.</p>
+                <p><strong>2. Commission:</strong> Calculated on MRP (₹299/₹599). Your current level determines your rate (15% - 35%).</p>
+                <p><strong>3. Levels:</strong> Updated on the 1st of every month based on previous month's performance.</p>
+                <p><strong>4. Verification:</strong> Valid Bank Details are mandatory for payouts. Company is not liable for incorrect details.</p>
+            </div>
+            <button class="btn-buy primary" style="margin-top:20px;" onclick="document.getElementById('fullTermsModal').style.display='none'">I Understand</button>
+        </div>
+    </div>
+
+    <div id="registerModal" class="modal">
+        <div class="modal-content">
+            <span class="close-icon" onclick="document.getElementById('registerModal').style.display='none'">&times;</span>
+            <h2>Join as Partner</h2>
+            <form id="regForm" onsubmit="return false;" style="margin-top:15px;">
+                <div class="form-group"><label>Name</label><input type="text" name="name" required></div>
+                <div class="form-group"><label>Phone</label><input type="text" name="phone" required></div>
+                <div class="form-group"><label>Email</label><input type="email" id="regEmail" required></div>
+                <button type="button" onclick="sendRegOtp()" class="btn-buy secondary" style="margin-bottom:10px;">Send Verification OTP</button>
+                <div id="otpInputSection" style="display:none; background:#F9FAFB; padding:10px; border-radius:8px;">
+                    <input type="text" id="regOtp" placeholder="Enter OTP" style="width:100%; padding:10px; margin-bottom:10px;">
+                    <button type="button" onclick="verifyRegOtp()" class="btn-buy primary">Verify Email</button>
+                </div>
+                <div id="regPassSection" style="display:none; margin-top:10px;">
+                    <div class="form-group"><label>Set Password</label><input type="password" id="regPass"></div>
+                    <button type="button" id="finalRegBtn" class="btn-buy primary">Complete Registration</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="bankModal" class="modal">
+        <div class="modal-content">
+            <span class="close-icon" onclick="document.getElementById('bankModal').style.display='none'">&times;</span>
+            <h2 style="text-align:center;">Update Bank Details</h2>
+            <form id="bankForm" style="margin-top:15px;">
+                <div class="form-group"><label>Bank Name</label><input type="text" name="bank_name" id="in_bank"></div>
+                <div class="form-group"><label>Holder Name</label><input type="text" name="account_holder" id="in_holder"></div>
+                <div class="form-group"><label>Account Number</label><input type="text" name="account_number" id="in_acct"></div>
+                <div class="form-group"><label>IFSC Code</label><input type="text" name="ifsc_code" id="in_ifsc"></div>
+                <div class="form-group"><label>UPI ID</label><input type="text" name="upi_id" id="in_upi"></div>
+                <button type="submit" class="btn-buy primary">Save Details</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="licenseModal" class="modal"><div class="modal-content" style="text-align:center;"><h2>🎉 Payment Success!</h2><p>Download your license below.</p><div id="licenseKeyArea" style="background:#F3F4F6; padding:1rem; border:2px dashed #CCC; margin:1rem 0; font-family:monospace;"></div><button class="btn-buy secondary" onclick="location.reload()">Close</button></div></div>
+
     <script>
-        document.getElementById('year').textContent = new Date().getFullYear();
-        let RAZORPAY_KEY_ID = null;
         const BACKEND_URL = "https://zarqeen-backend.onrender.com";
+        document.getElementById('year').textContent = new Date().getFullYear();
 
-        function toggleMobileMenu() { const nav = document.getElementById('mobileNav'); nav.classList.toggle('active'); }
-        function checkDownload(event) {
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    
-    // Path to the file hosted on your Render server
-    const localDownloadUrl = "{{ download_link }}"; 
-
-    if (isMobile) {
-        event.preventDefault();
-        Swal.fire({
-            title: 'Windows PC Required',
-            text: 'Zarqeen Alif is a desktop application. Please download this on your Windows computer.',
-            icon: 'info',
-            confirmButtonColor: '#1E40AF'
-        });
-    } else {
-        // On PC: Show success message
-        const Toast = Swal.mixin({
-            toast: true,
-            position: 'top-end',
-            showConfirmButton: false,
-            timer: 3000
-        });
-        Toast.fire({
-            icon: 'success',
-            title: 'Download started directly from Zarqeen'
-        });
-        
-        // No event.preventDefault() here means the link works immediately
-    }
-}
-        function showLoader(txt) { const loader = document.getElementById('actionLoader'); document.getElementById('loaderText').innerText = txt || "Loading..."; loader.style.display = 'flex'; setTimeout(() => { document.getElementById('loaderSubText').innerText = "Waking up server... please wait."; }, 3000); }
-        function hideLoader() { document.getElementById('actionLoader').style.display = 'none'; }
-        
-        async function fetchConfig() { try { const res = await fetch(`${BACKEND_URL}/api/get-config`); const data = await res.json(); RAZORPAY_KEY_ID = data.key_id; } catch(e) { console.error(e); } }
-        fetchConfig();
-
-    async function syncDownloadLink() {
-    try {
-        const res = await fetch(`${BACKEND_URL}/api/download-link`);
-        const data = await res.json();
-
-        if (!data.download_url) return;
-
-        document.querySelectorAll('.download-link').forEach(a => {
-            a.href = data.download_url;
-        });
-
-    } catch (e) {
-        console.error("Download link sync failed", e);
-    }
-}
-
-window.addEventListener('load', syncDownloadLink);
-
-
-        
-        function closeLicenseModal() { document.getElementById('licenseModal').style.display = 'none'; location.reload(); }
-        function openLoginModal() {
-    document.getElementById('mobileNav')?.classList.remove('active');
-    document.getElementById('loginModal').style.display = 'block';
-}
-
-function openRegisterModal() {
-    document.getElementById('mobileNav')?.classList.remove('active');
-    document.getElementById('registerModal').style.display = 'block';
-}
-
+        function toggleMobileMenu() { document.getElementById('mobileNav').classList.toggle('active'); }
+        function openLoginModal() { document.getElementById('loginModal').style.display = 'block'; }
         function closeLoginModal() { document.getElementById('loginModal').style.display = 'none'; }
+        function openRegisterModal() { document.getElementById('registerModal').style.display = 'block'; }
         function openBankModal() { document.getElementById('bankModal').style.display = 'block'; }
-        
-      function switchTab(type) {
-    // Reset forgot password flow
-    document.getElementById('forgotFlow').style.display = 'none'; 
-    
-    // Select buttons and forms
-    const tabs = document.querySelectorAll('.tab-btn');
-    const distForm = document.getElementById('distForm');
-    const adminForm = document.getElementById('adminForm');
+        function showLoader(t) { document.getElementById('actionLoader').style.display = 'flex'; document.getElementById('loaderText').innerText = t || "Loading..."; }
+        function hideLoader() { document.getElementById('actionLoader').style.display = 'none'; }
 
-    if(type === 'distributor') {
-        distForm.style.display = 'block';
-        adminForm.style.display = 'none';
-        // Add active class to first button, remove from second
-        tabs[0].classList.add('active');
-        tabs[1].classList.remove('active');
-    } else {
-        distForm.style.display = 'none';
-        adminForm.style.display = 'block';
-        // Add active class to second button, remove from first
-        tabs[1].classList.add('active');
-        tabs[0].classList.remove('active');
-    }
-}
-
-        function showForgot() { document.getElementById('distForm').style.display = 'none'; document.getElementById('forgotFlow').style.display = 'block'; document.getElementById('step1').style.display = 'block'; document.getElementById('step2').style.display = 'none'; }
-        function hideForgot() { document.getElementById('forgotFlow').style.display = 'none'; document.getElementById('distForm').style.display = 'block'; }
-
-        async function sendOtp() {
-            const email = document.getElementById('resetEmail').value; if(!email) return alert("Enter email"); showLoader("Sending OTP...");
-            try { const res = await fetch(`${BACKEND_URL}/api/send-otp`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({email}) }); const d = await res.json(); hideLoader(); if(d.success) { alert(d.message); document.getElementById('step1').style.display='none'; document.getElementById('step2').style.display='block'; } else alert(d.message); } catch(e) { hideLoader(); alert("Error sending OTP"); }
-        }
-        async function resetWithOtp() {
-            const email = document.getElementById('resetEmail').value; const otp = document.getElementById('otpCode').value; const pw = document.getElementById('newPass').value;
-            if(!otp || !pw) return alert("Fill all fields"); showLoader("Resetting...");
-            try { const res = await fetch(`${BACKEND_URL}/api/reset-with-otp`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({email, otp, new_password:pw}) }); const d = await res.json(); hideLoader(); if(d.success) { alert(d.message); hideForgot(); } else alert(d.message); } catch(e) { hideLoader(); alert("Error resetting"); }
-        }
-
-        let regDataTemp = {}; 
-        async function sendRegOtp() {
-            const form = document.getElementById('regForm'); 
-            const name = form.querySelector('[name="name"]').value;
-            const phone = form.querySelector('[name="phone"]').value;
-            const email = form.querySelector('[name="email"]').value;
-            
-            const dummyPass = "TEMP_" + Date.now();
-            const data = { name, phone, email, password: dummyPass };
-            regDataTemp = data; 
-            
-            if(!name || !email) return alert("Please fill Name and Email first.");
-            showLoader("Sending Code...");
-            
-            try { 
-                const res = await fetch(`${BACKEND_URL}/api/distributor/register`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) }); 
-                const r = await res.json(); 
-                hideLoader(); 
-                if(r.success) { 
-                    alert(r.message); 
-                    document.getElementById('otpInputSection').style.display = 'block'; 
-                } else { 
-                    alert(r.message); 
-                } 
-            } catch(e) { 
-                hideLoader(); alert("Error contacting server"); 
-            }
-        }
-
-      async function updateDownloadLinks() {
-        try {
-            const response = await fetch('https://zarqeen-backend.onrender.com/api/download-link');
-            const data = await response.json();
-            if (data.download_url) {
-                // Find all links that point to the software download and update them
-                const links = document.querySelectorAll('a[href*="Zarqeen_Alif_v110.exe"], a[onclick*="checkDownload"]');
-                links.forEach(link => link.href = data.download_url);
-            }
-        } catch (error) {
-            console.error('Error fetching download link:', error);
-        }
-    }
-    window.addEventListener('load', updateDownloadLinks);
-
-
-
-        
-        async function verifyRegOtp() {
-            const otp = document.getElementById('regOtp').value; 
-            if(!otp) return alert("Enter Code");
-            showLoader("Verifying...");
-            
-            try { 
-                const res = await fetch(`${BACKEND_URL}/api/distributor/verify-registration`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ email: regDataTemp.email, otp: otp }) }); 
-                const r = await res.json(); 
-                hideLoader();
-                
-                if(r.success) { 
-                    alert("Email Verified! Please set your password now.");
-                    
-                    const passInput = document.getElementById('regPass');
-                    passInput.disabled = false;
-                    passInput.placeholder = "Enter your desired password";
-                    passInput.focus();
-                    
-                    const finalBtn = document.getElementById('finalRegBtn');
-                    finalBtn.disabled = false;
-                    finalBtn.classList.remove('btn-disabled');
-                    
-                    regDataTemp.otp = otp;
-                    regDataTemp.code = r.code;
-                    document.getElementById('otpInputSection').style.display = 'none';
-                    
-                } else { 
-                     alert(r.message); 
-                } 
-            } catch(e) { 
-                hideLoader(); alert("Verification Failed"); 
-            }
-        }
-        
-        document.getElementById('finalRegBtn').addEventListener('click', async function(e) { 
-            e.preventDefault(); 
-            const realPassword = document.getElementById('regPass').value;
-            if(!realPassword) return alert("Please enter a password.");
-
-            showLoader("Setting Password...");
-
+        async function syncDownloadLink() {
             try {
-                const resetRes = await fetch(`${BACKEND_URL}/api/reset-with-otp`, { 
-                    method: 'POST', 
-                    headers: {'Content-Type': 'application/json'}, 
-                    body: JSON.stringify({ email: regDataTemp.email, otp: regDataTemp.otp, new_password: realPassword }) 
-                });
-                const resetJson = await resetRes.json();
-
-                if(resetJson.success) {
-                    const loginRes = await fetch(`${BACKEND_URL}/api/distributor/login`, { 
-                        method: 'POST', 
-                        headers: {'Content-Type': 'application/json'}, 
-                        body: JSON.stringify({ email: regDataTemp.email, password: realPassword }) 
-                    });
-                    const loginJson = await loginRes.json();
-                    hideLoader();
-                    
-                    if(loginJson.success) {
-                         localStorage.setItem('dist_token', loginJson.token); 
-                         document.getElementById('registerModal').style.display = 'none'; 
-                         alert(`Registration Complete! Your Distributor Code is: ${regDataTemp.code}`); 
-                         loadDashboard(1);
-                    } else {
-                        alert("Registration complete. Please login manually.");
-                        document.getElementById('registerModal').style.display = 'none'; 
-                        openLoginModal();
-                    }
-                } else {
-                    hideLoader();
-                    alert("Error setting password. Please use Forgot Password.");
+                const res = await fetch(`${BACKEND_URL}/api/download-link`);
+                const data = await res.json();
+                if (data.download_url) {
+                    document.querySelectorAll('a.dynamic-dl').forEach(el => el.href = data.download_url);
                 }
-            } catch(e) {
-                hideLoader();
-                alert("Connection Error");
+            } catch (e) { console.log("Link sync error"); }
+        }
+        window.addEventListener('load', syncDownloadLink);
+
+        function checkDownload(event) {
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            if (isMobile) {
+                event.preventDefault();
+                Swal.fire({ title: 'Windows PC Required', text: 'Zarqeen Alif is a desktop application. Please download on your Windows computer.', icon: 'info' });
             }
-        });
+        }
 
-        document.getElementById('bankForm').addEventListener('submit', async function(e) {
-            e.preventDefault(); showLoader("Updating..."); const token = localStorage.getItem('dist_token'); const data = Object.fromEntries(new FormData(this));
-            try { const res = await fetch(`${BACKEND_URL}/api/distributor/update-bank`, { method: 'POST', headers: {'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`}, body: JSON.stringify(data) }); const r = await res.json(); hideLoader(); if(r.success) { alert("Updated!"); document.getElementById('bankModal').style.display='none'; loadDashboard(1); } } catch(e) { hideLoader(); alert("Update Failed"); }
-        });
+        function switchTab(type) {
+            const tabs = document.querySelectorAll('.tab-btn');
+            const distForm = document.getElementById('distForm');
+            const adminForm = document.getElementById('adminForm');
+            if (type === 'distributor') {
+                distForm.style.display = 'block'; adminForm.style.display = 'none';
+                tabs[0].classList.add('active'); tabs[1].classList.remove('active');
+            } else {
+                distForm.style.display = 'none'; adminForm.style.display = 'block';
+                tabs[1].classList.add('active'); tabs[0].classList.remove('active');
+            }
+        }
 
-        let ACTIVE_DISTRIBUTOR_CODE_BUY = null;
+        let ACTIVE_DISTRIBUTOR_CODE = null;
         async function applyCode() {
-            const code = document.getElementById('distCode').value.trim(); if(!code) return; showLoader("Checking Code...");
-            try { const res = await fetch(`${BACKEND_URL}/api/check_distributor`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ code }) }); const data = await res.json(); hideLoader();
-            if (data.valid) { ACTIVE_DISTRIBUTOR_CODE_BUY = code; document.getElementById('codeMsg').innerText = `✅ ${data.name} applied (${data.discount}% OFF)`; document.getElementById('codeMsg').style.color='green'; } else { ACTIVE_DISTRIBUTOR_CODE_BUY = null; document.getElementById('codeMsg').innerText="❌ Invalid Code"; document.getElementById('codeMsg').style.color='red'; } } catch(e) { hideLoader(); }
+            const code = document.getElementById('distCode').value.trim(); if(!code) return;
+            showLoader("Checking...");
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/check_distributor`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ code }) });
+                const data = await res.json(); hideLoader();
+                if (data.valid) {
+                    ACTIVE_DISTRIBUTOR_CODE = code;
+                    document.getElementById('codeMsg').innerText = `✅ ${data.name} applied (${data.discount}% OFF)`;
+                    document.getElementById('codeMsg').style.color = 'green';
+                } else {
+                    document.getElementById('codeMsg').innerText = "❌ Invalid Code";
+                    document.getElementById('codeMsg').style.color = 'red';
+                }
+            } catch (e) { hideLoader(); }
         }
 
         async function buyPlan(planType) {
-            showLoader("Starting Payment..."); 
-            if (!RAZORPAY_KEY_ID) await fetchConfig();
-            
+            showLoader("Starting Payment...");
             try {
-                const res = await fetch(`${BACKEND_URL}/create_order`, { 
-                    method: 'POST', 
-                    headers: {'Content-Type': 'application/json'}, 
-                    body: JSON.stringify({ plan: planType, distributor_code: ACTIVE_DISTRIBUTOR_CODE_BUY }) 
-                });
-                const orderData = await res.json(); 
-                hideLoader();
+                const configRes = await fetch(`${BACKEND_URL}/api/get-config`);
+                const config = await configRes.json();
+                const res = await fetch(`${BACKEND_URL}/create_order`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ plan: planType, distributor_code: ACTIVE_DISTRIBUTOR_CODE }) });
+                const orderData = await res.json(); hideLoader();
                 
-                if (orderData.error) {
-                    alert("Order Creation Failed: " + orderData.error);
-                    return;
-                }
-
-                const options = { 
-                    "key": RAZORPAY_KEY_ID, 
-                    "amount": orderData.amount, 
-                    "currency": "INR", 
-                    "name": "Zarqeen Alif", 
-                    "description": `License Key for ${planType} Plan`,
-                    "order_id": orderData.id, 
-                    "handler": async function (response){ 
-                        showLoader("Verifying..."); 
-                        try { 
-                            const verifyRes = await fetch(`${BACKEND_URL}/verify_payment`, { 
-                                method: 'POST', 
-                                headers: {'Content-Type': 'application/json'}, 
-                                body: JSON.stringify({ 
-                                    razorpay_payment_id: response.razorpay_payment_id, 
-                                    razorpay_order_id: response.razorpay_order_id, 
-                                    razorpay_signature: response.razorpay_signature, 
-                                    plan_type: planType 
-                                }) 
-                            }); 
-                            const result = await verifyRes.json(); 
-                            hideLoader(); 
-                            
-                            if(result.success) { 
-                                const blob = new Blob([result.license_key], { type: "text/plain" }); 
-                                const url = window.URL.createObjectURL(blob); 
-                                document.getElementById('licenseKeyArea').innerHTML = `<a href="${url}" download="license.zarqeen" class="btn-buy primary" style="text-decoration:none;">⬇ Download License File</a>`; 
-                                document.getElementById('licenseModal').style.display='block'; 
-                            } else {
-                                alert('Verification failed: ' + result.message); 
-                            } 
-                        } catch (e) { 
-                            hideLoader(); 
-                            alert("Critical Error: " + e.message); 
-                        } 
-                    }, 
-                    "modal": { "ondismiss": function(){ hideLoader(); } } 
+                const options = {
+                    "key": config.key_id, "amount": orderData.amount, "currency": "INR", "name": "Zarqeen Alif", "order_id": orderData.id,
+                    "handler": async function (response){
+                        showLoader("Verifying...");
+                        const verifyRes = await fetch(`${BACKEND_URL}/verify_payment`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({...response, plan_type: planType}) });
+                        const result = await verifyRes.json(); hideLoader();
+                        if(result.success) {
+                            const blob = new Blob([result.license_key], { type: "text/plain" });
+                            const url = window.URL.createObjectURL(blob);
+                            document.getElementById('licenseKeyArea').innerHTML = `<a href="${url}" download="license.zarqeen" class="nav-btn">⬇ Download License File</a>`;
+                            document.getElementById('licenseModal').style.display='block';
+                        }
+                    }
                 };
-                
-                const rzp = new Razorpay(options);
-                rzp.on('payment.failed', function (response){
-                    hideLoader();
-                    alert("Payment Failed: " + response.error.description);
-                });
-                rzp.open();
-
-            } catch(e) { 
-                hideLoader(); 
-                alert("Connection Error: " + e.message); 
-            }
+                new Razorpay(options).open();
+            } catch(e) { hideLoader(); alert("Error connecting to payment gateway"); }
         }
 
-        document.getElementById('distForm').addEventListener('submit', async function(e) {
-            e.preventDefault(); showLoader("Logging in..."); const data = Object.fromEntries(new FormData(this));
-            try { const res = await fetch(`${BACKEND_URL}/api/distributor/login`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) }); const r = await res.json(); hideLoader(); if(r.success) { localStorage.setItem('dist_token', r.token); closeLoginModal(); loadDashboard(1); } else alert(r.message || "Failed"); } catch(e) { hideLoader(); alert("Error connecting"); }
-        });
+        document.getElementById('distForm').onsubmit = async (e) => {
+            e.preventDefault(); showLoader("Logging in...");
+            const data = Object.fromEntries(new FormData(e.target));
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/distributor/login`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) });
+                const r = await res.json(); hideLoader();
+                if(r.success) { localStorage.setItem('dist_token', r.token); closeLoginModal(); loadDashboard(1); } else alert(r.message);
+            } catch(e) { hideLoader(); }
+        };
 
-        document.getElementById('adminForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    showLoader("Verifying Admin...");
-    const data = Object.fromEntries(new FormData(this));
-    try {
-        const res = await fetch(`${BACKEND_URL}/admin/login`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(data),
-            credentials: 'include' // Important for sessions
-        });
-        const result = await res.json();
-        hideLoader();
-        if(result.success) {
-            // Redirect immediately to the dashboard
-            window.location.href = result.redirect; 
-        } else {
-            alert(result.message);
-        }
-    } catch(e) {
-        hideLoader();
-        alert("Connection Error");
-    }
-});
-       else {
-            alert(result.message || "Invalid Credentials");
-        }
-    } catch(e) {
-        hideLoader();
-        alert("Connection Error");
-    }
-});
+        document.getElementById('adminForm').onsubmit = async (e) => {
+            e.preventDefault(); showLoader("Verifying Admin...");
+            const data = Object.fromEntries(new FormData(e.target));
+            try {
+                const res = await fetch(`${BACKEND_URL}/admin/login`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data), credentials: 'include' });
+                const r = await res.json(); hideLoader();
+                if(r.success) { setTimeout(() => { window.location.href = r.redirect; }, 500); } else alert(r.message);
+            } catch(e) { hideLoader(); }
+        };
 
         let CURRENT_PAGE = 1;
         async function loadDashboard(page) {
-    CURRENT_PAGE = page; 
-    const targetSec = document.getElementById('target-businesses');
-if (targetSec) targetSec.style.display = 'none';
-    const token = localStorage.getItem('dist_token'); 
-    if(!token) return; 
-    
-    showLoader("Loading Dashboard...");
-    
-    try {
-        const res = await fetch(`${BACKEND_URL}/api/distributor/data?page=${page}`, { 
-            method: 'GET', 
-            headers: {'Authorization': `Bearer ${token}`} 
-        });
-        
-        if(res.status === 401) { doLogout(); return; }
-        const data = await res.json();
-        
-        // Update Name and Code
-        document.getElementById('dashName').innerText = data.name; 
-        document.getElementById('dashCode').innerText = data.code;
-        
-        // Level Progress Logic
-        const p = data.progress; 
-        if(p) { 
-            document.getElementById('lvlName').innerText = p.current_level; 
-            document.getElementById('lvlDisc').innerText = `${data.discount}% OFF`; 
-            if (p.is_max) { 
-                document.getElementById('lvlMsg').innerText = "Max Level Reached! 🏆"; 
-                document.getElementById('lvlBar').style.width = "100%"; 
-                document.getElementById('lvlBar').style.background = "#10B981"; 
-            } else { 
-                const percent = Math.min((p.month_sales / p.target) * 100, 100); 
-                document.getElementById('lvlMsg').innerText = `${p.month_sales} / ${p.target} Sales to ${p.next_level}`; 
-                document.getElementById('lvlBar').style.width = `${percent}%`; 
-            } 
+            CURRENT_PAGE = page; const token = localStorage.getItem('dist_token'); if(!token) return;
+            showLoader("Loading Portal...");
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/distributor/data?page=${page}`, { headers: {'Authorization': `Bearer ${token}`} });
+                const data = await res.json(); hideLoader();
+                if(res.status === 401) return doLogout();
+
+                document.getElementById('dashName').innerText = data.name; document.getElementById('dashCode').innerText = data.code;
+                const p = data.progress;
+                if(p) {
+                    document.getElementById('lvlName').innerText = p.current_level;
+                    document.getElementById('lvlDisc').innerText = `${data.discount}% OFF`;
+                    document.getElementById('lvlMsg').innerText = p.is_max ? "Max Level 🏆" : `${p.month_sales}/${p.target} Sales to ${p.next_level}`;
+                    document.getElementById('lvlBar').style.width = p.is_max ? "100%" : `${(p.month_sales/p.target)*100}%`;
+                }
+
+                let bonusHtml = data.bonus_percent > 0 ? `<div style="margin-top:10px; padding:8px; background:#ECFDF5; color:#065F46; border-radius:6px; font-size:0.75rem;">✨ <strong>${data.bonus_name}:</strong> +${data.bonus_percent}% Bonus Active!</div>` : "";
+                document.getElementById('dashTotal').innerText = data.total_sales;
+                document.getElementById('dashComm').innerHTML = `<span style="color:#2563EB">Earned: ₹${data.commission_earned.toFixed(2)}</span><br><span style="color:gray; font-size:0.8rem;">Received: ₹${data.commission_paid.toFixed(2)}</span><br><strong style="color:red">Balance: ₹${data.balance_due.toFixed(2)}</strong>${bonusHtml}`;
+
+                const b = data.bank_info; document.getElementById('d_bank').innerText = b.bank_name||'-'; document.getElementById('d_holder').innerText = b.account_holder||'-'; document.getElementById('d_acct').innerText = b.account_number||'-'; document.getElementById('d_ifsc').innerText = b.ifsc||'-'; document.getElementById('d_upi').innerText = b.upi||'-';
+                
+                const tbody = document.getElementById('dashTableBody'); tbody.innerHTML = "";
+                data.sales_history.forEach(s => { tbody.innerHTML += `<tr><td>${s.date}</td><td>${s.plan}</td><td>₹${s.amount}</td><td>${s.status}</td><td style="font-family:monospace">${s.key}</td><td><a href="${data.backend_url}download/license/${s.key}" class="nav-btn" style="padding:4px 8px;">⬇</a></td></tr>`; });
+                
+                document.getElementById('pageInfo').innerText = `Page ${page} of ${data.pagination.total_pages}`;
+                document.getElementById('prevBtn').style.display = data.pagination.has_prev ? 'block' : 'none';
+                document.getElementById('nextBtn').style.display = data.pagination.has_next ? 'block' : 'none';
+
+                ['header', '.hero', '#features', '#target-businesses', '#pricing', 'footer'].forEach(s => { const el = document.querySelector(s); if(el) el.style.display = 'none'; });
+                document.getElementById('dashboardSection').style.display = 'block';
+                window.scrollTo(0,0);
+            } catch(e) { hideLoader(); }
         }
 
-        // Bonus and Financials Logic
-        let bonusHtml = "";
-        if (data.bonus_percent > 0) {
-            bonusHtml = `
-                <div style="margin-top:10px; padding:8px; background:#ECFDF5; border-radius:6px; font-size:0.75rem; color:#065F46; border:1px solid #A7F3D0;">
-                    ✨ <strong>${data.bonus_name || 'Special Bonus'}:</strong> +${data.bonus_percent}% Extra Commission Active!
-                </div>`;
-        }
-
-        document.getElementById('dashTotal').innerText = data.total_sales; 
-       // Inside loadDashboard, update the dashComm.innerHTML logic:
-document.getElementById('dashComm').innerHTML = `
-    <span style="color:#2563EB">Earned: ₹${Number(data.commission_earned).toFixed(2)}</span><br>
-    <span style="color:#059669;font-size:0.8em">Received: ₹${Number(data.commission_paid).toFixed(2)}</span><br>
-    <span style="color:#DC2626;font-size:0.9em;font-weight:800">Balance: ₹${Number(data.balance_due).toFixed(2)}</span>
-    ${bonusHtml}
-    <div style="margin-top: 8px; font-size: 0.7rem; color: #6B7280; font-style: italic;">
-        * Payout requires min. ₹500 balance.
-    </div>
-`;
-
-        // Bank Info Update
-        const b = data.bank_info; 
-        document.getElementById('in_bank').value = b.bank_name||''; 
-        document.getElementById('in_holder').value = b.account_holder||''; 
-        document.getElementById('in_acct').value = b.account_number||''; 
-        document.getElementById('in_ifsc').value = b.ifsc||''; 
-        document.getElementById('in_upi').value = b.upi||'';
-        document.getElementById('d_bank').innerText = b.bank_name||'-'; 
-        document.getElementById('d_holder').innerText = b.account_holder||'-'; 
-        document.getElementById('d_acct').innerText = b.account_number||'-'; 
-        document.getElementById('d_ifsc').innerText = b.ifsc||'-'; 
-        document.getElementById('d_upi').innerText = b.upi||'-';
-
-        // Reduced Table History (Date, Plan, Amount, Status, Key, Action)
-        const tbody = document.getElementById('dashTableBody'); 
-        tbody.innerHTML = "";
-        data.sales_history.forEach(row => { 
-            tbody.innerHTML += `<tr>
-                <td>${row.date}</td>
-                <td>${row.plan}</td>
-                <td>₹${row.amount}</td>
-                <td>${row.status}</td>
-                <td style="font-family:monospace">${row.key}</td>
-                <td><a href="${data.backend_url}download/license/${row.key}" class="nav-btn" style="padding:4px 8px;font-size:0.8rem;">⬇</a></td>
-            </tr>`; 
-        });
-
-        // Pagination
-        const prev = document.getElementById('prevBtn'); 
-        const next = document.getElementById('nextBtn'); 
-        document.getElementById('pageInfo').innerText = `Page ${page} of ${data.pagination.total_pages}`; 
-        prev.style.display = data.pagination.has_prev ? 'inline-block' : 'none'; 
-        next.style.display = data.pagination.has_next ? 'inline-block' : 'none';
-
-        // UI Toggles
-        document.querySelector('header').style.display='none'; 
-        document.querySelector('.hero').style.display='none'; 
-        document.getElementById('features').style.display='none'; 
-        document.getElementById('target-businesses').style.display='none'; 
-        document.getElementById('pricing').style.display='none'; 
-        document.querySelector('footer').style.display='none'; 
-        document.getElementById('dashboardSection').style.display='block'; 
-        
-        hideLoader(); 
-        window.scrollTo(0,0);
-    } catch(e) { 
-        console.error(e);
-        hideLoader(); 
-    }
-}
-        function changePage(dir) { loadDashboard(CURRENT_PAGE + dir); }
+        function changePage(d) { loadDashboard(CURRENT_PAGE + d); }
         function doLogout() { localStorage.removeItem('dist_token'); location.reload(); }
-        window.addEventListener('load', function() { if(localStorage.getItem('dist_token')) loadDashboard(1); });
-        
+        window.addEventListener('DOMContentLoaded', () => { if(localStorage.getItem('dist_token')) loadDashboard(1); });
 
+        // Registration Logic
+        let regData = {};
+        async function sendRegOtp() {
+            const name = document.querySelector('[name="name"]').value;
+            const email = document.getElementById('regEmail').value;
+            if(!name || !email) return alert("Fill Name and Email");
+            showLoader("Sending OTP...");
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/distributor/register`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ name, email, phone: document.querySelector('[name="phone"]').value, password: "TEMP" }) });
+                const r = await res.json(); hideLoader();
+                if(r.success) { regData.email = email; document.getElementById('otpInputSection').style.display='block'; } else alert(r.message);
+            } catch(e) { hideLoader(); }
+        }
+
+        async function verifyRegOtp() {
+            const otp = document.getElementById('regOtp').value;
+            showLoader("Verifying...");
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/distributor/verify-registration`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ email: regData.email, otp }) });
+                const r = await res.json(); hideLoader();
+                if(r.success) { regData.otp = otp; document.getElementById('otpInputSection').style.display='none'; document.getElementById('regPassSection').style.display='block'; } else alert(r.message);
+            } catch(e) { hideLoader(); }
+        }
+
+        document.getElementById('finalRegBtn').onclick = async () => {
+            const pw = document.getElementById('regPass').value;
+            showLoader("Finishing...");
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/reset-with-otp`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ email: regData.email, otp: regData.otp, new_password: pw }) });
+                const r = await res.json(); hideLoader();
+                if(r.success) { alert("Success! Please Login."); location.reload(); } else alert(r.message);
+            } catch(e) { hideLoader(); }
+        }
+
+        document.getElementById('bankForm').onsubmit = async (e) => {
+            e.preventDefault(); const token = localStorage.getItem('dist_token');
+            const data = Object.fromEntries(new FormData(e.target));
+            showLoader("Saving...");
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/distributor/update-bank`, { method: 'POST', headers: {'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`}, body: JSON.stringify(data) });
+                if((await res.json()).success) { alert("Updated!"); document.getElementById('bankModal').style.display='none'; loadDashboard(1); }
+            } catch(e) { hideLoader(); }
+        };
     </script>
 </body>
 </html>
