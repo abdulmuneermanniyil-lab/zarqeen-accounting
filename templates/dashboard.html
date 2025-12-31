@@ -186,12 +186,29 @@
     </div>
 
     <script>
-        function showTab(id) {
-            document.querySelectorAll('.section').forEach(d => d.classList.remove('active'));
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-            event.currentTarget.classList.add('active');
-        }
+       function showTab(id) {
+    // 1. Hide all content sections
+    document.querySelectorAll('.section').forEach(sec => {
+        sec.classList.remove('active');
+    });
+
+    // 2. Remove 'active' class from all tab buttons
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
+
+    // 3. Show the selected section
+    const targetSection = document.getElementById(id);
+    if (targetSection) {
+        targetSection.classList.add('active');
+    }
+
+    // 4. Highlight the clicked tab button
+    // Using event.currentTarget ensures the button is selected even if you click the text inside
+    if (event && event.currentTarget) {
+        event.currentTarget.classList.add('active');
+    }
+}
     </script>
 </body>
 </html>
