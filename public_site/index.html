@@ -755,19 +755,7 @@
         alert("Connection Error");
     }
 });
-        const result = await res.json();
-        hideLoader();
-        
-        if(result.success) {
-            // Force a slight delay to ensure cookie is saved on mobile before redirect
-            setTimeout(() => {
-                if (result.redirect) {
-                    window.location.href = result.redirect.startsWith('http') 
-                        ? result.redirect 
-                        : `${BACKEND_URL}${result.redirect}`;
-                }
-            }, 500);
-        } else {
+       else {
             alert(result.message || "Invalid Credentials");
         }
     } catch(e) {
