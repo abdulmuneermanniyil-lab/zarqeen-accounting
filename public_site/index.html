@@ -192,10 +192,13 @@
                 <div id="dashComm">Financials</div>
             </div>
             <div class="dash-card">
-                <div style="display:flex; justify-content:space-between;">
-                    <div class="dash-val" id="lvlName" style="font-size:1.5rem;">Bronze</div>
-                    <span id="lvlDisc" style="background:#FEF3C7; padding:4px 8px; border-radius:4px; font-size:0.8rem;">10% Off</span>
-                </div>
+                <div style="display:flex; justify-content:space-between; align-items: flex-start;">
+    <div id="lvlName" style="font-size:1.5rem; font-weight:700; color:var(--primary);">Bronze</div>
+    <div style="text-align:right;">
+        <span id="lvlDisc" style="background:#DBEAFE; color:#1E40AF; padding:2px 8px; border-radius:4px; font-size:0.75rem; font-weight:700; display:block; margin-bottom:4px;">10% OFF</span>
+        <span id="lvlCommRate" style="background:#D1FAE5; color:#065F46; padding:2px 8px; border-radius:4px; font-size:0.75rem; font-weight:700;">15% COMM</span>
+    </div>
+</div>
                 <div id="lvlMsg" style="font-size:0.8rem; margin:10px 0;">0/5 to Next Level</div>
                 <div style="background:#EEE; height:8px; border-radius:10px;"><div id="lvlBar" style="background:orange; height:100%; width:0%; border-radius:10px; transition:0.5s;"></div></div>
             </div>
@@ -431,6 +434,8 @@
                 if(p) {
                     document.getElementById('lvlName').innerText = p.current_level;
                     document.getElementById('lvlDisc').innerText = `${data.discount}% OFF`;
+                    document.getElementById('lvlCommRate').innerText = `${data.commission_pct}% COMM`;    
+                    const progressPercent = p.is_max ? 100 : Math.min((p.month_sales / p.target) * 100, 100);
                     document.getElementById('lvlMsg').innerText = p.is_max ? "Max Level 🏆" : `${p.month_sales}/${p.target} Sales to ${p.next_level}`;
                     document.getElementById('lvlBar').style.width = p.is_max ? "100%" : `${(p.month_sales/p.target)*100}%`;
                 }
