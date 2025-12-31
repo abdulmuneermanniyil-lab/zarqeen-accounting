@@ -46,13 +46,15 @@
     <form action="/admin/update_settings" method="POST" style="margin-top: 10px;">
         <div class="form-row" style="flex-direction: column; align-items: stretch; gap: 10px;">
             <div>
-                <label style="font-size: 0.8rem;">Bonus Event Name (Message)</label>
-                <input type="text" name="bonus_name" value="{{ settings.special_message }}" placeholder="e.g. New Year Bonus" style="width: 100%;">
+                <label style="font-size: 0.8rem;">Bonus Event Name (Visible to Partners)</label>
+                <!-- name must be 'bonus_name' to match backend -->
+                <input type="text" name="bonus_name" value="{{ settings.special_message }}" placeholder="e.g. Happy New Year 2026" style="width: 100%;">
             </div>
             <div style="display: flex; gap: 10px; align-items: flex-end;">
                 <div style="flex: 1;">
                     <label style="font-size: 0.8rem;">Extra Commission %</label>
-                    <input type="number" name="bonus" value="{{ settings.special_bonus_percent }}" style="width: 100%;">
+                    <!-- name must be 'bonus' to match backend -->
+                    <input type="number" name="bonus" value="{{ settings.special_bonus_percent }}" placeholder="0" style="width: 100%;">
                 </div>
                 <button type="submit" class="btn">Update</button>
             </div>
