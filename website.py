@@ -256,7 +256,7 @@ def create_order():
 def verify_payment():
     data = request.json
     try:
-        # Signature Verification
+        # 1. Signature Verification
         params_dict = {
             'razorpay_order_id': str(data['razorpay_order_id']),
             'razorpay_payment_id': str(data['razorpay_payment_id']),
@@ -264,7 +264,7 @@ def verify_payment():
         }
         razorpay_client.utility.verify_payment_signature(params_dict)
         
-        # Fetch Plan and Distributor Info
+        # 2. Fetch Order and Plan Info
         plan_type = data.get('plan_type')
         dist_id = None
         amount_collected = 0.0
@@ -274,39 +274,40 @@ def verify_payment():
             notes = order_data.get('notes', {})
             dist_id = notes.get('distributor_id')
             amount_collected = float(order_data.get('amount', 0)) / 100.0
-        except:
+        except Exception as e:
+            # Fallback if Razorpay fetch fails
             amount_collected = 299.0 if plan_type == 'basic' else 599.0
 
+        # 3. Distributor & Commission Logic
         dist_obj = None
         comm_earned = 0.0
         
         if dist_id and str(dist_id) != "None":
             dist_obj = Distributor.query.get(int(dist_id))
             if dist_obj:
-    mrp = 299.0 if plan_type == 'basic' else 599.0
-    
-    # 1. Get Global Bonus from Settings
-    st = Settings.query.first()
-    bonus_pct = st.special_bonus_percent if st else 0
-    
-    # 2. Get Base Level Rate (15, 25, or 35)
-    base_rate = LEVELS.get(dist_obj.level, LEVELS[1])['commission']
-    
-    # 3. Combined Rate = Base + Bonus
-    total_rate = base_rate + bonus_pct
-    
-    # 4. Final Calculation based on MRP
-    comm_earned = (mrp * total_rate) / 100
-    
-    # 5. Save this to the License object
-    new_lic = License(
-        # ... other fields ...
-        commission_earned=round(comm_earned, 2),
-        distributor_id=dist_obj.id
-    )
+                # Always calculate based on MRP
+                mrp = 299.0 if plan_type == 'basic' else 599.0
+                
+                # Ensure level is current
+                refresh_distributor_level(dist_obj)
+                
+                # Get Global Bonus from Settings
+                st = Settings.query.first()
+                bonus_pct = st.special_bonus_percent if st else 0
+                
+                # Get Base Level Rate (15, 25, or 35)
+                base_rate = LEVELS.get(dist_obj.level, LEVELS[1])['commission']
+                
+                # Total Rate = Base + Bonus
+                total_rate = base_rate + bonus_pct
+                
+                # Final Commission Calculation
+                comm_earned = (mrp * total_rate) / 100
 
-        # Generate Key & Save
+        # 4. Generate Key
         new_key = generate_unique_key(plan_type, dist_obj.code if dist_obj else None)
+        
+        # 5. Save Single License Instance
         new_lic = License(
             license_key=new_key, 
             plan_type=plan_type, 
@@ -319,10 +320,12 @@ def verify_payment():
         
         db.session.add(new_lic)
         db.session.commit()
+        
         return jsonify({'success': True, 'license_key': new_key})
         
     except Exception as e:
         db.session.rollback()
+        print(f"VERIFY ERROR: {str(e)}")
         return jsonify({'success': False, 'message': str(e)})
 
 @app.route('/download/license/<key>')
