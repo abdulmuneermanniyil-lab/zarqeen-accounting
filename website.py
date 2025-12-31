@@ -283,18 +283,27 @@ def verify_payment():
         if dist_id and str(dist_id) != "None":
             dist_obj = Distributor.query.get(int(dist_id))
             if dist_obj:
-                # Always calculate based on MRP as requested
-                mrp = 299.0 if plan_type == 'basic' else 599.0
-                
-                # Level Refresh (Ensures they are at the correct level for this month)
-                refresh_distributor_level(dist_obj)
-                
-                # Calculation: MRP * (Level_Comm + Bonus%)
-                st = Settings.query.first()
-                bonus_pct = st.special_bonus_percent if st else 0
-                base_comm_pct = LEVELS[dist_obj.level]['commission']
-                
-                comm_earned = (mrp * (base_comm_pct + bonus_pct)) / 100
+    mrp = 299.0 if plan_type == 'basic' else 599.0
+    
+    # 1. Get Global Bonus from Settings
+    st = Settings.query.first()
+    bonus_pct = st.special_bonus_percent if st else 0
+    
+    # 2. Get Base Level Rate (15, 25, or 35)
+    base_rate = LEVELS.get(dist_obj.level, LEVELS[1])['commission']
+    
+    # 3. Combined Rate = Base + Bonus
+    total_rate = base_rate + bonus_pct
+    
+    # 4. Final Calculation based on MRP
+    comm_earned = (mrp * total_rate) / 100
+    
+    # 5. Save this to the License object
+    new_lic = License(
+        # ... other fields ...
+        commission_earned=round(comm_earned, 2),
+        distributor_id=dist_obj.id
+    )
 
         # Generate Key & Save
         new_key = generate_unique_key(plan_type, dist_obj.code if dist_obj else None)
@@ -624,22 +633,40 @@ def api_distributor_login():
 def api_get_distributor_data():
     t = request.headers.get('Authorization', '').replace('Bearer ', ''); dist = Distributor.query.filter_by(api_token=t).first()
     if not dist: return jsonify({'error': 'Invalid'}), 401
+    
+    # 1. Refresh Level & Get Settings
     refresh_distributor_level(dist)
+    settings = Settings.query.first()
+    bonus_pct = settings.special_bonus_percent if settings else 0
+    
     page = request.args.get('page', 1, type=int)
     q = License.query.filter_by(distributor_id=dist.id).order_by(License.created_at.desc())
     pg = q.paginate(page=page, per_page=10, error_out=False)
     
+    # Financials
     earn = sum(safe_float(l.commission_earned) for l in q.all())
-    cur = dist.level; tgt = LEVELS[min(cur+1, 3)]['target']
+    cur = dist.level
+    base_rate = LEVELS[cur]['commission']
+    tgt = LEVELS[min(cur+1, 3)]['target']
     msales = License.query.filter(License.distributor_id==dist.id, License.created_at>=datetime.utcnow().replace(day=1)).count()
     
-    sd = [{'date': s.created_at.strftime('%Y-%m-%d'), 'plan': s.plan_type, 'amount': s.amount_paid, 'status': 'INSTALLED' if s.is_used else 'PENDING', 'key': s.license_key, 'version': s.software_version, 'last_login': s.last_login_date.strftime('%Y-%m-%d') if s.last_login_date else '-', 'expiry': s.expiry_date.strftime('%Y-%m-%d') if s.expiry_date else '-'} for s in pg.items]
+    # Reduced Sales History (Matching your dashboard requirement)
+    sd = [{'date': s.created_at.strftime('%Y-%m-%d'), 'plan': s.plan_type, 'amount': s.amount_paid, 'status': 'INSTALLED' if s.is_used else 'PENDING', 'key': s.license_key} for s in pg.items]
 
     return jsonify({
-        "name": dist.name, "code": dist.code, "discount": dist.discount_percent, 
-        "commission_pct": LEVELS[cur]['commission'],
-        "total_sales": q.count(), "commission_earned": earn, "commission_paid": safe_float(dist.commission_paid), "balance_due": earn - safe_float(dist.commission_paid),
-        "sales_history": sd, "backend_url": request.host_url,
+        "name": dist.name, 
+        "code": dist.code, 
+        "discount": dist.discount_percent, 
+        "base_comm": base_rate,
+        "bonus_percent": bonus_pct,
+        "bonus_name": settings.special_message if settings else "",
+        "commission_pct": base_rate + bonus_pct, # Combined Rate
+        "total_sales": q.count(), 
+        "commission_earned": earn, 
+        "commission_paid": safe_float(dist.commission_paid), 
+        "balance_due": earn - safe_float(dist.commission_paid),
+        "sales_history": sd, 
+        "backend_url": request.host_url,
         "bank_info": {"bank_name": dist.bank_name, "account_holder": dist.account_holder, "account_number": dist.account_number, "ifsc": dist.ifsc_code, "upi": dist.upi_id},
         "pagination": {"total_pages": pg.pages, "has_next": pg.has_next, "has_prev": pg.has_prev},
         "progress": {"current_level": LEVELS[cur]['name'], "month_sales": msales, "target": tgt, "next_level": LEVELS[min(cur+1, 3)]['name'], "is_max": cur==3}
