@@ -191,17 +191,19 @@
             <div class="dash-card">
                 <div id="dashComm">Financials</div>
             </div>
-            <div class="dash-card">
-                <div style="display:flex; justify-content:space-between; align-items: flex-start;">
-    <div id="lvlName" style="font-size:1.5rem; font-weight:700; color:var(--primary);">Bronze</div>
-    <div style="text-align:right;">
-        <span id="lvlDisc" style="background:#DBEAFE; color:#1E40AF; padding:2px 8px; border-radius:4px; font-size:0.75rem; font-weight:700; display:block; margin-bottom:4px;">10% OFF</span>
-        <span id="lvlCommRate" style="background:#D1FAE5; color:#065F46; padding:2px 8px; border-radius:4px; font-size:0.75rem; font-weight:700;">15% COMM</span>
+           <div class="dash-card">
+    <div style="display:flex; justify-content:space-between; align-items: flex-start;">
+        <div id="lvlName" style="font-size:1.5rem; font-weight:700; color:var(--primary);">Bronze</div>
+        <div style="text-align:right; display:flex; flex-direction:column; gap:4px;">
+            <span id="lvlDisc" style="background:#DBEAFE; color:#1E40AF; padding:2px 8px; border-radius:4px; font-size:0.75rem; font-weight:700;">10% OFF</span>
+            <span id="lvlCommRate" style="background:#D1FAE5; color:#065F46; padding:2px 8px; border-radius:4px; font-size:0.75rem; font-weight:700;">15% COMM</span>
+        </div>
+    </div>
+    <div id="lvlMsg" style="font-size:0.8rem; margin:10px 0; color:var(--text-muted);">0 / 5 Sales to Silver</div>
+    <div style="background:#E5E7EB; height:10px; border-radius:10px; overflow:hidden;"> <!-- overflow:hidden keeps the bar inside -->
+        <div id="lvlBar" style="background:#F59E0B; height:100%; width:0%; border-radius:10px; transition:width 0.5s ease;"></div>
     </div>
 </div>
-                <div id="lvlMsg" style="font-size:0.8rem; margin:10px 0;">0/5 to Next Level</div>
-                <div style="background:#EEE; height:8px; border-radius:10px;"><div id="lvlBar" style="background:orange; height:100%; width:0%; border-radius:10px; transition:0.5s;"></div></div>
-            </div>
             
             <div class="dash-card" style="background: #FFFBEB; border: 1px solid #FEF3C7;">
                 <h4 style="color: #92400E; margin-bottom: 8px;">📢 Payout Rules</h4>
