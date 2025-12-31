@@ -465,6 +465,7 @@ def delete_distributor(id): db.session.delete(Distributor.query.get_or_404(id));
 def delete_license(id): db.session.delete(License.query.get_or_404(id)); db.session.commit(); return redirect(url_for("dashboard"))
 
 @app.route('/admin/edit_license/<int:license_id>', methods=['POST'])
+@login_required
 def edit_license(license_id):
     # This matches the 'status' name in the dashboard.html dropdown
     new_status = request.form.get('status') 
