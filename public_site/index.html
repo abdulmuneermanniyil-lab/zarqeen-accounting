@@ -464,11 +464,21 @@
         function closeLoginModal() { document.getElementById('loginModal').style.display = 'none'; }
         function openBankModal() { document.getElementById('bankModal').style.display = 'block'; }
         
-        function switchTab(type) {
-            document.getElementById('forgotFlow').style.display = 'none'; 
-            if(type === 'distributor') { document.getElementById('distForm').style.display = 'block'; document.getElementById('distForm').classList.add('active'); document.getElementById('adminForm').classList.remove('active'); } 
-            else { document.getElementById('distForm').style.display = 'none'; document.getElementById('distForm').classList.remove('active'); document.getElementById('adminForm').classList.add('active'); }
-        }
+      function switchTab(type) {
+    document.getElementById('forgotFlow').style.display = 'none'; 
+    const dBtn = document.querySelector('.login-tabs button:nth-child(1)');
+    const aBtn = document.querySelector('.login-tabs button:nth-child(2)');
+    const dForm = document.getElementById('distForm');
+    const aForm = document.getElementById('adminForm');
+
+    if(type === 'distributor') {
+        dForm.style.display = 'block'; aForm.style.display = 'none';
+        dBtn.classList.add('active'); aBtn.classList.remove('active');
+    } else {
+        dForm.style.display = 'none'; aForm.style.display = 'block';
+        aBtn.classList.add('active'); dBtn.classList.remove('active');
+    }
+}
 
         function showForgot() { document.getElementById('distForm').style.display = 'none'; document.getElementById('forgotFlow').style.display = 'block'; document.getElementById('step1').style.display = 'block'; document.getElementById('step2').style.display = 'none'; }
         function hideForgot() { document.getElementById('forgotFlow').style.display = 'none'; document.getElementById('distForm').style.display = 'block'; }
