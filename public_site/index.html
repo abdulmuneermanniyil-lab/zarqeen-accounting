@@ -681,7 +681,10 @@ if(p) {
     // Math.min ensures the width never goes above 100% even if sales exceed target
     const progressPercent = p.is_max ? 100 : Math.min((p.month_sales / p.target) * 100, 100);
     
-    document.getElementById('lvlMsg').innerText = p.is_max ? "Max Level Reached! 🏆" : `${p.month_sales} / ${p.target} Sales to ${p.next_level}`;
+   const msgText = p.is_max ? "Max Level Reached! 🏆" : `${p.month_sales} / ${p.target} Sales to ${p.next_level}`;
+const rateBreakdown = bPercent > 0 ? `<br><span style="font-size:0.7rem; color:gray;">(Includes ${data.base_comm}% Base + ${bPercent}% ${bName})</span>` : "";
+
+document.getElementById('lvlMsg').innerHTML = msgText + rateBreakdown;
     document.getElementById('lvlBar').style.width = `${progressPercent}%`;
     
     // 3. Optional: Visual feedback - Turn bar green if target reached
