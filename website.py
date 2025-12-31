@@ -448,11 +448,26 @@ def dashboard():
                            distributors=dist_data, 
                            settings=settings)
 
-@app.route("/admin/update_settings", methods=["POST"])
-@login_required
+@app.route('/admin/update_settings', methods=['POST'])
 def update_settings():
-    s = Settings.query.first(); s.special_bonus_percent = int(request.form.get('bonus', 0)); s.special_message = request.form.get('message', ''); db.session.commit()
-    return redirect(url_for('dashboard'))
+    # Manual check for logged in admin
+    if not session.get('admin_logged_in'):
+        return redirect('/admin/login')
+
+    s = Settings.query.first()
+    if not s:
+        s = Settings()
+        db.session.add(s)
+
+    # SAFE CONVERSION: Check if the value is empty before calling int()
+    bonus_val = request.form.get('bonus', '0').strip()
+    s.special_bonus_percent = int(bonus_val) if bonus_val and bonus_val.isdigit() else 0
+    
+    # Matches your DB column 'special_message'
+    s.special_message = request.form.get('bonus_name', '').strip()
+    
+    db.session.commit()
+    return redirect('/admin/dashboard')
 
 @app.route("/admin/add_distributor", methods=["POST"])
 @login_required
@@ -715,3 +730,9 @@ def fix_db():
     return "Database updated successfully!"
 
 if __name__ == '__main__': app.run(debug=True)
+
+app.config.update(
+    SESSION_COOKIE_SAMESITE='None',
+    SESSION_COOKIE_SECURE=True, # Required for 'None'
+    PERMANENT_SESSION_LIFETIME=604800 # 7 Days
+)
