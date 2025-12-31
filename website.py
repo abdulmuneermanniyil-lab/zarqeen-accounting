@@ -495,32 +495,26 @@ def login():
             else:
                 LOGIN_ATTEMPTS[ip] = {'count': 0, 'last_attempt': datetime.utcnow()}
 
-    username = ""
-    password = ""
-    if request.is_json:
-        data = request.get_json()
-        username = data.get("username")
-        password = data.get("password")
-    else:
-        username = request.form.get("username")
-        password = request.form.get("password")
+     data = request.get_json()
+    username = data.get("username")
+    password = data.get("password")
 
     if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
         if ip in LOGIN_ATTEMPTS: del LOGIN_ATTEMPTS[ip]
         session["admin_logged_in"] = True
-        session.permanent = True
-        if request.is_json:
-            return jsonify({'success': True, 'redirect': url_for('dashboard', _external=True)})
-        return redirect(url_for("dashboard"))
-
-    if ip not in LOGIN_ATTEMPTS: LOGIN_ATTEMPTS[ip] = {'count': 1, 'last_attempt': datetime.utcnow()}
-    else:
-        LOGIN_ATTEMPTS[ip]['count'] += 1
-        LOGIN_ATTEMPTS[ip]['last_attempt'] = datetime.utcnow()
-
-    msg = f"Invalid Credentials. Attempts remaining: {MAX_RETRIES - LOGIN_ATTEMPTS[ip]['count']}"
-    if request.is_json: return jsonify({'success': False, 'message': msg})
-    return msg, 401
+        session.permanent = True # Important for mobile
+        return jsonify({'success': True, 'redirect': url_for('dashboard', _external=True)})
+    
+    # Track failed attempt
+    attempts_data = LOGIN_ATTEMPTS.get(ip, {'count': 0})
+    attempts_data['count'] += 1
+    attempts_data['last_attempt'] = datetime.utcnow()
+    LOGIN_ATTEMPTS[ip] = attempts_data
+    
+    return jsonify({
+        'success': False, 
+        'message': f"Invalid Credentials. Attempt {attempts_data['count']}/{MAX_RETRIES}"
+    }), 401
 
 @app.route("/admin/logout")
 def logout(): session.pop("admin_logged_in", None); return redirect(FRONTEND_URL)
