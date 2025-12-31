@@ -433,7 +433,10 @@ footer a:hover {
         <div id="lvlName" style="font-size:1.5rem; font-weight:700; color:var(--primary);">Bronze</div>
         <div style="text-align:right; display:flex; flex-direction:column; gap:4px;">
             <span id="lvlDisc" style="background:#DBEAFE; color:#1E40AF; padding:2px 8px; border-radius:4px; font-size:0.75rem; font-weight:700;">10% OFF</span>
-            <span id="lvlCommRate" style="background:#D1FAE5; color:#065F46; padding:2px 8px; border-radius:4px; font-size:0.75rem; font-weight:700;">15% COMM</span>
+           
+<span id="lvlCommRate" style="background:#D1FAE5; color:#065F46; padding:2px 8px; border-radius:4px; font-size:0.75rem; font-weight:700;">
+    0% COMM
+</span>
         </div>
     </div>
     <div id="lvlMsg" style="font-size:0.8rem; margin:10px 0; color:var(--text-muted);">0 / 5 Sales to Silver</div>
@@ -661,54 +664,132 @@ footer a:hover {
 
         let CURRENT_PAGE = 1;
         async function loadDashboard(page) {
-            CURRENT_PAGE = page; const token = localStorage.getItem('dist_token'); if(!token) return;
-            showLoader("Loading Portal...");
-            try {
-                const res = await fetch(`${BACKEND_URL}/api/distributor/data?page=${page}`, { headers: {'Authorization': `Bearer ${token}`} });
-                const data = await res.json(); hideLoader();
-                if(res.status === 401) return doLogout();
-
-                document.getElementById('dashName').innerText = data.name; document.getElementById('dashCode').innerText = data.code;
-                const p = data.progress;
-if(p) {
-    document.getElementById('lvlName').innerText = p.current_level;
-    document.getElementById('lvlDisc').innerText = `${data.discount}% OFF`;
+    CURRENT_PAGE = page; 
+    const token = localStorage.getItem('dist_token'); 
+    if(!token) return; 
     
-    // 1. Update the level-based commission percent (15, 25, or 35)
-    document.getElementById('lvlCommRate').innerText = `${data.commission_pct}% COMM`;
-
-    // 2. Fix the Progress Bar overflow
-    // Math.min ensures the width never goes above 100% even if sales exceed target
-    const progressPercent = p.is_max ? 100 : Math.min((p.month_sales / p.target) * 100, 100);
+    showLoader("Loading Portal...");
     
-   const msgText = p.is_max ? "Max Level Reached! 🏆" : `${p.month_sales} / ${p.target} Sales to ${p.next_level}`;
-const rateBreakdown = bPercent > 0 ? `<br><span style="font-size:0.7rem; color:gray;">(Includes ${data.base_comm}% Base + ${bPercent}% ${bName})</span>` : "";
+    try {
+        const res = await fetch(`${BACKEND_URL}/api/distributor/data?page=${page}`, { 
+            headers: {'Authorization': `Bearer ${token}`} 
+        });
+        
+        if(res.status === 401) return doLogout();
+        const data = await res.json(); 
+        hideLoader();
 
-document.getElementById('lvlMsg').innerHTML = msgText + rateBreakdown;
-    document.getElementById('lvlBar').style.width = `${progressPercent}%`;
-    
-    // 3. Optional: Visual feedback - Turn bar green if target reached
-    document.getElementById('lvlBar').style.background = (progressPercent >= 100) ? "#10B981" : "#F59E0B";
-}
+        // 1. Basic Info
+        const dashName = document.getElementById('dashName');
+        const dashCode = document.getElementById('dashCode');
+        if (dashName) dashName.innerText = data.name;
+        if (dashCode) dashCode.innerText = data.code;
 
-                let bonusHtml = data.bonus_percent > 0 ? `<div style="margin-top:10px; padding:8px; background:#ECFDF5; color:#065F46; border-radius:6px; font-size:0.75rem;">✨ <strong>${data.bonus_name}:</strong> +${data.bonus_percent}% Bonus Active!</div>` : "";
-                document.getElementById('dashTotal').innerText = data.total_sales;
-                document.getElementById('dashComm').innerHTML = `<span style="color:#2563EB">Earned: ₹${data.commission_earned.toFixed(2)}</span><br><span style="color:gray; font-size:0.8rem;">Received: ₹${data.commission_paid.toFixed(2)}</span><br><strong style="color:red">Balance: ₹${data.balance_due.toFixed(2)}</strong>${bonusHtml}`;
-
-                const b = data.bank_info; document.getElementById('d_bank').innerText = b.bank_name||'-'; document.getElementById('d_holder').innerText = b.account_holder||'-'; document.getElementById('d_acct').innerText = b.account_number||'-'; document.getElementById('d_ifsc').innerText = b.ifsc||'-'; document.getElementById('d_upi').innerText = b.upi||'-';
-                
-                const tbody = document.getElementById('dashTableBody'); tbody.innerHTML = "";
-                data.sales_history.forEach(s => { tbody.innerHTML += `<tr><td>${s.date}</td><td>${s.plan}</td><td>₹${s.amount}</td><td>${s.status}</td><td style="font-family:monospace">${s.key}</td><td><a href="${data.backend_url}download/license/${s.key}" class="nav-btn" style="padding:4px 8px;">⬇</a></td></tr>`; });
-                
-                document.getElementById('pageInfo').innerText = `Page ${page} of ${data.pagination.total_pages}`;
-                document.getElementById('prevBtn').style.display = data.pagination.has_prev ? 'block' : 'none';
-                document.getElementById('nextBtn').style.display = data.pagination.has_next ? 'block' : 'none';
-
-                ['header', '.hero', '#features', '#target-businesses', '#pricing', 'footer'].forEach(s => { const el = document.querySelector(s); if(el) el.style.display = 'none'; });
-                document.getElementById('dashboardSection').style.display = 'block';
-                window.scrollTo(0,0);
-            } catch(e) { hideLoader(); }
+        // 2. Bonus Logic
+        const bName = data.bonus_name || 'Special Bonus';
+        const bPercent = data.bonus_percent || 0;
+        let bonusHtml = "";
+        if (bPercent > 0) {
+            bonusHtml = `
+                <div style="margin-top:10px; padding:10px; background:#ECFDF5; border-radius:8px; font-size:0.75rem; color:#065F46; border:1px solid #A7F3D0; display:flex; align-items:center; gap:8px;">
+                    <span style="font-size:1.2rem;">🎁</span>
+                    <div>
+                        <strong>${bName}:</strong><br>
+                        Extra ${bPercent}% commission is active!
+                    </div>
+                </div>`;
         }
+
+        // 3. Financials
+        const dashComm = document.getElementById('dashComm');
+        if (dashComm) {
+            dashComm.innerHTML = `
+                <span style="color:#2563EB">Earned: ₹${(data.commission_earned || 0).toFixed(2)}</span><br>
+                <span style="color:gray; font-size:0.8rem;">Received: ₹${(data.commission_paid || 0).toFixed(2)}</span><br>
+                <strong style="color:red">Balance: ₹${(data.balance_due || 0).toFixed(2)}</strong>
+                ${bonusHtml}
+                <div style="margin-top: 8px; font-size: 0.7rem; color: #6B7280; font-style: italic;">
+                    * Payout requires min. ₹500 balance.
+                </div>
+            `;
+        }
+        if (document.getElementById('dashTotal')) document.getElementById('dashTotal').innerText = data.total_sales;
+
+        // 4. Progress & Levels
+        const p = data.progress;
+        if(p) {
+            if (document.getElementById('lvlName')) document.getElementById('lvlName').innerText = p.current_level;
+            if (document.getElementById('lvlDisc')) document.getElementById('lvlDisc').innerText = `${data.discount}% OFF`;
+            
+            // Commission Badge
+            const commBadge = document.getElementById('lvlCommRate');
+            if (commBadge) commBadge.innerText = `${data.commission_pct}% COMM`;
+
+            // Progress Message with Breakdown
+            const lvlMsg = document.getElementById('lvlMsg');
+            if (lvlMsg) {
+                const msgText = p.is_max ? "Max Level Reached! 🏆" : `${p.month_sales} / ${p.target} Sales to ${p.next_level}`;
+                const breakdown = bPercent > 0 ? `<br><span style="font-size:0.7rem; color:gray;">(${data.base_comm}% Base + ${bPercent}% Bonus)</span>` : "";
+                lvlMsg.innerHTML = msgText + breakdown;
+            }
+
+            // Progress Bar Fix
+            const lvlBar = document.getElementById('lvlBar');
+            if (lvlBar) {
+                const progressPercent = p.is_max ? 100 : Math.min((p.month_sales / p.target) * 100, 100);
+                lvlBar.style.width = `${progressPercent}%`;
+                lvlBar.style.background = (progressPercent >= 100) ? "#10B981" : "#F59E0B";
+            }
+        }
+
+        // 5. Bank Info
+        const b = data.bank_info;
+        if (b) {
+            const fields = { 'd_bank': b.bank_name, 'd_holder': b.account_holder, 'd_acct': b.account_number, 'd_ifsc': b.ifsc, 'd_upi': b.upi };
+            for (let id in fields) { if (document.getElementById(id)) document.getElementById(id).innerText = fields[id] || '-'; }
+            
+            // Update inputs in the edit modal
+            if (document.getElementById('in_bank')) document.getElementById('in_bank').value = b.bank_name || '';
+            if (document.getElementById('in_holder')) document.getElementById('in_holder').value = b.account_holder || '';
+            if (document.getElementById('in_acct')) document.getElementById('in_acct').value = b.account_number || '';
+            if (document.getElementById('in_ifsc')) document.getElementById('in_ifsc').value = b.ifsc || '';
+            if (document.getElementById('in_upi')) document.getElementById('in_upi').value = b.upi || '';
+        }
+
+        // 6. Sales History
+        const tbody = document.getElementById('dashTableBody');
+        if (tbody) {
+            tbody.innerHTML = "";
+            data.sales_history.forEach(s => {
+                tbody.innerHTML += `<tr>
+                    <td>${s.date}</td>
+                    <td>${s.plan}</td>
+                    <td>₹${s.amount}</td>
+                    <td>${s.status}</td>
+                    <td style="font-family:monospace">${s.key}</td>
+                    <td><a href="${data.backend_url}download/license/${s.key}" class="nav-btn" style="padding:4px 8px;">⬇</a></td>
+                </tr>`;
+            });
+        }
+
+        // 7. Pagination
+        if (document.getElementById('pageInfo')) document.getElementById('pageInfo').innerText = `Page ${page} of ${data.pagination.total_pages}`;
+        if (document.getElementById('prevBtn')) document.getElementById('prevBtn').style.display = data.pagination.has_prev ? 'block' : 'none';
+        if (document.getElementById('nextBtn')) document.getElementById('nextBtn').style.display = data.pagination.has_next ? 'block' : 'none';
+
+        // 8. Final UI Toggle
+        ['header', '.hero', '#features', '#target-businesses', '#pricing', 'footer'].forEach(s => { 
+            const el = document.querySelector(s); if(el) el.style.display = 'none'; 
+        });
+        const dashSection = document.getElementById('dashboardSection');
+        if (dashSection) dashSection.style.display = 'block';
+        
+        window.scrollTo(0,0);
+    } catch(e) { 
+        console.error("Dashboard Loading Error:", e);
+        hideLoader(); 
+    }
+}
 
         function changePage(d) { loadDashboard(CURRENT_PAGE + d); }
         function doLogout() { localStorage.removeItem('dist_token'); location.reload(); }
