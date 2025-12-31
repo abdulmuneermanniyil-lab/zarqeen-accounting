@@ -229,13 +229,14 @@ footer a:hover {
     color: #FFFFFF !important;
 }
         /* Optimized Grid for Features */
+/* Update this in your index.html style block */
 .features {
     max-width: 1200px;
     margin: 2rem auto;
     padding: 0 1.5rem;
     display: grid;
-    /* This forces items to wrap once they hit 300px width */
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
+    /* Adjusting min-width to 320px helps force 3 columns on standard screens */
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); 
     gap: 2rem;
     justify-content: center;
 }
@@ -319,6 +320,12 @@ footer a:hover {
         <div class="feature-card"><div class="feature-icon">🎨</div><h3>Paints & Decor</h3><p>Unit-based billing for paint and home decor shops.</p></div>
         <div class="feature-card"><div class="feature-icon">🍰</div><h3>Bakeries</h3><p>Lightning-fast thermal billing for sweet stalls.</p></div>
         <div class="feature-card"><div class="feature-icon">📚</div><h3>Stationery</h3><p>Efficient management for books and school supplies.</p></div>
+        <!-- Add this as the 9th card -->
+<div class="feature-card">
+    <div class="feature-icon">💊</div>
+    <h3>Pharmacy & Medical</h3>
+    <p>Professional billing for medical stores and pharmacies with GST and HSN support.</p>
+</div>
     </div>
 </section>
 
