@@ -26,6 +26,17 @@
         .tab.active { background: var(--primary); color: white; }
         .section { display: none; }
         .section.active { display: block; }
+        /* Ensure inputs in the table are neat */
+td input {
+    padding: 4px 6px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.85rem;
+}
+td input:focus {
+    border-color: var(--accent);
+    outline: none;
+}
     </style>
 </head>
 <body>
