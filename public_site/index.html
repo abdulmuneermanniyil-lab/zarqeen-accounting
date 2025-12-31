@@ -779,6 +779,8 @@
         let CURRENT_PAGE = 1;
         async function loadDashboard(page) {
     CURRENT_PAGE = page; 
+    const targetSec = document.getElementById('target-businesses');
+if (targetSec) targetSec.style.display = 'none';
     const token = localStorage.getItem('dist_token'); 
     if(!token) return; 
     
