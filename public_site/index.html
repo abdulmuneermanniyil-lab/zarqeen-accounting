@@ -474,8 +474,11 @@
         function closeLoginModal() { document.getElementById('loginModal').style.display = 'none'; }
         function openBankModal() { document.getElementById('bankModal').style.display = 'block'; }
         
-      function switchTab(type) {
+      ffunction switchTab(type) {
+    // Reset forgot password flow
     document.getElementById('forgotFlow').style.display = 'none'; 
+    
+    // Select buttons and forms
     const tabs = document.querySelectorAll('.tab-btn');
     const distForm = document.getElementById('distForm');
     const adminForm = document.getElementById('adminForm');
@@ -483,12 +486,14 @@
     if(type === 'distributor') {
         distForm.style.display = 'block';
         adminForm.style.display = 'none';
-        tabs[0].classList.add('active'); // Highlights Distributor
+        // Add active class to first button, remove from second
+        tabs[0].classList.add('active');
         tabs[1].classList.remove('active');
     } else {
         distForm.style.display = 'none';
         adminForm.style.display = 'block';
-        tabs[1].classList.add('active'); // Highlights Admin
+        // Add active class to second button, remove from first
+        tabs[1].classList.add('active');
         tabs[0].classList.remove('active');
     }
 }
