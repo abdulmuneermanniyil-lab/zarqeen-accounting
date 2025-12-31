@@ -87,11 +87,8 @@
         .key-box { background: #F3F4F6; padding: 1rem; border: 2px dashed #D1D5DB; border-radius: 8px; margin: 1.5rem 0; font-family: monospace; font-size: 1.1rem; color: var(--primary-dark); word-break: break-all; }
         
         .login-tabs { display: flex; margin-bottom: 20px; border-bottom: 1px solid #E5E7EB; }
-        .tab-btn { flex: 1; padding: 10px; border: none; background: none; font-weight: 600; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; }
-        .tab-btn.active { 
-    color: var(--primary) !important; 
-    border-bottom: 2px solid var(--primary) !important; 
-}
+        .tab-btn { flex: 1; padding: 10px; border: none; background: none; font-weight: 600; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; transition: 0.3s; }
+.tab-btn.active { color: var(--primary) !important; border-bottom: 2px solid var(--primary) !important; }
         .login-form { display: none; }
         .login-form.active { display: block; }
         .form-group { margin-bottom: 15px; text-align: left; }
