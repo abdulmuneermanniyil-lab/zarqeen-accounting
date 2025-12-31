@@ -481,31 +481,53 @@ def edit_license(license_id):
 
 @app.route("/admin/login", methods=["GET", "POST"])
 def login():
-    if request.headers.get('X-Forwarded-For'): ip = request.headers.get('X-Forwarded-For').split(',')[0]
-    else: ip = request.remote_addr
+    # 1. Identify User IP
+    if request.headers.get('X-Forwarded-For'):
+        ip = request.headers.get('X-Forwarded-For').split(',')[0]
+    else:
+        ip = request.remote_addr
 
+    # 2. Check Rate Limiting Lockout
     if ip in LOGIN_ATTEMPTS:
         attempt = LOGIN_ATTEMPTS[ip]
         if attempt['count'] >= MAX_RETRIES:
             if datetime.utcnow() - attempt['last_attempt'] < LOCKOUT_TIME:
                 remaining = int((LOCKOUT_TIME - (datetime.utcnow() - attempt['last_attempt'])).total_seconds() / 60)
                 msg = f"Too many failed attempts. Try again in {remaining} minutes."
-                if request.is_json: return jsonify({'success': False, 'message': msg})
+                if request.is_json: 
+                    return jsonify({'success': False, 'message': msg})
                 return msg, 429
             else:
+                # Lockout expired, reset counter
                 LOGIN_ATTEMPTS[ip] = {'count': 0, 'last_attempt': datetime.utcnow()}
 
-     data = request.get_json()
+    # 3. Handle GET request (Show message or handle as needed)
+    if request.method == "GET":
+        return jsonify({'message': 'Admin login endpoint active.'})
+
+    # 4. Handle POST request (JSON Login)
+    data = request.get_json()
+    if not data:
+        return jsonify({'success': False, 'message': 'Missing login data'}), 400
+
     username = data.get("username")
     password = data.get("password")
 
+    # 5. Check Credentials
     if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
-        if ip in LOGIN_ATTEMPTS: del LOGIN_ATTEMPTS[ip]
+        # Success: Clear attempts and set session
+        if ip in LOGIN_ATTEMPTS: 
+            del LOGIN_ATTEMPTS[ip]
+            
         session["admin_logged_in"] = True
-        session.permanent = True # Important for mobile
-        return jsonify({'success': True, 'redirect': url_for('dashboard', _external=True)})
+        session.permanent = True # Important for mobile cookie persistence
+        
+        return jsonify({
+            'success': True, 
+            'redirect': url_for('dashboard', _external=True)
+        })
     
-    # Track failed attempt
+    # 6. Failure: Track attempt and return error
     attempts_data = LOGIN_ATTEMPTS.get(ip, {'count': 0})
     attempts_data['count'] += 1
     attempts_data['last_attempt'] = datetime.utcnow()
