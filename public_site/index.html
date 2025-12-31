@@ -433,14 +433,23 @@
 
                 document.getElementById('dashName').innerText = data.name; document.getElementById('dashCode').innerText = data.code;
                 const p = data.progress;
-                if(p) {
-                    document.getElementById('lvlName').innerText = p.current_level;
-                    document.getElementById('lvlDisc').innerText = `${data.discount}% OFF`;
-                    document.getElementById('lvlCommRate').innerText = `${data.commission_pct}% COMM`;    
-                    const progressPercent = p.is_max ? 100 : Math.min((p.month_sales / p.target) * 100, 100);
-                    document.getElementById('lvlMsg').innerText = p.is_max ? "Max Level 🏆" : `${p.month_sales}/${p.target} Sales to ${p.next_level}`;
-                    document.getElementById('lvlBar').style.width = p.is_max ? "100%" : `${(p.month_sales/p.target)*100}%`;
-                }
+if(p) {
+    document.getElementById('lvlName').innerText = p.current_level;
+    document.getElementById('lvlDisc').innerText = `${data.discount}% OFF`;
+    
+    // 1. Update the level-based commission percent (15, 25, or 35)
+    document.getElementById('lvlCommRate').innerText = `${data.commission_pct}% COMM`;
+
+    // 2. Fix the Progress Bar overflow
+    // Math.min ensures the width never goes above 100% even if sales exceed target
+    const progressPercent = p.is_max ? 100 : Math.min((p.month_sales / p.target) * 100, 100);
+    
+    document.getElementById('lvlMsg').innerText = p.is_max ? "Max Level Reached! 🏆" : `${p.month_sales} / ${p.target} Sales to ${p.next_level}`;
+    document.getElementById('lvlBar').style.width = `${progressPercent}%`;
+    
+    // 3. Optional: Visual feedback - Turn bar green if target reached
+    document.getElementById('lvlBar').style.background = (progressPercent >= 100) ? "#10B981" : "#F59E0B";
+}
 
                 let bonusHtml = data.bonus_percent > 0 ? `<div style="margin-top:10px; padding:8px; background:#ECFDF5; color:#065F46; border-radius:6px; font-size:0.75rem;">✨ <strong>${data.bonus_name}:</strong> +${data.bonus_percent}% Bonus Active!</div>` : "";
                 document.getElementById('dashTotal').innerText = data.total_sales;
