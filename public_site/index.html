@@ -478,8 +478,16 @@
 
         
         function closeLicenseModal() { document.getElementById('licenseModal').style.display = 'none'; location.reload(); }
-        function openLoginModal() { document.getElementById('loginModal').style.display = 'block'; }
-        function openRegisterModal() { document.getElementById('registerModal').style.display = 'block'; }
+        function openLoginModal() {
+    document.getElementById('mobileNav')?.classList.remove('active');
+    document.getElementById('loginModal').style.display = 'block';
+}
+
+function openRegisterModal() {
+    document.getElementById('mobileNav')?.classList.remove('active');
+    document.getElementById('registerModal').style.display = 'block';
+}
+
         function closeLoginModal() { document.getElementById('loginModal').style.display = 'none'; }
         function openBankModal() { document.getElementById('bankModal').style.display = 'block'; }
         
