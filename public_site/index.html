@@ -88,7 +88,10 @@
         
         .login-tabs { display: flex; margin-bottom: 20px; border-bottom: 1px solid #E5E7EB; }
         .tab-btn { flex: 1; padding: 10px; border: none; background: none; font-weight: 600; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; }
-        .tab-btn.active { color: var(--primary); border-bottom: 2px solid var(--primary); }
+        .tab-btn.active { 
+    color: var(--primary) !important; 
+    border-bottom: 2px solid var(--primary) !important; 
+}
         .login-form { display: none; }
         .login-form.active { display: block; }
         .form-group { margin-bottom: 15px; text-align: left; }
@@ -470,17 +473,16 @@
         
       function switchTab(type) {
     document.getElementById('forgotFlow').style.display = 'none'; 
-    const dBtn = document.querySelector('.login-tabs button:nth-child(1)');
-    const aBtn = document.querySelector('.login-tabs button:nth-child(2)');
+    const tabs = document.querySelectorAll('.tab-btn');
     const dForm = document.getElementById('distForm');
     const aForm = document.getElementById('adminForm');
 
     if(type === 'distributor') {
         dForm.style.display = 'block'; aForm.style.display = 'none';
-        dBtn.classList.add('active'); aBtn.classList.remove('active');
+        tabs[0].classList.add('active'); tabs[1].classList.remove('active');
     } else {
         dForm.style.display = 'none'; aForm.style.display = 'block';
-        aBtn.classList.add('active'); dBtn.classList.remove('active');
+        tabs[1].classList.add('active'); tabs[0].classList.remove('active');
     }
 }
 
