@@ -472,17 +472,24 @@
         function openBankModal() { document.getElementById('bankModal').style.display = 'block'; }
         
       function switchTab(type) {
+    // 1. Reset forgot flow
     document.getElementById('forgotFlow').style.display = 'none'; 
+    
+    // 2. Identify elements
     const tabs = document.querySelectorAll('.tab-btn');
-    const dForm = document.getElementById('distForm');
-    const aForm = document.getElementById('adminForm');
+    const distForm = document.getElementById('distForm');
+    const adminForm = document.getElementById('adminForm');
 
     if(type === 'distributor') {
-        dForm.style.display = 'block'; aForm.style.display = 'none';
-        tabs[0].classList.add('active'); tabs[1].classList.remove('active');
+        distForm.style.display = 'block';
+        adminForm.style.display = 'none';
+        tabs[0].classList.add('active');    // Highlight Distributor
+        tabs[1].classList.remove('active'); // Remove Admin highlight
     } else {
-        dForm.style.display = 'none'; aForm.style.display = 'block';
-        tabs[1].classList.add('active'); tabs[0].classList.remove('active');
+        distForm.style.display = 'none';
+        adminForm.style.display = 'block';
+        tabs[1].classList.add('active');    // Highlight Admin
+        tabs[0].classList.remove('active'); // Remove Distributor highlight
     }
 }
 
