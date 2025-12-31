@@ -452,24 +452,23 @@
         fetchConfig();
 
     async function syncDownloadLink() {
-        try {
-            const response = await fetch('https://zarqeen-backend.onrender.com/api/download-link');
-            const data = await response.json();
-            if (data.download_url) {
-                // Targets nav links, hero button, and the trial button
-                const targets = document.querySelectorAll('a[onclick*="checkDownload"], .dynamic-dl-trial');
-                targets.forEach(el => {
-                    // Update the href of the <a> tag
-                    if (el.tagName === 'A') {
-                        el.href = data.download_url;
-                        // Ensure it doesn't try to open in new tab if you want direct download
-                        el.removeAttribute('target'); 
-                    }
-                });
-            }
-        } catch (e) { console.error("Link sync failed"); }
+    try {
+        const res = await fetch(`${BACKEND_URL}/api/download-link`);
+        const data = await res.json();
+
+        if (!data.download_url) return;
+
+        document.querySelectorAll('.download-link').forEach(a => {
+            a.href = data.download_url;
+        });
+
+    } catch (e) {
+        console.error("Download link sync failed", e);
     }
-    window.addEventListener('load', syncDownloadLink);
+}
+
+window.addEventListener('load', syncDownloadLink);
+
 
         
         function closeLicenseModal() { document.getElementById('licenseModal').style.display = 'none'; location.reload(); }
