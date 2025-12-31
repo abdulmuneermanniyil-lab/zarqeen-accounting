@@ -484,30 +484,66 @@ def add_distributor():
     return redirect(url_for("dashboard"))
 
 @app.route("/admin/edit_distributor/<int:id>", methods=["POST"])
-@login_required
 def edit_distributor(id):
+    # Security: Manual session check for better cross-domain/mobile compatibility
+    if not session.get("admin_logged_in"):
+        return jsonify({'success': False, 'message': 'Unauthorized'}), 401
+
     d = Distributor.query.get_or_404(id)
     
-    if request.form.get("name"): d.name = request.form.get("name")
-    if request.form.get("email"): d.email = request.form.get("email")
-    if request.form.get("phone"): d.phone = request.form.get("phone")
-    if request.form.get("discount"): 
-        try: d.discount_percent = int(request.form.get("discount"))
-        except: pass
+    # Basic Information
+    if request.form.get("name"): d.name = request.form.get("name").strip()
+    if request.form.get("email"): d.email = request.form.get("email").strip()
+    if request.form.get("phone"): d.phone = request.form.get("phone").strip()
     
-    if "bank_name" in request.form: d.bank_name = request.form.get("bank_name")
-    if "account_holder" in request.form: d.account_holder = request.form.get("account_holder")
-    if "account_number" in request.form: d.account_number = request.form.get("account_number")
-    if "ifsc_code" in request.form: d.ifsc_code = request.form.get("ifsc_code")
-    if "upi_id" in request.form: d.upi_id = request.form.get("upi_id")
+    # Discount Percentage
+    discount = request.form.get("discount")
+    if discount:
+        try:
+            d.discount_percent = int(discount)
+        except ValueError:
+            pass
     
-    add = request.form.get("add_payment")
-    man = request.form.get("manual_paid_total")
-    if add and safe_float(add) > 0: d.commission_paid += safe_float(add)
-    elif man and man.strip(): d.commission_paid = safe_float(man)
+    # Banking Details
+    if "upi_id" in request.form: d.upi_id = request.form.get("upi_id").strip()
+    # Adding these in case you decide to add inputs for them later
+    if request.form.get("bank_name"): d.bank_name = request.form.get("bank_name").strip()
+    if request.form.get("account_holder"): d.account_holder = request.form.get("account_holder").strip()
+    if request.form.get("account_number"): d.account_number = request.form.get("account_number").strip()
+    if request.form.get("ifsc_code"): d.ifsc_code = request.form.get("ifsc_code").strip()
     
-    if request.form.get("password"): d.set_password(request.form.get("password"))
-    db.session.commit()
+    # --- PAYMENT LOGIC ---
+    add_payment = request.form.get("add_payment", "").strip()
+    manual_paid = request.form.get("manual_paid_total", "").strip()
+
+    # Priority 1: If Admin typed an amount to "Add", increment the existing total
+    if add_payment:
+        try:
+            val = float(add_payment)
+            if val > 0:
+                # Increment the existing value
+                d.commission_paid = float(d.commission_paid or 0) + val
+        except ValueError:
+            pass
+    # Priority 2: If no "Add" value, check if the "Total Paid" was manually edited
+    elif manual_paid:
+        try:
+            d.commission_paid = float(manual_paid)
+        except ValueError:
+            pass
+    # ----------------------
+
+    # Password Update (Only if provided)
+    new_password = request.form.get("password")
+    if new_password and len(new_password.strip()) > 0:
+        d.set_password(new_password.strip())
+    
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        print(f"Update Error: {e}")
+
     return redirect(url_for("dashboard"))
 
 @app.route("/admin/delete_distributor/<int:id>", methods=["POST"])
