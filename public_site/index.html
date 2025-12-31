@@ -7,6 +7,7 @@
     <title>Zarqeen Alif - India's Best Value Invoicing Software</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="icon" type="image/png" href="static/header.png">
     
     <style>
@@ -877,6 +878,8 @@ document.getElementById('dashComm').innerHTML = `
         function changePage(dir) { loadDashboard(CURRENT_PAGE + dir); }
         function doLogout() { localStorage.removeItem('dist_token'); location.reload(); }
         window.addEventListener('load', function() { if(localStorage.getItem('dist_token')) loadDashboard(1); });
+        
+
     </script>
 </body>
 </html>
