@@ -41,9 +41,79 @@
         .btn-lg { padding: 1rem 2rem; font-size: 1.1rem; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; transition: transform 0.2s; }
         .btn-primary { background: var(--primary); color: var(--white); }
         
-        .features { max-width: 1200px; margin: 2rem auto; padding: 0 1.5rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem; }
-        .feature-card { background: var(--white); padding: 2rem; border-radius: 12px; border: 1px solid #E5E7EB; text-align: center; transition: 0.3s; }
-        .feature-card:hover { transform: translateY(-5px); border-color: var(--primary); }
+       /* Professional Feature Cards */
+.features {
+    gap: 1.5rem;
+}
+
+.feature-card {
+    background: var(--white);
+    padding: 2.5rem 1.5rem;
+    border-radius: 16px;
+    border: 1px solid #E5E7EB;
+    text-align: center;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.feature-card:hover {
+    border-color: var(--primary);
+    box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.1);
+}
+
+.feature-icon {
+    width: 60px;
+    height: 60px;
+    background: #EFF6FF;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    margin-bottom: 1.25rem;
+    color: var(--primary);
+}
+
+.feature-card h3 {
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+}
+
+.feature-card p {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+}
+
+/* Fixed Pricing Cards (Prevents Oversizing) */
+.plan-card {
+    flex: 1;
+    min-height: 480px; /* Ensures all cards are equal height */
+    padding: 2rem;
+    border-radius: 20px;
+    transform: none !important; /* Removes the 1.05 scale causing the oversized look */
+}
+
+.plan-card.popular {
+    border: 2px solid var(--primary);
+    background: #FFFFFF;
+    box-shadow: 0 10px 30px -10px rgba(37, 99, 235, 0.2);
+}
+
+.badge-top {
+    display: inline-block;
+    background: #DBEAFE;
+    color: #1E40AF;
+    padding: 4px 12px;
+    border-radius: 50px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+}
         
         .pricing-section { padding: 4rem 1rem; text-align: center; }
         .section-title { font-size: 2.25rem; font-weight: 800; margin-bottom: 0.5rem; }
@@ -207,19 +277,19 @@ footer a:hover {
     </section>
 
     <section id="target-businesses" class="pricing-section" style="background: #fff; padding-top: 2rem;">
-        <h2 class="section-title">Perfect for Your Business</h2>
-        <p class="section-subtitle">Tailored billing for every retail sector</p>
-        <div class="features" style="margin-top: 0;">
-            <div class="feature-card"><div>👕</div><h3>Textile & Garments</h3><p>Quick A4/A5 billing for boutiques and clothing stores.</p></div>
-            <div class="feature-card"><div>🛒</div><h3>Grocery & Kirana</h3><p>Lightning checkout for thermal printers.</p></div>
-            <div class="feature-card"><div>📱</div><h3>Electronics</h3><p>Professional GST invoices for mobile shops.</p></div>
-            <div class="feature-card"><div>🔧</div><h3>Hardware</h3><p>Manage thousands of items with zero lag.</p></div>
-            <div class="feature-card"><div>👟</div><h3>Footwear</h3><p>Ideal for shoe stores and bag shops.</p></div>
-            <div class="feature-card"><div>🎨</div><h3>Paints & Decor</h3><p>Easy unit management for home decor.</p></div>
-            <div class="feature-card"><div>🍰</div><h3>Bakeries</h3><p>Fast thermal bills for sweet stalls and cafes.</p></div>
-            <div class="feature-card"><div>📚</div><h3>Stationery</h3><p>Efficient billing for school and gift items.</p></div>
-        </div>
-    </section>
+    <h2 class="section-title">Perfect for Your Business</h2>
+    <p class="section-subtitle">Specially optimized for Indian retail workflows</p>
+    <div class="features" style="margin-top: 0;">
+        <div class="feature-card"><div class="feature-icon">👕</div><h3>Textile & Garments</h3><p>Handle varied sizes and professional A4/A5 invoices.</p></div>
+        <div class="feature-card"><div class="feature-icon">🛒</div><h3>Grocery & Kirana</h3><p>Speedy billing with 2" and 3" thermal printer support.</p></div>
+        <div class="feature-card"><div class="feature-icon">📱</div><h3>Electronics</h3><p>GST-ready bills with serial number tracking.</p></div>
+        <div class="feature-card"><div class="feature-icon">🔧</div><h3>Hardware</h3><p>Manage thousands of small items with instant search.</p></div>
+        <div class="feature-card"><div class="feature-icon">👟</div><h3>Footwear</h3><p>Professional billing for shoe stores and bag shops.</p></div>
+        <div class="feature-card"><div class="feature-icon">🎨</div><h3>Paints & Decor</h3><p>Unit-based billing for paint and home decor shops.</p></div>
+        <div class="feature-card"><div class="feature-icon">🍰</div><h3>Bakeries</h3><p>Lightning-fast thermal billing for sweet stalls.</p></div>
+        <div class="feature-card"><div class="feature-icon">📚</div><h3>Stationery</h3><p>Efficient management for books and school supplies.</p></div>
+    </div>
+</section>
 
     <section id="pricing" class="pricing-section">
     <h2 class="section-title">Unbeatable Pricing</h2>
@@ -235,48 +305,48 @@ footer a:hover {
     </div>
 
     <div class="pricing-grid">
-        <!-- Trial Plan -->
-        <div class="plan-card">
-            <h3>Trial</h3>
-            <div class="price">Free</div>
-            <ul class="plan-features">
-                <li>7 Days Full Access</li>
-                <li>All Paper Sizes</li>
-                <li>Indian GST Format</li>
-                <li>Offline Storage</li>
-            </ul>
-            <a href="#" class="dynamic-dl" onclick="checkDownload(event)" style="margin-top:auto;">
-                <button class="btn-buy secondary">Download Now</button>
-            </a>
-        </div>
-
-        <!-- Basic Plan -->
-        <div class="plan-card">
-            <h3>Basic</h3>
-            <div class="price">₹299<span>/year</span></div>
-            <ul class="plan-features">
-                <li>1 Year License</li>
-                <li>Unlimited Invoices</li>
-                <li>Free Version Updates</li>
-                <li>Standard Support</li>
-            </ul>
-            <button class="btn-buy primary" onclick="buyPlan('basic')">Buy Basic License</button>
-        </div>
-
-        <!-- Premium Plan -->
-        <div class="plan-card popular">
-            <div style="position:absolute; top:12px; right:-30px; background:var(--accent); color:brown; padding:5px 40px; font-size:0.7rem; font-weight:800; transform:rotate(45deg);">BEST VALUE</div>
-            <h3>Premium</h3>
-            <div class="price">₹599<span>/3 yrs</span></div>
-            <ul class="plan-features">
-                <li>3 Year License</li>
-                <li>Priority WhatsApp Support</li>
-                <li>Business Logo Branding</li>
-                <li>Everything in Basic</li>
-            </ul>
-            <button class="btn-buy primary" onclick="buyPlan('premium')">Buy Premium License</button>
-        </div>
+    <!-- Trial -->
+    <div class="plan-card">
+        <div class="badge-top" style="background:#F3F4F6; color:#374151;">Getting Started</div>
+        <h3>Trial</h3>
+        <div class="price">Free</div>
+        <ul class="plan-features">
+            <li>7 Days Full Access</li>
+            <li>All Paper Sizes</li>
+            <li>Indian GST Format</li>
+            <li>Offline Storage</li>
+        </ul>
+        <button class="btn-buy secondary dynamic-dl" onclick="checkDownload(event)">Download Trial</button>
     </div>
+
+    <!-- Basic -->
+    <div class="plan-card">
+        <div class="badge-top">Recommended</div>
+        <h3>Basic</h3>
+        <div class="price">₹299<span>/year</span></div>
+        <ul class="plan-features">
+            <li>1 Year License</li>
+            <li>Unlimited Invoices</li>
+            <li>Free Version Updates</li>
+            <li>Standard Support</li>
+        </ul>
+        <button class="btn-buy primary" onclick="buyPlan('basic')">Get Basic License</button>
+    </div>
+
+    <!-- Premium -->
+    <div class="plan-card popular">
+        <div class="badge-top" style="background:#FDE68A; color:#92400E;">Most Popular</div>
+        <h3>Premium</h3>
+        <div class="price">₹599<span>/3 yrs</span></div>
+        <ul class="plan-features">
+            <li>3 Year License</li>
+            <li>Priority WhatsApp Support</li>
+            <li>Business Logo Branding</li>
+            <li>Everything in Basic</li>
+        </ul>
+        <button class="btn-buy primary" onclick="buyPlan('premium')">Get Premium License</button>
+    </div>
+</div>
 </section>
 
    <footer style="text-align:center; padding:4rem 1rem;">
