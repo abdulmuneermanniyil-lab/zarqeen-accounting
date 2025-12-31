@@ -87,8 +87,8 @@
         .key-box { background: #F3F4F6; padding: 1rem; border: 2px dashed #D1D5DB; border-radius: 8px; margin: 1.5rem 0; font-family: monospace; font-size: 1.1rem; color: var(--primary-dark); word-break: break-all; }
         
         .login-tabs { display: flex; margin-bottom: 20px; border-bottom: 1px solid #E5E7EB; }
-        .tab-btn { flex: 1; padding: 10px; border: none; background: none; font-weight: 600; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; transition: 0.3s; }
-.tab-btn.active { color: var(--primary) !important; border-bottom: 2px solid var(--primary) !important; }
+        .tab-btn { flex: 1; padding: 10px; border: none; background: none; font-weight: 600; color: #6B7280; cursor: pointer; border-bottom: 2px solid transparent; }
+.tab-btn.active { color: #2563EB !important; border-bottom: 2px solid #2563EB !important; }
         .login-form { display: none; }
         .login-form.active { display: block; }
         .form-group { margin-bottom: 15px; text-align: left; }
@@ -392,10 +392,16 @@
             <div id="forgotFlow" style="display:none;"><div id="step1"><h3>Reset Password</h3><div class="form-group"><label>Enter Email</label><input type="email" id="resetEmail"></div><button onclick="sendOtp()" class="btn-buy primary">Send OTP</button></div><div id="step2" style="display:none;"><h3>Verify OTP</h3><div class="form-group"><label>Enter 6-digit Code</label><input type="text" id="otpCode"></div><div class="form-group"><label>New Password</label><input type="password" id="newPass"></div><button onclick="resetWithOtp()" class="btn-buy primary">Change Password</button></div><p style="text-align:center; margin-top:10px;"><a onclick="hideForgot()" style="cursor:pointer; color:gray;">Back</a></p></div>
             
             <form id="adminForm" class="login-form">
-                <div class="form-group"><label>Username</label><input type="text" name="username" required></div>
-                <div class="form-group"><label>Password</label><input type="password" name="password" required></div>
-                <button type="submit" class="btn-buy primary" style="background:#111827;">Login Admin</button>
-            </form>
+    <div class="form-group">
+        <label>Admin Username</label>
+        <input type="text" name="username" required placeholder="Admin Username">
+    </div>
+    <div class="form-group">
+        <label>Password</label>
+        <input type="password" name="password" required placeholder="Password">
+    </div>
+    <button type="submit" class="btn-buy primary" style="background:#111827;">Login Admin</button>
+</form>
         </div>
     </div>
 
@@ -469,10 +475,7 @@
         function openBankModal() { document.getElementById('bankModal').style.display = 'block'; }
         
       function switchTab(type) {
-    // 1. Reset forgot flow
     document.getElementById('forgotFlow').style.display = 'none'; 
-    
-    // 2. Identify elements
     const tabs = document.querySelectorAll('.tab-btn');
     const distForm = document.getElementById('distForm');
     const adminForm = document.getElementById('adminForm');
@@ -480,13 +483,13 @@
     if(type === 'distributor') {
         distForm.style.display = 'block';
         adminForm.style.display = 'none';
-        tabs[0].classList.add('active');    // Highlight Distributor
-        tabs[1].classList.remove('active'); // Remove Admin highlight
+        tabs[0].classList.add('active'); // Highlights Distributor
+        tabs[1].classList.remove('active');
     } else {
         distForm.style.display = 'none';
         adminForm.style.display = 'block';
-        tabs[1].classList.add('active');    // Highlight Admin
-        tabs[0].classList.remove('active'); // Remove Distributor highlight
+        tabs[1].classList.add('active'); // Highlights Admin
+        tabs[0].classList.remove('active');
     }
 }
 
