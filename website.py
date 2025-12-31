@@ -390,7 +390,7 @@ def version_check():
 
 @app.route('/api/download-link')
 def get_download_link():
-    url = os.environ.get('DOWNLOAD_LINK', 'https://github.com/abdulmuneermanniyil-lab/zarqeen-accounting/releases/download/Version/Zarqeen_Alif_v110.exe')
+    url = os.environ.get('DOWNLOAD_LINK', 'fallback.exe')
     return jsonify({"download_url": url})
 
 
