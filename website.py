@@ -633,4 +633,11 @@ def reset_db():
         except: pass
     return "DB Force Reset Complete"
 
+@app.route('/sys/fix-db')
+def fix_db():
+    # This command adds the missing column directly to your Postgres DB
+    db.session.execute(db.text('ALTER TABLE distributor ADD COLUMN IF NOT EXISTS commission_earned FLOAT DEFAULT 0.0'))
+    db.session.commit()
+    return "Database updated successfully!"
+
 if __name__ == '__main__': app.run(debug=True)
