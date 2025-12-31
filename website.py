@@ -508,6 +508,7 @@ def login():
     if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
         if ip in LOGIN_ATTEMPTS: del LOGIN_ATTEMPTS[ip]
         session["admin_logged_in"] = True
+        session.permanent = True
         if request.is_json:
             return jsonify({'success': True, 'redirect': url_for('dashboard', _external=True)})
         return redirect(url_for("dashboard"))
