@@ -720,8 +720,21 @@
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(data),
-            credentials: 'include' // This is critical for cross-domain cookies
+            credentials: 'include' // Important for sessions
         });
+        const result = await res.json();
+        hideLoader();
+        if(result.success) {
+            // Redirect immediately to the dashboard
+            window.location.href = result.redirect; 
+        } else {
+            alert(result.message);
+        }
+    } catch(e) {
+        hideLoader();
+        alert("Connection Error");
+    }
+});
         const result = await res.json();
         hideLoader();
         
