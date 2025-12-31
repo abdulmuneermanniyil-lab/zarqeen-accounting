@@ -228,6 +228,23 @@ footer a {
 footer a:hover {
     color: #FFFFFF !important;
 }
+        /* Optimized Grid for Features */
+.features {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 1.5rem;
+    display: grid;
+    /* This forces items to wrap once they hit 300px width */
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
+    gap: 2rem;
+    justify-content: center;
+}
+
+/* Ensure cards don't shrink too much */
+.feature-card {
+    min-width: 280px; 
+    width: 100%;
+}
         @media (max-width: 768px) { .nav-links { display: none; } .mobile-menu-btn { display: block; } .hero h1 { font-size: 2.2rem; } .plan-card.popular { transform: none; } }
     </style>
 </head>
