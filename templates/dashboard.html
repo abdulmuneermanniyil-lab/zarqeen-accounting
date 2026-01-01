@@ -110,74 +110,45 @@
                     </tr>
                 </thead>
                 <tbody>
-                   {% for d in distributors %}
-<tr>
-    <form action="/admin/edit_distributor/{{ d.obj.id }}" method="POST">
-        <!-- Name & Contact -->
-        <td>
-            <input type="text" name="name" value="{{ d.obj.name }}" style="width:100%; margin-bottom:5px; font-weight:bold;" placeholder="Name">
-            <input type="email" name="email" value="{{ d.obj.email }}" style="width:100%; font-size:0.85rem;" placeholder="Email">
-            <input type="text" name="phone" value="{{ d.obj.phone }}" style="width:100%; font-size:0.85rem; margin-top:5px;" placeholder="Phone">
-        </td>
-
-        <!-- Distributor Code -->
-        <td style="text-align:center;"><strong style="color:#2563EB;">{{ d.obj.code }}</strong></td>
-
-        <!-- Level & Discount -->
-        <td>
-            <span class="badge">{{ d.level_name }}</span>
-            <div style="margin-top:5px; display:flex; align-items:center; gap:5px;">
-                <input type="number" name="discount" value="{{ d.obj.discount_percent }}" style="width:45px;">
-                <small>% Disc</small>
-            </div>
-        </td>
-
-        <!-- Total Earned -->
-        <td style="font-weight:600;">₹{{ "%.2f"|format(d.earned) }}</td>
-
-        <!-- Financial Management (Paid & Pay Now) -->
-        <td>
-            <div style="display: flex; flex-direction: column; gap: 8px;">
-                <div>
-                    <small style="color: gray; display: block; font-size: 0.65rem; text-transform: uppercase;">Total Paid</small>
-                    <input type="number" step="0.01" name="manual_paid_total" value="{{ d.obj.commission_paid }}" style="width: 90px; background: #f9fafb;" title="Edit total manually">
+    {% for d in distributors %}
+    <tr style="{{ 'opacity: 0.5;' if not d.obj.is_enabled }}">
+        <form action="/admin/edit_distributor/{{ d.obj.id }}" method="POST">
+            <!-- 1. Name -->
+            <td><strong>{{ d.obj.name }}</strong><br><small>{{ d.obj.email }}</small></td>
+            
+            <!-- 2. Code -->
+            <td><code style="color:var(--primary); font-weight:bold;">{{ d.obj.code }}</code></td>
+            
+            <!-- 3. Level -->
+            <td><span class="badge">{{ d.level_name }}</span></td>
+            
+            <!-- 4. Add Payment -->
+            <td>
+                <input type="number" step="0.01" name="add_payment" placeholder="Add ₹" style="width: 80px; padding: 5px; border: 1px solid #A7F3D0;">
+                <button type="submit" class="btn btn-sm" style="background:#059669; padding: 5px 8px;">OK</button>
+            </td>
+            
+            <!-- 5. Balance -->
+            <td style="color: {{ 'red' if d.balance > 0 else 'green' }}; font-weight: bold;">
+                ₹{{ "%.2f"|format(d.balance) }}
+            </td>
+            
+            <!-- 6. Actions (View & Toggle) -->
+            <td>
+                <div style="display: flex; gap: 8px;">
+                    <a href="/admin/view_distributor/{{ d.obj.id }}" class="btn btn-sm" style="background:var(--accent); color:brown;">👁️ View</a>
+                    
+                    <form action="/admin/toggle_distributor/{{ d.obj.id }}" method="POST" style="display:inline;">
+                        <button type="submit" class="btn btn-sm {{ 'btn-red' if d.obj.is_enabled else 'btn-green' }}" style="width: 80px;">
+                            {{ 'Disable' if d.obj.is_enabled else 'Enable' }}
+                        </button>
+                    </form>
                 </div>
-                <div style="border-top: 1px dashed #ddd; padding-top: 5px;">
-                    <small style="color: #059669; display: block; font-size: 0.65rem; font-weight: bold; text-transform: uppercase;">+ Add Payment</small>
-                    <input type="number" step="0.01" name="add_payment" placeholder="Amount" style="width: 90px; border-color: #A7F3D0;">
-                </div>
-            </div>
-        </td>
-
-        <!-- Balance Due -->
-        <td style="color: {{ 'red' if d.balance > 0 else 'green' }}; font-weight: bold;">
-            ₹{{ "%.2f"|format(d.balance) }}
-            {% if d.balance >= 500 %}
-                <div style="margin-top:5px;"><span class="badge badge-green" style="font-size:0.6rem; padding:2px 4px;">READY TO PAY</span></div>
-            {% endif %}
-        </td>
-
-        <!-- Banking Details -->
-        <td>
-            <input type="text" name="upi_id" value="{{ d.obj.upi_id or '' }}" placeholder="UPI ID" style="width:100%; font-size:0.8rem; margin-bottom:5px;">
-            <small style="color:gray; font-size:0.7rem; display:block;">Acc: {{ d.obj.account_number or 'Not Added' }}</small>
-        </td>
-
-        <!-- Save Button -->
-        <td>
-            <button type="submit" class="btn btn-sm" style="background:#059669;" title="Save Changes">💾 Save</button>
-        </td>
-    </form>
-
-    <!-- Delete Action -->
-    <td>
-        <form action="/admin/delete_distributor/{{ d.obj.id }}" method="POST" onsubmit="return confirm('Delete distributor? This cannot be undone.');">
-            <button type="submit" class="btn btn-sm btn-red" title="Delete Account">X</button>
+            </td>
         </form>
-    </td>
-</tr>
-{% endfor %}
-                </tbody>
+    </tr>
+    {% endfor %}
+</tbody>
             </table>
         </div>
     </div>
