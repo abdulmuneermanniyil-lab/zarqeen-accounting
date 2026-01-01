@@ -530,9 +530,34 @@ footer a:hover {
                     <button type="button" onclick="verifyRegOtp()" class="btn-buy primary">Verify Email</button>
                 </div>
                 <div id="regPassSection" style="display:none; margin-top:10px;">
-                    <div class="form-group"><label>Set Password</label><input type="password" id="regPass"></div>
-                    <button type="button" id="finalRegBtn" class="btn-buy primary">Complete Registration</button>
-                </div>
+    <div class="form-group"><label>Set Account Password</label><input type="password" id="regPass" placeholder="Create a strong password"></div>
+    
+    <!-- Partner Duties Section -->
+    <div style="background: #F0F7FF; border: 1px solid #CFE2FF; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+        <p style="font-size: 0.85rem; font-weight: 800; color: #084298; margin-bottom: 10px;">✅ Partner Duties & Acknowledgments</p>
+        <div style="font-size: 0.75rem; color: #055160; display: flex; flex-direction: column; gap: 8px;">
+            <label style="display:flex; gap:10px; cursor:pointer;">
+                <input type="checkbox" class="duty-check" required> 
+                <span>I will act as the primary contact for Zarqeen and support my customers.</span>
+            </label>
+            <label style="display:flex; gap:10px; cursor:pointer;">
+                <input type="checkbox" class="duty-check" required> 
+                <span>I will assist customers with software installation and provide basic guidance.</span>
+            </label>
+            <label style="display:flex; gap:10px; cursor:pointer;">
+                <input type="checkbox" class="duty-check" required> 
+                <span>I will facilitate and guide customers through the license renewal process.</span>
+            </label>
+            <label style="display:flex; gap:10px; cursor:pointer;">
+                <input type="checkbox" class="duty-check" required> 
+                <span>I will communicate necessary feedback and information to Zarqeen support.</span>
+            </label>
+        </div>
+    </div>
+
+    <button type="button" id="finalRegBtn" class="btn-buy primary" style="opacity: 0.5;" disabled>Complete Registration</button>
+    <p id="checkMsg" style="font-size:0.7rem; color:red; text-align:center; margin-top:5px;">Please tick all duties to proceed.</p>
+</div>
             </form>
         </div>
     </div>
@@ -598,6 +623,33 @@ footer a:hover {
             }
         }
 
+// Function to check if all duty checkboxes are ticked
+function validateDuties() {
+    const checks = document.querySelectorAll('.duty-check');
+    const btn = document.getElementById('finalRegBtn');
+    const msg = document.getElementById('checkMsg');
+    
+    // Check if every single checkbox is checked
+    const allChecked = Array.from(checks).every(c => c.checked);
+    
+    if (allChecked) {
+        btn.disabled = false;
+        btn.style.opacity = "1";
+        if (msg) msg.style.display = "none";
+    } else {
+        btn.disabled = true;
+        btn.style.opacity = "0.5";
+        if (msg) msg.style.display = "block";
+    }
+}
+
+// Add event listeners to the checkboxes
+document.addEventListener('change', function(e) {
+    if (e.target.classList.contains('duty-check')) {
+        validateDuties();
+    }
+});
+        
         let ACTIVE_DISTRIBUTOR_CODE = null;
         async function applyCode() {
             const code = document.getElementById('distCode').value.trim(); if(!code) return;
