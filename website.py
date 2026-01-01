@@ -84,6 +84,7 @@ class Distributor(db.Model):
     commission_paid = db.Column(db.Float, default=0.0); api_token = db.Column(db.String(100))
     otp_code = db.Column(db.String(10)); otp_expiry = db.Column(db.DateTime); reset_token = db.Column(db.String(100))
     is_verified = db.Column(db.Boolean, default=False)
+    is_enabled = db.Column(db.Boolean, default=True)
     level = db.Column(db.Integer, default=1); last_level_check = db.Column(db.DateTime, default=datetime.utcnow)
     licenses = db.relationship('License', backref='distributor', lazy=True)
 
@@ -783,6 +784,25 @@ def api_get_distributor_data():
         "pagination": {"total_pages": pg.pages, "has_next": pg.has_next, "has_prev": pg.has_prev},
         "progress": {"current_level": LEVELS[cur]['name'], "month_sales": msales, "target": tgt, "next_level": LEVELS[min(cur+1, 3)]['name'], "is_max": cur==3}
     })
+
+
+@app.route("/admin/view_distributor/<int:id>")
+def view_distributor(id):
+    if not session.get("admin_logged_in"): return redirect('/admin/login')
+    d = Distributor.query.get_or_404(id)
+    # Calculate financials for the detail view
+    total_earned = sum(safe_float(l.commission_earned) for l in d.licenses)
+    balance = total_earned - safe_float(d.commission_paid)
+    return render_template("view_distributor.html", d=d, earned=total_earned, balance=balance, levels=LEVELS)
+
+@app.route("/admin/toggle_distributor/<int:id>", methods=["POST"])
+def toggle_distributor(id):
+    if not session.get("admin_logged_in"): return jsonify({'success': False}), 401
+    d = Distributor.query.get_or_404(id)
+    d.is_enabled = not d.is_enabled  # Flip the status
+    db.session.commit()
+    return redirect(url_for('dashboard'))
+
 
 
     
