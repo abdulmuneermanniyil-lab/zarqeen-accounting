@@ -632,18 +632,76 @@ def login():
 def logout(): session.pop("admin_logged_in", None); return redirect(FRONTEND_URL)
 
 @app.route("/admin/export/<type>")
-@login_required
 def export_data(type):
-    si = io.StringIO(); cw = csv.writer(si)
+    # Security: Ensure only logged-in admin can export
+    if not session.get('admin_logged_in'):
+        return redirect(url_for('login'))
+
+    si = io.StringIO()
+    cw = csv.writer(si)
+    
     if type == 'licenses':
-        cw.writerow(['Date', 'Key', 'Plan', 'Amount', 'Distributor', 'Status', 'Version', 'Expiry'])
-        for r in License.query.all(): cw.writerow([r.created_at, r.license_key, r.plan_type, r.amount_paid, r.distributor.name if r.distributor else 'Direct', r.is_used, r.software_version, r.expiry_date])
+        # Expanded headers for Licenses
+        cw.writerow([
+            'Date Created', 'License Key', 'Plan Type', 'Amount Paid', 
+            'Commission Earned (₹)', 'Distributor Name', 'Distributor Code', 
+            'Razorpay Payment ID', 'Status (Is Used)', 'Software Version', 'Expiry Date'
+        ])
+        
+        licenses = License.query.order_by(License.created_at.desc()).all()
+        for r in licenses:
+            cw.writerow([
+                r.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+                r.license_key,
+                r.plan_type,
+                r.amount_paid,
+                r.commission_earned,
+                r.distributor.name if r.distributor else 'Direct',
+                r.distributor.code if r.distributor else '-',
+                r.payment_id,
+                'Installed' if r.is_used else 'Pending',
+                r.software_version or 'N/A',
+                r.expiry_date.strftime('%Y-%m-%d') if r.expiry_date else 'N/A'
+            ])
+
     elif type == 'distributors':
-        cw.writerow(['Name', 'Code', 'Email', 'Earned', 'Paid', 'Balance'])
-        for r in Distributor.query.all():
-            earn = sum(safe_float(l.commission_earned) for l in r.licenses)
-            cw.writerow([r.name, r.code, r.email, earn, r.commission_paid, earn - safe_float(r.commission_paid)])
-    output = make_response(si.getvalue()); output.headers["Content-Disposition"] = f"attachment; filename={type}.csv"; output.headers["Content-type"] = "text/csv"; return output
+        # Expanded headers for Distributors including Banking & Level info
+        cw.writerow([
+            'Name', 'Distributor Code', 'Email', 'Phone', 'Current Level', 
+            'Discount %', 'Total Earned (₹)', 'Total Paid (₹)', 'Balance Due (₹)', 
+            'Bank Name', 'Account Holder', 'Account Number', 'IFSC Code', 'UPI ID', 'Verified'
+        ])
+        
+        distributors = Distributor.query.all()
+        for r in distributors:
+            # Calculate financials
+            total_earn = sum(safe_float(l.commission_earned) for l in r.licenses)
+            total_paid = safe_float(r.commission_paid)
+            balance = total_earn - total_paid
+            level_name = LEVELS.get(r.level, LEVELS[1])['name']
+            
+            cw.writerow([
+                r.name,
+                r.code,
+                r.email,
+                r.phone,
+                level_name,
+                r.discount_percent,
+                round(total_earn, 2),
+                round(total_paid, 2),
+                round(balance, 2),
+                r.bank_name or '-',
+                r.account_holder or '-',
+                f"'{r.account_number}" if r.account_number else '-', # Added ' to prevent Excel from scientific notation
+                r.ifsc_code or '-',
+                r.upi_id or '-',
+                'Yes' if r.is_verified else 'No'
+            ])
+
+    output = make_response(si.getvalue())
+    output.headers["Content-Disposition"] = f"attachment; filename=zarqeen_{type}_{datetime.utcnow().strftime('%Y%m%d')}.csv"
+    output.headers["Content-type"] = "text/csv"
+    return output
 
 # --- DISTRIBUTOR API ---
 @app.route('/api/distributor/register', methods=['POST'])
