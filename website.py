@@ -797,12 +797,19 @@ def view_distributor(id):
 
 @app.route("/admin/toggle_distributor/<int:id>", methods=["POST"])
 def toggle_distributor(id):
-    if not session.get("admin_logged_in"): return jsonify({'success': False}), 401
+    if not session.get("admin_logged_in"): 
+        return redirect('/admin/login')
+        
     d = Distributor.query.get_or_404(id)
-    d.is_enabled = not d.is_enabled  # Flip the status
+    # Check if column exists, then toggle
+    if hasattr(d, 'is_enabled'):
+        d.is_enabled = not d.is_enabled
+    else:
+        # Fallback if you haven't run the migration yet
+        return "Database migration needed. Please add is_enabled column.", 500
+        
     db.session.commit()
-    return redirect(url_for('dashboard'))
-
+    return redirect('/admin/dashboard')
 
 
     
