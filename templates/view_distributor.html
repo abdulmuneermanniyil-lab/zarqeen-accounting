@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><title>Partner Details - {{ d.name }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"> <!-- Reuse your admin CSS -->
+    <style>
+        .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 20px; }
+        .info-box { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .label { color: gray; font-size: 0.8rem; text-transform: uppercase; display: block; margin-bottom: 5px; }
+        .val { font-size: 1.1rem; font-weight: 600; margin-bottom: 15px; display: block; }
+    </style>
+</head>
+<body style="background: #F3F4F6; padding: 40px;">
+    <div style="max-width: 900px; margin: 0 auto;">
+        <a href="/admin/dashboard" style="text-decoration: none; color: #2563EB;">← Back to Dashboard</a>
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; margin: 20px 0;">
+            <h1>Partner Profile: {{ d.name }}</h1>
+            <span class="badge {{ 'badge-green' if d.is_enabled else 'badge-red' }}" style="padding: 10px 20px; font-size: 1rem;">
+                {{ 'ACTIVE' if d.is_enabled else 'DISABLED' }}
+            </span>
+        </div>
+
+        <div class="detail-grid">
+            <!-- Basic Info -->
+            <div class="info-box">
+                <h3>Contact & Account</h3>
+                <span class="label">Partner Code</span><span class="val">{{ d.code }}</span>
+                <span class="label">Email Address</span><span class="val">{{ d.email }}</span>
+                <span class="label">Phone Number</span><span class="val">{{ d.phone }}</span>
+                <span class="label">Current Level</span><span class="val">{{ levels[d.level]['name'] }} ({{ levels[d.level]['commission'] }}% Comm)</span>
+            </div>
+
+            <!-- Financials -->
+            <div class="info-box">
+                <h3>Financial Summary</h3>
+                <span class="label">Total Commission Earned</span><span class="val" style="color:#2563EB;">₹{{ "%.2f"|format(earned) }}</span>
+                <span class="label">Total Paid to Date</span><span class="val" style="color:#059669;">₹{{ "%.2f"|format(d.commission_paid) }}</span>
+                <span class="label">Current Balance Due</span><span class="val" style="color:red; font-size: 1.5rem;">₹{{ "%.2f"|format(balance) }}</span>
+            </div>
+
+            <!-- Banking -->
+            <div class="info-box" style="grid-column: span 2;">
+                <h3>Banking & Payout Details</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
+                    <div><span class="label">Bank Name</span><span class="val">{{ d.bank_name or '-' }}</span></div>
+                    <div><span class="label">Account Holder</span><span class="val">{{ d.account_holder or '-' }}</span></div>
+                    <div><span class="label">Account Number</span><span class="val">{{ d.account_number or '-' }}</span></div>
+                    <div><span class="label">IFSC Code</span><span class="val">{{ d.ifsc_code or '-' }}</span></div>
+                    <div><span class="label">UPI ID</span><span class="val" style="color: #2563EB;">{{ d.upi_id or '-' }}</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
