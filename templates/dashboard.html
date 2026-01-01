@@ -94,63 +94,7 @@
             </form>
         </div>
 
-        <div class="card">
-            <h3>Distributor List</h3>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Code</th>
-                        <th>Level</th>
-                        <th>Earned</th>
-                        <th>Paid</th>
-                        <th>Balance</th>
-                        <th>Bank Details</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-    {% for d in distributors %}
-    <tr style="{{ 'opacity: 0.5;' if not d.obj.is_enabled }}">
-        <form action="/admin/edit_distributor/{{ d.obj.id }}" method="POST">
-            <!-- 1. Name -->
-            <td><strong>{{ d.obj.name }}</strong><br><small>{{ d.obj.email }}</small></td>
-            
-            <!-- 2. Code -->
-            <td><code style="color:var(--primary); font-weight:bold;">{{ d.obj.code }}</code></td>
-            
-            <!-- 3. Level -->
-            <td><span class="badge">{{ d.level_name }}</span></td>
-            
-            <!-- 4. Add Payment -->
-            <td>
-                <input type="number" step="0.01" name="add_payment" placeholder="Add ₹" style="width: 80px; padding: 5px; border: 1px solid #A7F3D0;">
-                <button type="submit" class="btn btn-sm" style="background:#059669; padding: 5px 8px;">OK</button>
-            </td>
-            
-            <!-- 5. Balance -->
-            <td style="color: {{ 'red' if d.balance > 0 else 'green' }}; font-weight: bold;">
-                ₹{{ "%.2f"|format(d.balance) }}
-            </td>
-            
-            <!-- 6. Actions (View & Toggle) -->
-            <td>
-                <div style="display: flex; gap: 8px;">
-                    <a href="/admin/view_distributor/{{ d.obj.id }}" class="btn btn-sm" style="background:var(--accent); color:brown;">👁️ View</a>
-                    
-                    <form action="/admin/toggle_distributor/{{ d.obj.id }}" method="POST" style="display:inline;">
-                        <button type="submit" class="btn btn-sm {{ 'btn-red' if d.obj.is_enabled else 'btn-green' }}" style="width: 80px;">
-                            {{ 'Disable' if d.obj.is_enabled else 'Enable' }}
-                        </button>
-                    </form>
-                </div>
-            </td>
-        </form>
-    </tr>
-    {% endfor %}
-</tbody>
-            </table>
-        </div>
+        Distributor List</h
     </div>
 
     <!-- Licenses Section -->
