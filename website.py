@@ -411,39 +411,34 @@ def get_download_link():
 # --- ADMIN ---
 @app.route("/admin/dashboard")
 def dashboard():
-    # 1. Security Check: Only allow if admin_logged_in is True in session
     if not session.get("admin_logged_in"):
-        return redirect(url_for('login')) # Redirects to your admin login route
+        return redirect(url_for('login'))
 
-    # 2. Fetch Data
     licenses = License.query.order_by(License.created_at.desc()).all()
-    distributors = Distributor.query.all()
+    # Query all distributors from DB
+    all_distributors = Distributor.query.all()
     
-    # 3. Handle Settings (Ensure special_message and percent exist)
     settings = Settings.query.first()
     if not settings:
-        settings = Settings(special_bonus_percent=0, special_message="Welcome Bonus")
+        settings = Settings(special_bonus_percent=0, special_message="Welcome")
         db.session.add(settings)
         db.session.commit()
 
-    # 4. Process Distributor Data
+    # Prepare the list for the template
     dist_data = []
-    for d in distributors:
-        # Sum commission earned from all licenses linked to this distributor
+    for d in all_distributors:
+        # Sum commission earned from all licenses of THIS distributor
         total_earned = sum(safe_float(l.commission_earned) for l in d.licenses)
-        total_paid = safe_float(d.commission_paid)
-        current_balance = total_earned - total_paid
-        
-        # Get level name from your LEVELS dictionary
-        level_info = LEVELS.get(d.level, LEVELS[1])
+        balance = total_earned - safe_float(d.commission_paid)
         
         dist_data.append({
             "obj": d, 
-            "earned": round(total_earned, 2), 
-            "balance": round(current_balance, 2), 
-            "level_name": level_info['name']
+            "earned": total_earned, 
+            "balance": balance, 
+            "level_name": LEVELS.get(d.level, LEVELS[1])['name']
         })
 
+    # CRITICAL: Ensure you are passing 'distributors=dist_data'
     return render_template("dashboard.html", 
                            licenses=licenses, 
                            distributors=dist_data, 
