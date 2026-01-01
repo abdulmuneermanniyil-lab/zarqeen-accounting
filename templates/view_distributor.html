@@ -52,5 +52,62 @@
             </div>
         </div>
     </div>
+<!-- Inside view_distributor.html body -->
+<form action="/admin/edit_distributor/{{ d.id }}" method="POST">
+    <div class="detail-grid">
+        <!-- Basic Info (Editable) -->
+        <div class="info-box">
+            <h3 style="display:flex; justify-content:space-between; align-items:center;">
+                Contact Details 
+                <button type="submit" class="btn btn-sm" style="background:#059669;">💾 Save All Changes</button>
+            </h3>
+            <span class="label">Partner Name</span>
+            <input type="text" name="name" value="{{ d.name }}" class="edit-input">
+            
+            <span class="label">Email Address</span>
+            <input type="email" name="email" value="{{ d.email }}" class="edit-input">
+            
+            <span class="label">Phone Number</span>
+            <input type="text" name="phone" value="{{ d.phone }}" class="edit-input">
+            
+            <span class="label">Change Password (leave blank to keep current)</span>
+            <input type="password" name="password" placeholder="New password" class="edit-input">
+        </div>
+
+        <!-- Banking (Editable) -->
+        <div class="info-box">
+            <h3>Banking Details</h3>
+            <span class="label">UPI ID</span>
+            <input type="text" name="upi_id" value="{{ d.upi_id or '' }}" class="edit-input" placeholder="example@upi">
+            
+            <span class="label">Bank Name</span>
+            <input type="text" name="bank_name" value="{{ d.bank_name or '' }}" class="edit-input">
+            
+            <span class="label">Account Holder</span>
+            <input type="text" name="account_holder" value="{{ d.account_holder or '' }}" class="edit-input">
+            
+            <span class="label">Account Number</span>
+            <input type="text" name="account_number" value="{{ d.account_number or '' }}" class="edit-input">
+            
+            <span class="label">IFSC Code</span>
+            <input type="text" name="ifsc_code" value="{{ d.ifsc_code or '' }}" class="edit-input">
+        </div>
+    </div>
+</form>
+
+
 </body>
+    <style>
+    /* Add this to view_distributor style block */
+    .edit-input {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 15px;
+        border: 1px solid #DDD;
+        border-radius: 6px;
+        font-size: 1rem;
+        font-family: inherit;
+    }
+    .edit-input:focus { border-color: #2563EB; outline: none; background: #F0F7FF; }
+</style>
 </html>
