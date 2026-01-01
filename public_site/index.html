@@ -489,11 +489,31 @@ footer a:hover {
                 <button class="tab-btn active" onclick="switchTab('distributor')">Distributor</button>
                 <button class="tab-btn" onclick="switchTab('admin')">Admin</button>
             </div>
-            <form id="distForm" class="login-form" style="display:block;">
-                <div class="form-group"><label>Email</label><input type="email" name="email" required></div>
-                <div class="form-group"><label>Password</label><input type="password" name="password" required></div>
-                <button type="submit" class="btn-buy primary">Login</button>
-            </form>
+            <!-- Inside loginModal -->
+<form id="distForm" class="login-form" style="display:block;">
+    <div class="form-group"><label>Email</label><input type="email" name="email" id="loginEmail" required></div>
+    <div class="form-group"><label>Password</label><input type="password" name="password" required></div>
+    <div style="text-align:right; margin-top:-10px; margin-bottom:15px;">
+        <a onclick="showForgot()" style="color:var(--primary); cursor:pointer; font-size:0.8rem; font-weight:600;">Forgot Password?</a>
+    </div>
+    <button type="submit" class="btn-buy primary">Login</button>
+</form>
+
+<!-- ADD THIS FORGOT FLOW SECTION -->
+<div id="forgotFlow" style="display:none;">
+    <div id="forgotStep1">
+        <h3 style="text-align:center; font-size:1.1rem; margin-bottom:15px;">Reset Password</h3>
+        <div class="form-group"><label>Enter Registered Email</label><input type="email" id="resetEmail" placeholder="email@example.com"></div>
+        <button onclick="sendOtp()" class="btn-buy primary">Send Reset Code</button>
+    </div>
+    <div id="forgotStep2" style="display:none;">
+        <h3 style="text-align:center; font-size:1.1rem; margin-bottom:15px;">Verify & Update</h3>
+        <div class="form-group"><label>6-Digit Code</label><input type="text" id="resetOtp" placeholder="Enter OTP" style="letter-spacing:5px; text-align:center;"></div>
+        <div class="form-group"><label>New Password</label><input type="password" id="newPass" placeholder="Enter new password"></div>
+        <button onclick="resetWithOtp()" class="btn-buy primary">Update Password</button>
+    </div>
+    <p style="text-align:center; margin-top:15px;"><a onclick="hideForgot()" style="cursor:pointer; color:gray; font-size:0.85rem;">← Back to Login</a></p>
+</div>
             <form id="adminForm" class="login-form">
                 <div class="form-group"><label>Admin Username</label><input type="text" name="username" required></div>
                 <div class="form-group"><label>Password</label><input type="password" name="password" required></div>
@@ -844,6 +864,52 @@ document.addEventListener('change', function(e) {
     }
 }
 
+function showForgot() {
+    document.getElementById('distForm').style.display = 'none';
+    document.getElementById('forgotFlow').style.display = 'block';
+}
+
+function hideForgot() {
+    document.getElementById('distForm').style.display = 'block';
+    document.getElementById('forgotFlow').style.display = 'none';
+}
+
+async function sendOtp() {
+    const email = document.getElementById('resetEmail').value;
+    if(!email) return alert("Please enter email");
+    showLoader("Sending OTP...");
+    try {
+        const res = await fetch(`${BACKEND_URL}/api/send-otp`, { 
+            method: 'POST', 
+            headers: {'Content-Type': 'application/json'}, 
+            body: JSON.stringify({ email }) 
+        });
+        const d = await res.json(); hideLoader();
+        if(d.success) { 
+            alert("OTP sent to your email!"); 
+            document.getElementById('forgotStep1').style.display = 'none';
+            document.getElementById('forgotStep2').style.display = 'block';
+        } else alert(d.message);
+    } catch(e) { hideLoader(); }
+}
+
+async function resetWithOtp() {
+    const email = document.getElementById('resetEmail').value;
+    const otp = document.getElementById('resetOtp').value;
+    const new_password = document.getElementById('newPass').value;
+    if(!otp || !new_password) return alert("Fill all fields");
+    showLoader("Updating...");
+    try {
+        const res = await fetch(`${BACKEND_URL}/api/reset-with-otp`, { 
+            method: 'POST', 
+            headers: {'Content-Type': 'application/json'}, 
+            body: JSON.stringify({ email, otp, new_password }) 
+        });
+        const d = await res.json(); hideLoader();
+        if(d.success) { alert("Password updated! Please login."); location.reload(); } else alert(d.message);
+    } catch(e) { hideLoader(); }
+}
+        
         function changePage(d) { loadDashboard(CURRENT_PAGE + d); }
         function doLogout() { localStorage.removeItem('dist_token'); location.reload(); }
         window.addEventListener('DOMContentLoaded', () => { if(localStorage.getItem('dist_token')) loadDashboard(1); });
