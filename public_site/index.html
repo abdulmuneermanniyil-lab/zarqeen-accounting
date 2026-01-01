@@ -550,7 +550,10 @@ footer a:hover {
                     <button type="button" onclick="verifyRegOtp()" class="btn-buy primary">Verify Email</button>
                 </div>
                 <div id="regPassSection" style="display:none; margin-top:10px;">
-    <div class="form-group"><label>Set Account Password</label><input type="password" id="regPass" placeholder="Create a strong password" required></div>
+   <div class="form-group">
+    <label>Set Account Password <span style="color:red;">*</span></label>
+    <input type="password" id="regPass" placeholder="Create a strong password" required oninput="validateDuties()">
+</div>
     
     <!-- Partner Duties Section -->
     <div style="background: #F0F7FF; border: 1px solid #CFE2FF; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
@@ -643,23 +646,30 @@ footer a:hover {
             }
         }
 
-// Function to check if all duty checkboxes are ticked
 function validateDuties() {
     const checks = document.querySelectorAll('.duty-check');
+    const passInput = document.getElementById('regPass');
     const btn = document.getElementById('finalRegBtn');
     const msg = document.getElementById('checkMsg');
     
-    // Check if every single checkbox is checked
+    // Check 1: All checkboxes ticked
     const allChecked = Array.from(checks).every(c => c.checked);
+    // Check 2: Password is not empty (at least 6 characters recommended)
+    const passValid = passInput.value.trim().length >= 6;
     
-    if (allChecked) {
+    if (allChecked && passValid) {
         btn.disabled = false;
         btn.style.opacity = "1";
+        btn.style.cursor = "pointer";
         if (msg) msg.style.display = "none";
     } else {
         btn.disabled = true;
         btn.style.opacity = "0.5";
-        if (msg) msg.style.display = "block";
+        btn.style.cursor = "not-allowed";
+        if (msg) {
+            msg.style.display = "block";
+            msg.innerText = !passValid ? "Password must be at least 6 characters." : "Please tick all duties to proceed.";
+        }
     }
 }
 
@@ -939,14 +949,33 @@ async function resetWithOtp() {
         }
 
         document.getElementById('finalRegBtn').onclick = async () => {
-            const pw = document.getElementById('regPass').value;
-            showLoader("Finishing...");
-            try {
-                const res = await fetch(`${BACKEND_URL}/api/reset-with-otp`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ email: regData.email, otp: regData.otp, new_password: pw }) });
-                const r = await res.json(); hideLoader();
-                if(r.success) { alert("Success! Please Login."); location.reload(); } else alert(r.message);
-            } catch(e) { hideLoader(); }
+    const pw = document.getElementById('regPass').value;
+    
+    // Final security check
+    if(!pw || pw.length < 6) {
+        return alert("Please set a valid password (min 6 characters).");
+    }
+
+    showLoader("Finishing Registration...");
+    try {
+        const res = await fetch(`${BACKEND_URL}/api/reset-with-otp`, { 
+            method: 'POST', 
+            headers: {'Content-Type': 'application/json'}, 
+            body: JSON.stringify({ email: regData.email, otp: regData.otp, new_password: pw }) 
+        });
+        const r = await res.json(); 
+        hideLoader();
+        if(r.success) { 
+            Swal.fire('Success!', 'Registration complete. You can now login.', 'success')
+            .then(() => location.reload()); 
+        } else {
+            alert(r.message);
         }
+    } catch(e) { 
+        hideLoader();
+        alert("Connection Error. Please try again.");
+    }
+}
 
         document.getElementById('bankForm').onsubmit = async (e) => {
             e.preventDefault(); const token = localStorage.getItem('dist_token');
