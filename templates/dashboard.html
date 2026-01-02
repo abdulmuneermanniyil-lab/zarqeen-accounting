@@ -131,55 +131,85 @@
 
     <!-- Licenses Section -->
     <div id="licenses" class="section">
-        <div class="card">
-            <h3>Recent Licenses</h3>
-            <div style="overflow-x:auto;">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Key</th>
-                            <th>Plan</th>
-                            <th>Amount</th>
-                            <th>Distributor</th>
-                            <th>Status</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for l in licenses %}
-                        <tr>
-                            <td>{{ l.created_at.strftime('%Y-%m-%d') }}</td>
-                            <td style="font-family: monospace; font-size: 0.85rem;">{{ l.license_key }}</td>
-                            <td>{{ l.plan_type }}</td>
-                            <td>₹{{ l.amount_paid }}</td>
-                            <td>{{ l.distributor.name if l.distributor else 'Direct' }}</td>
-                            <td>
-                                <span class="badge {{ 'badge-green' if l.is_used else 'badge-red' }}">
-                                    {{ 'INSTALLED' if l.is_used else 'PENDING' }}
-                                </span>
-                            </td>
-                            <td>
-                                <div style="display: flex; gap: 5px;">
-                                    <form action="/admin/edit_license/{{ l.id }}" method="POST" style="display:flex; gap:2px;">
-                                        <select name="status" style="font-size: 0.75rem; padding: 2px;">
-                                            <option value="pending" {{ 'selected' if not l.is_used }}>Pending</option>
-                                            <option value="used" {{ 'selected' if l.is_used }}>Installed</option>
-                                        </select>
-                                        <button type="submit" class="btn btn-sm">OK</button>
-                                    </form>
-                                    <form action="/admin/delete_license/{{ l.id }}" method="POST" onsubmit="return confirm('Delete?');">
-                                        <button type="submit" class="btn btn-sm btn-red">X</button>
-                                    </form>
+    <div class="card">
+        <h3>Recent Licenses</h3>
+        <div style="overflow-x:auto;">
+            <table style="min-width: 1000px;">
+                <thead>
+                    <tr>
+                        <th>Date Created</th>
+                        <th>License Key</th>
+                        <th>Plan & Amount</th>
+                        <th>User Contact</th> <!-- NEW -->
+                        <th>Activation Info</th> <!-- NEW -->
+                        <th>Distributor</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for l in licenses %}
+                    <tr>
+                        <td>{{ l.created_at.strftime('%Y-%m-%d') }}</td>
+                        <td style="font-family: monospace; font-size: 0.85rem;">{{ l.license_key }}</td>
+                        <td>
+                            <div style="font-weight: bold; text-transform: uppercase;">{{ l.plan_type }}</div>
+                            <div style="font-size: 0.8rem; color: #666;">₹{{ l.amount_paid }}</div>
+                        </td>
+                        <td>
+                            <!-- NEW: User Details -->
+                            {% if l.is_used %}
+                                <div style="font-size: 0.8rem;">
+                                    <strong>E:</strong> {{ l.user_email or 'N/A' }}<br>
+                                    <strong>P:</strong> {{ l.user_phone or 'N/A' }}
                                 </div>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+                            {% else %}
+                                <span style="color: #999;">Not Activated</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <!-- NEW: Metadata -->
+                            {% if l.is_used %}
+                                <div style="font-size: 0.8rem;">
+                                    <strong>On:</strong> {{ l.used_at.strftime('%Y-%m-%d %H:%M') if l.used_at else '---' }}<br>
+                                    <strong>Ver:</strong> <span class="badge" style="background:#eee; color:#333; border:none;">{{ l.software_version }}</span>
+                                </div>
+                            {% else %}
+                                ---
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div>{{ l.distributor.name if l.distributor else 'Direct' }}</div>
+                            {% if l.distributor %}
+                                <div style="font-size: 0.75rem; color: #059669;">Comm: ₹{{ l.commission_earned }}</div>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge {{ 'badge-green' if l.is_used else 'badge-red' }}">
+                                {{ 'INSTALLED' if l.is_used else 'PENDING' }}
+                            </span>
+                        </td>
+                        <td>
+                            <div style="display: flex; gap: 5px;">
+                                <form action="/admin/edit_license/{{ l.id }}" method="POST" style="display:flex; gap:2px;">
+                                    <select name="status" style="font-size: 0.75rem; padding: 2px;">
+                                        <option value="pending" {{ 'selected' if not l.is_used }}>Pending</option>
+                                        <option value="used" {{ 'selected' if l.is_used }}>Installed</option>
+                                    </select>
+                                    <button type="submit" class="btn btn-sm">OK</button>
+                                </form>
+                                <form action="/admin/delete_license/{{ l.id }}" method="POST" onsubmit="return confirm('Delete?');">
+                                    <button type="submit" class="btn btn-sm btn-red">X</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
+</div>
 
     <script>
         function showTab(id) {
