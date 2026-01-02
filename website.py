@@ -96,6 +96,8 @@ class License(db.Model):
     license_key = db.Column(db.String(60), unique=True, nullable=False)
     plan_type = db.Column(db.String(20), nullable=False)
     payment_id = db.Column(db.String(100))
+    user_email = db.Column(db.String(120))
+    user_phone = db.Column(db.String(20)) 
     amount_paid = db.Column(db.Float, default=0.0)
     commission_earned = db.Column(db.Float, default=0.0)
     is_used = db.Column(db.Boolean, default=False)
@@ -339,71 +341,86 @@ from flask import jsonify, request
 def validate_license():
     data = request.json or {}
     license_key = data.get('license_key', '').strip()
+    
+    # Capture user info and software info from the request
+    u_email = data.get('user_email', '').strip()
+    u_phone = data.get('user_phone', '').strip()
+    version = data.get('version', 'Unknown')
 
     if not license_key:
         return jsonify({'valid': False, 'message': 'License key missing'}), 400
 
-    # 1. Look up the license
+    # 1. Look up the license in the database
     lic = License.query.filter_by(license_key=license_key).first()
 
     if not lic:
         return jsonify({'valid': False, 'message': 'License key not found in our records.'}), 404
 
-    # 2. Check if already activated
+    # 2. Prevent re-activation of used keys
     if lic.is_used:
+        used_date = lic.used_at.strftime("%d-%b-%Y") if lic.used_at else "an unknown date"
         return jsonify({
             'valid': False,
-            'message': f'This license was already used on {lic.used_at.strftime("%d-%b-%Y")}.'
+            'message': f'This license was already activated on {used_date}.'
         }), 400
 
-    # 3. ACTIVATE THE LICENSE
+    # 3. ACTIVATE THE LICENSE & SAVE USER DETAILS
+    # This links the license to the specific customer in your Render database
     lic.is_used = True
     lic.used_at = datetime.utcnow()
-    lic.software_version = data.get('version', 'Unknown')
+    lic.software_version = version
     lic.last_login_date = datetime.utcnow()
+    lic.user_email = u_email  # Saved to License table
+    lic.user_phone = u_phone  # Saved to License table
 
-    # 4. HANDLE DISTRIBUTOR COMMISSION
-    # Prepare distributor info for the response
+    # 4. HANDLE DISTRIBUTOR COMMISSION & INFO
+    # Set default info for Direct sales
     dist_info = {
         'code': 'DIRECT',
         'name': 'Zarqeen Support',
-        'phone': 'zarqeensoftware@gmail.com' # Default Support
+        'phone': 'zarqeensoftware@gmail.com' 
     }
 
     if lic.distributor:
         dist = lic.distributor
         
-        # Calculate commission based on distributor's discount_percent
-        # Formula: Commission = Amount Paid * (Discount % / 100)
+        # Calculate commission based on distributor's discount level
+        # (e.g., 10% of 999 = 99.9 commission)
         commission = lic.amount_paid * (dist.discount_percent / 100.0)
         
+        # Update the License record
         lic.commission_earned = commission
-        dist.commission_earned += commission # Update distributor's total balance
         
+        # Update the Distributor's total earnings balance
+        dist.commission_earned += commission 
+        
+        # Update info for the API response
         dist_info = {
             'code': dist.code,
             'name': dist.name,
             'phone': dist.phone
         }
 
-    # 5. Commit changes to web database
+    # 5. Save everything to the Web Database
     try:
         db.session.commit()
     except Exception as e:
         db.session.rollback()
-        return jsonify({'valid': False, 'message': 'Server database error.'}), 500
+        # Log the error for your internal debugging
+        print(f"DATABASE COMMIT ERROR: {e}") 
+        return jsonify({'valid': False, 'message': 'Internal Server Error: Failed to save activation.'}), 500
 
-    # 6. RETURN COMPLETE DATA TO DESKTOP SOFTWARE
-    # The desktop software uses these keys to fill the "History" table
+    # 6. RETURN COMPLETE DATA TO THE DESKTOP APP
+    # These fields are used by the software to update the local 'History' table and support number
     return jsonify({
         'valid': True,
         'plan': lic.plan_type,             # 'basic' or 'premium'
-        'amount': lic.amount_paid,         # The amount the user paid
+        'amount': lic.amount_paid,         # Actual price paid (useful for history)
         'distributor_code': dist_info['code'],
         'distributor_name': dist_info['name'],
         'distributor_phone': dist_info['phone'],
         'activated_at': lic.used_at.isoformat(),
-        'expiry_date': lic.expiry_date.isoformat() # Using the @property from your model
+        'expiry_date': lic.expiry_date.isoformat() # From your model property
     })
 
 # --- site_backend.py (On Render) ---
