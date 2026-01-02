@@ -343,40 +343,67 @@ def validate_license():
     if not license_key:
         return jsonify({'valid': False, 'message': 'License key missing'}), 400
 
+    # 1. Look up the license
     lic = License.query.filter_by(license_key=license_key).first()
 
     if not lic:
-        return jsonify({'valid': False, 'message': 'Invalid license'}), 404
+        return jsonify({'valid': False, 'message': 'License key not found in our records.'}), 404
 
-    # Update audit info (safe to update every time)
+    # 2. Check if already activated
+    if lic.is_used:
+        return jsonify({
+            'valid': False,
+            'message': f'This license was already used on {lic.used_at.strftime("%d-%b-%Y")}.'
+        }), 400
+
+    # 3. ACTIVATE THE LICENSE
+    lic.is_used = True
+    lic.used_at = datetime.utcnow()
     lic.software_version = data.get('version', 'Unknown')
     lic.last_login_date = datetime.utcnow()
 
-    # 🚫 Already used
-    if lic.is_used:
+    # 4. HANDLE DISTRIBUTOR COMMISSION
+    # Prepare distributor info for the response
+    dist_info = {
+        'code': 'DIRECT',
+        'name': 'Zarqeen Support',
+        'phone': 'zarqeensoftware@gmail.com' # Default Support
+    }
+
+    if lic.distributor:
+        dist = lic.distributor
+        
+        # Calculate commission based on distributor's discount_percent
+        # Formula: Commission = Amount Paid * (Discount % / 100)
+        commission = lic.amount_paid * (dist.discount_percent / 100.0)
+        
+        lic.commission_earned = commission
+        dist.commission_earned += commission # Update distributor's total balance
+        
+        dist_info = {
+            'code': dist.code,
+            'name': dist.name,
+            'phone': dist.phone
+        }
+
+    # 5. Commit changes to web database
+    try:
         db.session.commit()
-        return jsonify({
-            'valid': False,
-            'message': 'License already used',
-            'used_at': lic.used_at.isoformat() if lic.used_at else None
-        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'valid': False, 'message': 'Server database error.'}), 500
 
-    # ✅ ACTIVATE LICENSE
-    lic.is_used = True
-    lic.used_at = datetime.utcnow()
-
-    # Plan duration
-    duration_days = 365 if lic.plan_type == 'basic' else 1095
-
-    db.session.commit()
-
+    # 6. RETURN COMPLETE DATA TO DESKTOP SOFTWARE
+    # The desktop software uses these keys to fill the "History" table
     return jsonify({
         'valid': True,
-        'plan': lic.plan_type,
-        'duration_days': duration_days,
-        'distributor_phone': lic.distributor.phone if lic.distributor else None,
-        'distributor_name': lic.distributor.name if lic.distributor else "Zarqeen",
-        'activated_at': lic.used_at.isoformat()
+        'plan': lic.plan_type,             # 'basic' or 'premium'
+        'amount': lic.amount_paid,         # The amount the user paid
+        'distributor_code': dist_info['code'],
+        'distributor_name': dist_info['name'],
+        'distributor_phone': dist_info['phone'],
+        'activated_at': lic.used_at.isoformat(),
+        'expiry_date': lic.expiry_date.isoformat() # Using the @property from your model
     })
 
 # --- site_backend.py (On Render) ---
