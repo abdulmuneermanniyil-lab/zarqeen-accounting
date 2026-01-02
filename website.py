@@ -681,11 +681,12 @@ def export_data(type):
     cw = csv.writer(si)
     
     if type == 'licenses':
-        # Expanded headers for Licenses
+        # Expanded headers to include User Contact and Activation details
         cw.writerow([
             'Date Created', 'License Key', 'Plan Type', 'Amount Paid', 
             'Commission Earned (₹)', 'Distributor Name', 'Distributor Code', 
-            'Razorpay Payment ID', 'Status (Is Used)', 'Software Version', 'Expiry Date'
+            'User Email', 'User Phone', 'Status', 'Activation Date', 
+            'Software Version', 'Expiry Date', 'Razorpay Payment ID'
         ])
         
         licenses = License.query.order_by(License.created_at.desc()).all()
@@ -693,19 +694,22 @@ def export_data(type):
             cw.writerow([
                 r.created_at.strftime('%Y-%m-%d %H:%M:%S'),
                 r.license_key,
-                r.plan_type,
+                r.plan_type.upper(),
                 r.amount_paid,
                 r.commission_earned,
                 r.distributor.name if r.distributor else 'Direct',
-                r.distributor.code if r.distributor else '-',
-                r.payment_id,
+                r.distributor.code if r.distributor else 'DIRECT',
+                r.user_email or 'N/A',  # NEW
+                r.user_phone or 'N/A',  # NEW
                 'Installed' if r.is_used else 'Pending',
+                r.used_at.strftime('%Y-%m-%d %H:%M:%S') if r.used_at else 'Not Activated', # NEW
                 r.software_version or 'N/A',
-                r.expiry_date.strftime('%Y-%m-%d') if r.expiry_date else 'N/A'
+                r.expiry_date.strftime('%Y-%m-%d') if r.expiry_date else 'N/A',
+                r.payment_id or '-'
             ])
 
     elif type == 'distributors':
-        # Expanded headers for Distributors including Banking & Level info
+        # Headers for Distributors including Banking & Level info (Kept as per your code)
         cw.writerow([
             'Name', 'Distributor Code', 'Email', 'Phone', 'Current Level', 
             'Discount %', 'Total Earned (₹)', 'Total Paid (₹)', 'Balance Due (₹)', 
@@ -718,7 +722,8 @@ def export_data(type):
             total_earn = sum(safe_float(l.commission_earned) for l in r.licenses)
             total_paid = safe_float(r.commission_paid)
             balance = total_earn - total_paid
-            level_name = LEVELS.get(r.level, LEVELS[1])['name']
+            # Handle levels (assuming LEVELS constant exists in your website.py)
+            level_name = LEVELS.get(r.level, LEVELS[1])['name'] if 'LEVELS' in globals() else f"Level {r.level}"
             
             cw.writerow([
                 r.name,
@@ -732,14 +737,16 @@ def export_data(type):
                 round(balance, 2),
                 r.bank_name or '-',
                 r.account_holder or '-',
-                f"'{r.account_number}" if r.account_number else '-', # Added ' to prevent Excel from scientific notation
+                f"'{r.account_number}" if r.account_number else '-', 
                 r.ifsc_code or '-',
                 r.upi_id or '-',
                 'Yes' if r.is_verified else 'No'
             ])
 
     output = make_response(si.getvalue())
-    output.headers["Content-Disposition"] = f"attachment; filename=zarqeen_{type}_{datetime.utcnow().strftime('%Y%m%d')}.csv"
+    # Generate filename with current date
+    file_tag = datetime.utcnow().strftime('%Y%m%d_%H%M')
+    output.headers["Content-Disposition"] = f"attachment; filename=zarqeen_{type}_{file_tag}.csv"
     output.headers["Content-type"] = "text/csv"
     return output
 
