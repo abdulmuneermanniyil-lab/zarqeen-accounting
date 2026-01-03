@@ -440,7 +440,7 @@ def validate_license():
     })
 
 # --- site_backend.py (On Render) ---
-LATEST_VERSION = "1.1.0" 
+LATEST_VERSION = "1.2.0" 
 
 @app.route('/api/version_check', methods=['GET'])
 def version_check():
@@ -451,10 +451,9 @@ def version_check():
         "message": "🚀 New Update v1.2.0: Now with split address support, auto-comma removal, and faster search!",
         "headline": "Supercharged Update Available!", # Fallback
         "features": [
-            "New Invoice Templates (A5 & Thermal)",
-            "Faster Inventory Search",
-            "Fixed 'None' display in GSTIN fields",
-            "Split Address (City & Zip) support"
+            "Subtitle, Logo add option in template",
+            "Fixed bugs",
+            "HSN Added"
         ],
         "ad_image": "https://www.zarqeen.in/static/images/update_banner.png" 
     }
