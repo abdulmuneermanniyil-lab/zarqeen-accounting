@@ -91,6 +91,15 @@ class Distributor(db.Model):
     def set_password(self, pwd): self.password_hash = generate_password_hash(pwd)
     def check_password(self, pwd): return check_password_hash(self.password_hash, pwd)
 
+class SystemMessage(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    message_id = db.Column(db.String(50), nullable=False) # Change this to force show again
+    content = db.Column(db.Text, nullable=False)
+    is_active = db.Column(db.Boolean, default=True)
+    link_text = db.Column(db.String(100))
+    link_url = db.Column(db.String(255))
+    style = db.Column(db.String(20), default="info") # info, success, warning
+
 class License(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     license_key = db.Column(db.String(60), unique=True, nullable=False)
@@ -884,15 +893,41 @@ def reset_with_otp():
 
 @app.route('/api/system_message', methods=['GET'])
 def get_system_message():
-    # You can later connect this to a database table if you want an Admin UI
-    return jsonify({
-        "message_id": "new_year_2026", # Change this ID whenever you send a NEW message
-        "content": "🎉 Zarqeen wishes you a very Happy New Year 2026! May your business grow multifold.",
-        "style": "info", # info, success, or warning
-        "show_link": False,
-        "link_text": "",
-        "link_url": ""
-    })
+    # Fetch the most recent active message
+    msg = SystemMessage.query.filter_by(is_active=True).order_by(SystemMessage.id.desc()).first()
+    if msg:
+        return jsonify({
+            "message_id": msg.message_id,
+            "content": msg.content,
+            "style": msg.style,
+            "show_link": True if msg.link_url else False,
+            "link_text": msg.link_text,
+            "link_url": msg.link_url
+        })
+    return jsonify({"content": ""}) # Return empty if no message
+
+@app.route('/admin/update_broadcast', methods=['POST'])
+@admin_required # Ensure you have your admin protection decorator here
+def update_broadcast():
+    content = request.form.get('content')
+    m_id = request.form.get('message_id')
+    
+    # Deactivate all old messages
+    SystemMessage.query.update({SystemMessage.is_active: False})
+    
+    # Create new broadcast
+    new_msg = SystemMessage(
+        message_id=m_id,
+        content=content,
+        link_text=request.form.get('link_text'),
+        link_url=request.form.get('link_url'),
+        style=request.form.get('style', 'info'),
+        is_active=True
+    )
+    db.session.add(new_msg)
+    db.session.commit()
+    flash("Broadcast message updated!")
+    return redirect('/admin/dashboard')
 
 
 @app.route('/reset-db-now')
