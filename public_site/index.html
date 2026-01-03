@@ -685,17 +685,26 @@ document.addEventListener('change', function(e) {
             const code = document.getElementById('distCode').value.trim(); if(!code) return;
             showLoader("Checking...");
             try {
-                const res = await fetch(`${BACKEND_URL}/api/check_distributor`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ code }) });
+                const res = await fetch(`${BACKEND_URL}/api/check_distributor`, { 
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'}, 
+                    body: JSON.stringify({ code }) 
+                });
                 const data = await res.json(); hideLoader();
                 if (data.valid) {
                     ACTIVE_DISTRIBUTOR_CODE = code;
                     document.getElementById('codeMsg').innerText = `✅ ${data.name} applied (${data.discount}% OFF)`;
                     document.getElementById('codeMsg').style.color = 'green';
                 } else {
-                    document.getElementById('codeMsg').innerText = "❌ Invalid Code";
+                    // Updated message per your requirement
+                    document.getElementById('codeMsg').innerText = "❌ User not registered";
                     document.getElementById('codeMsg').style.color = 'red';
                 }
-            } catch (e) { hideLoader(); }
+            } catch (e) { 
+                hideLoader(); 
+                document.getElementById('codeMsg').innerText = "❌ User not registered";
+                document.getElementById('codeMsg').style.color = 'red';
+            }
         }
 
         async function buyPlan(planType) {
@@ -724,14 +733,27 @@ document.addEventListener('change', function(e) {
             } catch(e) { hideLoader(); alert("Error connecting to payment gateway"); }
         }
 
+        // Update the Distributor Login handler
         document.getElementById('distForm').onsubmit = async (e) => {
             e.preventDefault(); showLoader("Logging in...");
             const data = Object.fromEntries(new FormData(e.target));
             try {
-                const res = await fetch(`${BACKEND_URL}/api/distributor/login`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) });
+                const res = await fetch(`${BACKEND_URL}/api/distributor/login`, { 
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'}, 
+                    body: JSON.stringify(data) 
+                });
                 const r = await res.json(); hideLoader();
-                if(r.success) { localStorage.setItem('dist_token', r.token); closeLoginModal(); loadDashboard(1); } else alert(r.message);
-            } catch(e) { hideLoader(); }
+                if(r.success) { 
+                    localStorage.setItem('dist_token', r.token); closeLoginModal(); loadDashboard(1); 
+                } else {
+                    // This shows "Incorrect password" or "User not found" sent from Python
+                    alert(r.message || "Incorrect password"); 
+                }
+            } catch(e) { 
+                hideLoader(); 
+                alert("Incorrect password or user not found"); 
+            }
         };
 
         document.getElementById('adminForm').onsubmit = async (e) => {
