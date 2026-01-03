@@ -798,21 +798,20 @@ def verify_registration():
 @app.route('/api/distributor/login', methods=['POST'])
 def dist_login():
     data = request.get_json()
-    email = data.get('email', '').strip()
+    # Use .lower() to ensure email matching isn't case-sensitive
+    email = data.get('email', '').strip().lower() 
     password = data.get('password', '').strip()
     
     dist = Distributor.query.filter_by(email=email).first()
     
-    # Check if distributor exists
     if not dist:
         return jsonify({'success': False, 'message': 'User not registered'}), 404
     
-    # Check password
+    # Check hashed password
     if dist.check_password(password):
-        # ... your token generation logic ...
-        return jsonify({'success': True, 'token': token})
+        # ... your token logic ...
+        return jsonify({'success': True, 'token': token, 'name': dist.name})
     else:
-        # Send clear message instead of crashing
         return jsonify({'success': False, 'message': 'Incorrect password'}), 401
 
 @app.route('/api/distributor/data', methods=['GET'])
