@@ -210,7 +210,46 @@
         </div>
     </div>
 </div>
+<div class="card" style="margin-top: 20px; border-top: 4px solid #f59e0b;">
+    <h3>📢 Global Broadcast Control</h3>
+    <p style="font-size: 0.8rem; color: #666;">This message will appear at the top of all user's desktop software.</p>
+    
+    <form action="/admin/update_broadcast" method="POST">
+        <div class="form-group">
+            <label>Message Content:</label>
+            <textarea name="content" rows="2" class="form-control" placeholder="e.g. Happy New Year!"></textarea>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div class="form-group">
+                <label>Message ID (Unique):</label>
+                <input type="text" name="message_id" class="form-control" placeholder="e.g. ny_2026">
+                <small>Changing this ID forces the message to show again to users who dismissed the old one.</small>
+            </div>
+            <div class="form-group">
+                <label>Color Style:</label>
+                <select name="style" class="form-control">
+                    <option value="info">Blue (Info)</option>
+                    <option value="success">Green (Success)</option>
+                    <option value="warning">Yellow (Warning)</option>
+                </select>
+            </div>
+        </div>
 
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div class="form-group">
+                <label>Link Text (Optional):</label>
+                <input type="text" name="link_text" class="form-control" placeholder="e.g. Click here">
+            </div>
+            <div class="form-group">
+                <label>Link URL (Optional):</label>
+                <input type="text" name="link_url" class="form-control" placeholder="https://...">
+            </div>
+        </div>
+        
+        <button type="submit" class="btn btn-primary">Publish Broadcast</button>
+    </form>
+</div>
     <script>
         function showTab(id) {
             document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
