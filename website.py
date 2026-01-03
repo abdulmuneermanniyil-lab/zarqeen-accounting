@@ -882,6 +882,19 @@ def reset_with_otp():
         return jsonify({'success': True, 'message': 'Password updated successfully!'})
     return jsonify({'success': False, 'message': 'Invalid or Expired OTP'})
 
+@app.route('/api/system_message', methods=['GET'])
+def get_system_message():
+    # You can later connect this to a database table if you want an Admin UI
+    return jsonify({
+        "message_id": "new_year_2026", # Change this ID whenever you send a NEW message
+        "content": "🎉 Zarqeen wishes you a very Happy New Year 2026! May your business grow multifold.",
+        "style": "info", # info, success, or warning
+        "show_link": False,
+        "link_text": "",
+        "link_url": ""
+    })
+
+
 @app.route('/reset-db-now')
 def reset_db():
     with app.app_context():
