@@ -733,28 +733,38 @@ document.addEventListener('change', function(e) {
             } catch(e) { hideLoader(); alert("Error connecting to payment gateway"); }
         }
 
-        // Update the Distributor Login handler
         document.getElementById('distForm').onsubmit = async (e) => {
-            e.preventDefault(); showLoader("Logging in...");
-            const data = Object.fromEntries(new FormData(e.target));
-            try {
-                const res = await fetch(`${BACKEND_URL}/api/distributor/login`, { 
-                    method: 'POST', 
-                    headers: {'Content-Type': 'application/json'}, 
-                    body: JSON.stringify(data) 
-                });
-                const r = await res.json(); hideLoader();
-                if(r.success) { 
-                    localStorage.setItem('dist_token', r.token); closeLoginModal(); loadDashboard(1); 
-                } else {
-                    // This shows "Incorrect password" or "User not found" sent from Python
-                    alert(r.message || "Incorrect password"); 
-                }
-            } catch(e) { 
-                hideLoader(); 
-                alert("Incorrect password or user not found"); 
-            }
-        };
+    e.preventDefault(); 
+    showLoader("Logging in...");
+    
+    const formData = new FormData(e.target);
+    const data = Object.fromEntries(formData);
+    // Ensure email is sent as lowercase to match backend logic
+    data.email = data.email.toLowerCase().trim();
+
+    try {
+        const res = await fetch(`${BACKEND_URL}/api/distributor/login`, { 
+            method: 'POST', 
+            headers: {'Content-Type': 'application/json'}, 
+            body: JSON.stringify(data) 
+        });
+        
+        const r = await res.json(); 
+        hideLoader();
+
+        if (r.success) { 
+            localStorage.setItem('dist_token', r.token); 
+            closeLoginModal(); 
+            loadDashboard(1); 
+        } else {
+            // Show the specific message from the server (e.g. "Incorrect password")
+            Swal.fire('Login Failed', r.message, 'error');
+        }
+    } catch (e) { 
+        hideLoader(); 
+        Swal.fire('Error', 'Connection to server failed', 'error');
+    }
+};
 
         document.getElementById('adminForm').onsubmit = async (e) => {
             e.preventDefault(); showLoader("Verifying Admin...");
