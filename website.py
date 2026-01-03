@@ -907,7 +907,6 @@ def get_system_message():
     return jsonify({"content": ""}) # Return empty if no message
 
 @app.route('/admin/update_broadcast', methods=['POST'])
-@admin_required # Ensure you have your admin protection decorator here
 def update_broadcast():
     content = request.form.get('content')
     m_id = request.form.get('message_id')
