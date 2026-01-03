@@ -221,13 +221,20 @@ def get_config(): return jsonify({'key_id': RAZORPAY_KEY_ID})
 
 @app.route('/api/check_distributor', methods=['POST'])
 def check_distributor():
-    try:
-        code = request.json.get('code', '').strip().upper()
-        dist = Distributor.query.filter_by(code=code).first()
-        if dist and dist.is_verified:
-            return jsonify({'valid': True, 'discount': dist.discount_percent, 'name': dist.name})
-        return jsonify({'valid': False})
-    except: return jsonify({'valid': False}), 500
+    data = request.get_json()
+    code = data.get('code', '').strip().upper()
+    
+    dist = Distributor.query.filter_by(code=code).first()
+    
+    if dist and dist.is_enabled:
+        return jsonify({
+            'valid': True, 
+            'name': dist.name, 
+            'discount': dist.discount_percent
+        })
+    else:
+        # Logic to return False so JS shows "User not registered"
+        return jsonify({'valid': False, 'message': 'User not registered'})
 
 @app.route('/create_order', methods=['POST'])
 def create_order():
@@ -789,13 +796,24 @@ def verify_registration():
     return jsonify({'success': False, 'message': 'Invalid OTP'})
 
 @app.route('/api/distributor/login', methods=['POST'])
-def api_distributor_login():
-    d = request.json; dist = Distributor.query.filter_by(email=d.get('email')).first()
-    if dist and dist.check_password(d.get('password')):
-        if not dist.is_verified: return jsonify({'success': False, 'message': 'Unverified'})
-        check_level_update(dist); dist.api_token = secrets.token_hex(16); db.session.commit()
-        return jsonify({'success': True, 'token': dist.api_token})
-    return jsonify({'success': False})
+def dist_login():
+    data = request.get_json()
+    email = data.get('email', '').strip()
+    password = data.get('password', '').strip()
+    
+    dist = Distributor.query.filter_by(email=email).first()
+    
+    # Check if distributor exists
+    if not dist:
+        return jsonify({'success': False, 'message': 'User not registered'}), 404
+    
+    # Check password
+    if dist.check_password(password):
+        # ... your token generation logic ...
+        return jsonify({'success': True, 'token': token})
+    else:
+        # Send clear message instead of crashing
+        return jsonify({'success': False, 'message': 'Incorrect password'}), 401
 
 @app.route('/api/distributor/data', methods=['GET'])
 def api_get_distributor_data():
